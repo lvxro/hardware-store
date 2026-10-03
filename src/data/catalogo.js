@@ -2,13 +2,16 @@
 // que el home y el listado pueden recorrer y filtrar.
 import datos from './productos.json'
 import categorias from './categorias'
+// Dólar oficial de referencia (Banco Nación). Cambiar este número cuando se actualice.
+export const DOLAR = 1540
+
 
 const productos = categorias.flatMap((cat) =>
   (datos[cat.slug] ?? []).map((p) => ({
     ...p,
     categoria: cat.slug,
     nombre: p.nombre ?? `${p.marca} ${p.modelo}`,
-    precio: p.precio_usd_aprox,
+    precio: Math.round((p.precio_usd_aprox * DOLAR) / 1000) * 1000,
     specs: cat.specs(p),
   })),
 )
@@ -22,7 +25,7 @@ export function precioDesde(slug) {
 }
 
 export function formatoPrecio(valor) {
-  return `US$ ${valor.toLocaleString('es-AR')}`
+  return `$ ${valor.toLocaleString('es-AR')}`
 }
 
 export default productos

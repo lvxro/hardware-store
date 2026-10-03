@@ -52,7 +52,7 @@ export default function App() {
       <footer className="mt-16 border-t border-linea bg-superficie">
         <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-2 px-4 py-6 text-sm text-tenue">
           <span>Auraware</span>
-          <span>Precios de referencia en dólares estadounidenses.</span>
+          <span>Precios en pesos argentinos, calculados con el dólar oficial.</span>
         </div>
       </footer>
     </div>

@@ -1,1 +1,31 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-fondo: #f5f6f8;
+  --color-superficie: #ffffff;
+  --color-tinta: #1b1f27;
+  --color-tenue: #5d6472;
+  --color-linea: #e2e5ea;
+  --color-pcb: #0f6b4f;
+  --color-pcb-claro: #e7f1ec;
+}
+
+body {
+  @apply bg-fondo font-sans text-tinta antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-pcb);
+  outline-offset: 2px;
+}
+
+/* Grilla tenue detrás de los dibujos de producto */
+.plano {
+  background-color: #f8f9fa;
+  background-image:
+    linear-gradient(#e9ecef 1px, transparent 1px),
+    linear-gradient(90deg, #e9ecef 1px, transparent 1px);
+  background-size: 16px 16px;
+}

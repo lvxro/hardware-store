@@ -51,7 +51,7 @@ export default function App() {
       </main>
       <footer className="mt-16 border-t border-linea bg-superficie">
         <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-2 px-4 py-6 text-sm text-tenue">
-          <span>Tienda PC</span>
+          <span>Auraware</span>
           <span>Precios de referencia en dólares estadounidenses.</span>
         </div>
       </footer>

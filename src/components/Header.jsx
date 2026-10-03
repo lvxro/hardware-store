@@ -6,7 +6,7 @@ export default function Header() {
     <header className="border-b border-linea bg-superficie">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 pt-4 lg:flex-row lg:items-center lg:gap-10 lg:py-0">
         <Link to="/" className="shrink-0 text-lg font-semibold tracking-tight lg:py-4">
-          Tienda PC
+          Auraware
         </Link>
 
         <nav aria-label="Categorías" className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:px-0">

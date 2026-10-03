@@ -12,8 +12,8 @@ export default function Home() {
         Componentes y periféricos para tu PC
       </h1>
       <p className="mt-3 max-w-xl text-tenue">
-        {productos.length} productos en {categorias.length} categorías. Precios de
-        referencia en dólares.
+        {productos.length} productos en {categorias.length} categorías. Precios en
+        pesos argentinos.
       </p>
 
       <div className="mt-10 grid gap-8 md:grid-cols-[3fr_2fr]">

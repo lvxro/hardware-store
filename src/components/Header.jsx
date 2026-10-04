@@ -1,15 +1,21 @@
 import { Link, NavLink } from 'react-router-dom'
 import categorias from '../data/categorias'
+import TemaToggle from './TemaToggle'
 
 export default function Header() {
   return (
     <header className="border-b border-linea bg-superficie">
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 pt-4 lg:flex-row lg:items-center lg:gap-10 lg:py-0">
-        <Link to="/" className="shrink-0 text-lg font-semibold tracking-tight lg:py-4">
+      {/* En celular: nombre y botón arriba, categorías abajo. En compu: todo en una fila */}
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-10 px-4">
+        <Link to="/" className="order-1 shrink-0 py-4 text-lg font-semibold tracking-tight">
           Auraware
         </Link>
 
-        <nav aria-label="Categorías" className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:px-0">
+        <div className="order-2 ml-auto lg:order-3">
+          <TemaToggle />
+        </div>
+
+        <nav aria-label="Categorías" className="order-3 w-full overflow-x-auto lg:order-2 lg:w-auto">
           <ul className="flex gap-6 whitespace-nowrap text-sm">
             {categorias.map((cat) => (
               <li key={cat.slug}>

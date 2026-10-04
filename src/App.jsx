@@ -3,17 +3,7 @@ import { Route, Routes, useLocation, Link } from 'react-router-dom'
 import Header from './components/Header'
 import Home from './pages/Home'
 import Listado from './pages/Listado'
-
-// Lugar reservado para la ficha de Gabriel (T-012).
-// Cuando tenga Producto.jsx, se reemplaza por: import Producto from './pages/Producto'
-function ProductoPendiente() {
-  return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-2xl font-semibold">Ficha de producto</h1>
-      <p className="mt-2 text-tenue">Esta página está en desarrollo (T-012).</p>
-    </div>
-  )
-}
+import Producto from './pages/Producto'
 
 function NoEncontrada() {
   return (
@@ -45,7 +35,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Listado />} />
           <Route path="/categoria/:slug" element={<Listado />} />
-          <Route path="/producto/:id" element={<ProductoPendiente />} />
+          <Route path="/producto/:id" element={<Producto />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
       </main>

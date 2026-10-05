@@ -4,6 +4,7 @@ import Header from './components/Header'
 import Home from './pages/Home'
 import Listado from './pages/Listado'
 import Producto from './pages/Producto'
+import Carrito from './pages/Carrito'
 
 function NoEncontrada() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/productos" element={<Listado />} />
           <Route path="/categoria/:slug" element={<Listado />} />
           <Route path="/producto/:id" element={<Producto />} />
+          <Route path="/carrito" element={<Carrito />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
       </main>

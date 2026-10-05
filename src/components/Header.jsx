@@ -11,8 +11,20 @@ export default function Header() {
           Auraware
         </Link>
 
-        <div className="order-2 ml-auto lg:order-3">
+        <div className="order-2 ml-auto flex items-center gap-2 lg:order-3">
           <TemaToggle />
+          <Link
+            to="/carrito"
+            aria-label="Carrito"
+            title="Carrito"
+            className="rounded-md border border-linea p-2 text-tenue hover:border-tinta hover:text-tinta"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+              <path d="M3 4h2l2.4 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2" />
+              <circle cx="9.5" cy="19" r="1.25" />
+              <circle cx="17" cy="19" r="1.25" />
+            </svg>
+          </Link>
         </div>
 
         <nav aria-label="Categorías" className="order-3 w-full overflow-x-auto lg:order-2 lg:w-auto">

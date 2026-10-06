@@ -1,25 +1,18 @@
 // Dibujo de cada producto, armado con sus propios datos del catálogo:
 // el procesador lleva el modelo grabado y la forma de su socket, la placa de video
 // tiene 2 o 3 coolers según el consumo, el teclado respeta su formato, etc.
+// Es un diagrama de línea fina de un solo tono (el color lo pone .vitrina en index.css).
 // Se muestra dentro de <Vitrina> mientras no haya una foto en /public/img.
 import Icono from './Icono'
 
-const ACENTO = 'var(--acento)'
+// Relleno del color del fondo: tapa las líneas que quedan detrás de una pieza
 const CUERPO = 'var(--cuerpo)'
+// Marcas chicas llenas (pin 1, antenas, teclas señaladas), en el mismo tono que la línea
+const LLENO = 'currentColor'
 
-function Texto({ x, y, size, children, anchor = 'middle', color = 'currentColor', opacity, ancho = 114 }) {
+function Texto({ x, y, size, children, anchor = 'middle' }) {
   return (
-    <text
-      x={x}
-      y={y}
-      textAnchor={anchor}
-      fontSize={size}
-      fontWeight="700"
-      fill={color}
-      stroke="none"
-      opacity={opacity}
-      style={{ fontStretch: `${ancho}%` }}
-    >
+    <text x={x} y={y} textAnchor={anchor} fontSize={size} fontWeight="600" fill="currentColor" stroke="none">
       {children}
     </text>
   )
@@ -44,24 +37,24 @@ function Procesador({ p }) {
     <g transform="translate(120 90) scale(1.14) translate(-120 -90)">
       {lga ? (
         <>
-          <rect x="72" y="26" width="96" height="128" rx="4" fill={CUERPO} />
+          <rect x="72" y="26" width="96" height="128" rx="4" />
           <path d={TAPAS.LGA} />
-          <path d="M76 150h11l-11-11z" fill={ACENTO} stroke="none" />
+          <path d="M76 150h11l-11-11z" fill={LLENO} stroke="none" />
         </>
       ) : (
         <>
-          <rect x="62" y="32" width="116" height="116" rx="4" fill={CUERPO} />
+          <rect x="62" y="32" width="116" height="116" rx="4" />
           {p.socket === 'AM5' ? (
             <path d={TAPAS.AM5} />
           ) : (
             <rect x="74" y="44" width="92" height="92" rx="8" />
           )}
-          <path d="M66 144h11l-11-11z" fill={ACENTO} stroke="none" />
+          <path d="M66 144h11l-11-11z" fill={LLENO} stroke="none" />
         </>
       )}
-      <Texto x="120" y="75" size="9" opacity="0.7">{p.marca}</Texto>
+      <Texto x="120" y="75" size="10">{p.marca}</Texto>
       <Texto x="120" y="93" size="14">{linea}</Texto>
-      <Texto x="120" y="109" size={numero.length > 8 ? 10 : 11.5} color={ACENTO}>{numero}</Texto>
+      <Texto x="120" y="109" size={numero.length > 8 ? 10 : 11.5}>{numero}</Texto>
     </g>
   )
 }
@@ -78,11 +71,9 @@ function Cooler({ cx, cy, r }) {
           key={giro}
           transform={`rotate(${giro})`}
           d={`M0 ${-r * 0.3}Q${r * 0.5} ${-r * 0.42} ${r * 0.34} ${-r * 0.9}`}
-          strokeWidth="1.5"
-          opacity="0.65"
         />
       ))}
-      <circle r={r * 0.26} fill={ACENTO} stroke="none" />
+      <circle r={r * 0.26} fill={CUERPO} />
     </g>
   )
 }
@@ -96,10 +87,10 @@ function PlacaDeVideo({ p }) {
   return (
     <>
       <rect x="9" y="30" width="7" height="120" rx="2" />
-      <rect x="22" y="38" width="200" height="94" rx="10" fill={CUERPO} />
-      <path d="M22 59H222" opacity="0.5" />
-      <Texto x="33" y="53" size="10" anchor="start" color={ACENTO}>{modelo}</Texto>
-      <Texto x="211" y="53" size="9" anchor="end" opacity="0.75">{p.memoria_gb} GB</Texto>
+      <rect x="22" y="38" width="200" height="94" rx="6" />
+      <path d="M22 59H222" />
+      <Texto x="31" y="54" size="13" anchor="start">{modelo}</Texto>
+      <Texto x="213" y="54" size="12" anchor="end">{p.memoria_gb} GB</Texto>
       {coolers.map((cx) => (
         <Cooler key={cx} cx={cx} cy={96} r={radio} />
       ))}
@@ -121,21 +112,21 @@ function MemoriaRam({ p }) {
 
   return (
     <>
-      {/* El kit trae dos módulos: el de atrás se asoma */}
-      <g transform="translate(12 -18)" opacity="0.4">
+      {/* El kit trae dos módulos: el de atrás va en línea de trazos */}
+      <g transform="translate(12 -18)" strokeDasharray="3 3">
         <path d={DISIPADOR} />
-        {rgb && <rect x="42" y="49" width="156" height="8" rx="4" />}
       </g>
 
       <path d={DISIPADOR} fill={CUERPO} />
-      {rgb && <rect x="42" y="49" width="156" height="8" rx="4" fill={ACENTO} stroke="none" />}
+      {/* Los kits RGB llevan la barra de luz arriba */}
+      {rgb && <rect x="42" y="49" width="156" height="8" rx="4" fill={CUERPO} />}
       <path d="M24 118v16h102v-6h8v6h82v-16" fill={CUERPO} />
       {contactos.map((x) => (
-        <path key={x} d={`M${x} 123v7`} strokeWidth="1.5" opacity="0.6" />
+        <path key={x} d={`M${x} 123v7`} />
       ))}
       <Texto x="40" y="101" size="21" anchor="start">{p.capacidad_gb} GB</Texto>
-      <Texto x="202" y="90" size="11" anchor="end" color={ACENTO}>{p.tipo}</Texto>
-      <Texto x="202" y="105" size="9.5" anchor="end" opacity="0.75">{p.velocidad_mhz} MHz</Texto>
+      <Texto x="202" y="90" size="12" anchor="end">{p.tipo}</Texto>
+      <Texto x="202" y="106" size="11" anchor="end">{p.velocidad_mhz} MHz</Texto>
     </>
   )
 }
@@ -156,39 +147,39 @@ function PlacaMadre({ p }) {
 
   return (
     <>
-      <rect x={x} y={y} width={ancho} height={alto} rx="4" fill={CUERPO} />
+      <rect x={x} y={y} width={ancho} height={alto} rx="3" />
 
       {/* Panel trasero, con las dos antenas si trae WiFi */}
-      <rect x={x + 6} y={y + 8} width="16" height="46" rx="2" />
+      <rect x={x + 6} y={y + 8} width="16" height="46" rx="1" />
       {p.wifi && (
         <>
-          <circle cx={x + 14} cy={y + 19} r="3" fill={ACENTO} stroke="none" />
-          <circle cx={x + 14} cy={y + 30} r="3" fill={ACENTO} stroke="none" />
+          <circle cx={x + 14} cy={y + 19} r="2.5" fill={LLENO} stroke="none" />
+          <circle cx={x + 14} cy={y + 30} r="2.5" fill={LLENO} stroke="none" />
         </>
       )}
 
       {/* Disipador de las fases y zócalo del procesador */}
-      <rect x={x + 28} y={y + 8} width="44" height="9" rx="2" opacity="0.6" />
-      <rect x={x + 32} y={y + 24} width="38" height="38" rx="3" />
-      <Texto x={x + 51} y={y + 46} size={p.socket.length > 4 ? 6.5 : 9} color={ACENTO}>{p.socket}</Texto>
+      <rect x={x + 28} y={y + 8} width="44" height="9" rx="1" />
+      <rect x={x + 32} y={y + 24} width="38" height="38" rx="2" />
+      <Texto x={x + 51} y={y + 46} size={p.socket.length > 4 ? 6.5 : 9}>{p.socket}</Texto>
 
       {/* Cuatro ranuras de memoria y el conector de 24 pines */}
-      {[80, 86, 92, 98].map((dx) => (
-        <path key={dx} d={`M${x + dx} ${y + 10}V${y + 72}`} strokeWidth="2.5" opacity="0.75" />
+      {[79, 85, 91, 97].map((dx) => (
+        <rect key={dx} x={x + dx} y={y + 10} width="3" height="62" />
       ))}
-      <rect x={derecha - 12} y={y + 26} width="6" height="28" rx="1" opacity="0.6" />
+      <rect x={derecha - 12} y={y + 26} width="6" height="28" rx="1" />
 
       {/* Ranuras PCIe, disipador del M.2 y del chipset */}
-      <rect x={x + 26} y={y + 82} width="76" height="6" rx="2" stroke={ACENTO} />
-      <rect x={x + 26} y={y + 95} width="50" height="9" rx="2" opacity="0.6" />
-      <rect x={x + 26} y={y + 111} width="56" height="6" rx="2" />
-      <rect x={derecha - 34} y={y + 90} width="27" height="24" rx="3" />
-      <Texto x={derecha - 20.5} y={y + 105} size="6.5" opacity="0.85">{p.chipset}</Texto>
+      <rect x={x + 26} y={y + 82} width="76" height="6" rx="1" />
+      <rect x={x + 26} y={y + 95} width="50" height="9" rx="1" />
+      <rect x={x + 26} y={y + 111} width="56" height="6" rx="1" />
+      <rect x={derecha - 34} y={y + 90} width="27" height="24" rx="2" fill={CUERPO} />
+      <Texto x={derecha - 20.5} y={y + 105} size="6.5">{p.chipset}</Texto>
 
       {alto > 140 && (
         <>
-          <rect x={x + 26} y={y + 130} width="30" height="5" rx="2" opacity="0.6" />
-          <path d={`M${x + 66} ${y + alto - 9}h${ancho - 76}`} strokeDasharray="2 4" opacity="0.6" />
+          <rect x={x + 26} y={y + 130} width="30" height="5" rx="1" />
+          <path d={`M${x + 66} ${y + alto - 9}h${ancho - 76}`} strokeDasharray="2 4" />
         </>
       )}
     </>
@@ -224,12 +215,13 @@ function Monitor({ p }) {
   return (
     <>
       <path d={`M112 ${base}v18h16v-18`} />
-      <rect x="84" y={base + 18} width="72" height="6" rx="3" fill={CUERPO} />
+      <rect x="84" y={base + 18} width="72" height="6" rx="1" />
+      {/* Marco y, adentro, el borde del panel */}
       <path d={pantalla(0)} fill={CUERPO} />
-      <path d={pantalla(5)} fill={ACENTO} stroke="none" opacity="0.14" />
+      <path d={pantalla(5)} />
       <Texto x="120" y={y + alto / 2 + panza + 4} size="24">{RESOLUCIONES[p.resolucion] ?? p.resolucion}</Texto>
-      <Texto x="120" y={y + alto / 2 + panza + 22} size="11" color={ACENTO}>{p.tasa_refresco_hz} Hz</Texto>
-      <Texto x={x + ancho - 12} y={y + 20 + panza / 2} size="9" anchor="end" opacity="0.7">{p.tamano_pulgadas}&quot;</Texto>
+      <Texto x="120" y={y + alto / 2 + panza + 23} size="13">{p.tasa_refresco_hz} Hz</Texto>
+      <Texto x={x + ancho - 13} y={y + 23 + panza / 2} size="11" anchor="end">{p.tamano_pulgadas}&quot;</Texto>
     </>
   )
 }
@@ -249,7 +241,7 @@ const FILAS = {
   espacio: [1.25, 1.25, 1.25, 6.25, 1.25, 1.25, 1.25, 1.25],
 }
 
-// Teclas pintadas: Esc y W, A, S, D
+// Teclas llenas: Esc y W, A, S, D
 const PINTADAS = { funcion: [0], qwerty: [2], asdf: [1, 2, 3] }
 
 function Teclas({ anchos, x, y, pintadas = [] }) {
@@ -258,7 +250,6 @@ function Teclas({ anchos, x, y, pintadas = [] }) {
   let numero = 0
   for (const ancho of anchos) {
     if (ancho > 0) {
-      const pintada = pintadas.includes(numero)
       teclas.push(
         <rect
           key={cursor}
@@ -266,9 +257,8 @@ function Teclas({ anchos, x, y, pintadas = [] }) {
           y={y}
           width={ancho * U - 1.6}
           height={U - 1.6}
-          rx="1.5"
-          fill={pintada ? ACENTO : 'none'}
-          stroke={pintada ? 'none' : 'currentColor'}
+          rx="1"
+          fill={pintadas.includes(numero) ? LLENO : 'none'}
         />,
       )
       numero += 1
@@ -306,8 +296,8 @@ function Teclado({ p }) {
   const numerico = [[], unas(4), unas(4), unas(4), unas(4), [2, 1, 1]]
 
   return (
-    <g strokeWidth="1.1">
-      <rect x={x - 7} y={y - 7} width={ancho + 12.4} height={alto + 12.4} rx="6" fill={CUERPO} strokeWidth="2" />
+    <>
+      <rect x={x - 7} y={y - 7} width={ancho + 12.4} height={alto + 12.4} rx="4" />
       {nombres.map((nombre, fila) => (
         <g key={nombre}>
           <Teclas
@@ -321,7 +311,7 @@ function Teclado({ p }) {
           {conNumerico && <Teclas anchos={numerico[fila]} x={xNumerico} y={yDe(fila)} />}
         </g>
       ))}
-    </g>
+    </>
   )
 }
 
@@ -334,25 +324,20 @@ function Mouse({ p }) {
 
   return (
     <>
+      {/* Con cable, sale por arriba; inalámbrico, lleva las dos ondas */}
       {conCable ? (
         <path d="M120 28C120 14 134 16 138 4" />
       ) : (
-        <g stroke={ACENTO}>
-          <path d="M152 30a12 12 0 0 1 9 9" />
-          <path d="M156 19a23 23 0 0 1 17 17" />
-        </g>
+        <path d="M152 30a12 12 0 0 1 9 9M156 19a23 23 0 0 1 17 17" />
       )}
-      <path
-        d="M120 28C96 28 84 46 84 74V112C84 140 100 156 120 156C140 156 156 140 156 112V74C156 46 144 28 120 28Z"
-        fill={CUERPO}
-      />
-      <path d="M120 28V80M84 82Q120 94 156 82" opacity="0.6" />
-      <rect x="116" y="44" width="8" height="20" rx="4" fill={ACENTO} stroke="none" />
+      <path d="M120 28C96 28 84 46 84 74V112C84 140 100 156 120 156C140 156 156 140 156 112V74C156 46 144 28 120 28Z" />
+      <path d="M120 28V80M84 82Q120 94 156 82" />
+      <rect x="116" y="44" width="8" height="20" rx="4" fill={CUERPO} />
       {Array.from({ length: laterales }, (_, i) => (
-        <path key={i} d={`M88 ${90 + i * 9}v5`} strokeWidth="3" opacity="0.75" />
+        <rect key={i} x="86.5" y={89 + i * 9} width="3" height="6" rx="1" />
       ))}
       <Texto x="120" y="128" size="14">{p.peso_g} g</Texto>
-      <Texto x="120" y="141" size="8" opacity="0.7">{Math.round(p.dpi_max / 1000)}K DPI</Texto>
+      <Texto x="120" y="142" size="9.5">{Math.round(p.dpi_max / 1000)}K DPI</Texto>
     </>
   )
 }
@@ -378,7 +363,7 @@ export default function Ilustracion({ producto, categoria, className = '' }) {
       viewBox="0 0 240 180"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1"
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}

@@ -1,32 +1,23 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import Icono from './Icono'
+import Vitrina from './Vitrina'
 import { formatoPrecio } from '../data/catalogo'
+import { precioEfectivo } from '../data/reglas'
 
 export default function ProductoCard({ producto }) {
-  const [sinImagen, setSinImagen] = useState(!producto.imagen)
-
   return (
     <Link
       to={`/producto/${producto.id}`}
-      className="group flex h-full flex-col rounded-md border border-linea bg-superficie hover:border-tinta"
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-linea bg-superficie hover:border-aura"
     >
-      <div className="plano flex aspect-[16/9] min-[480px]:aspect-[4/3] items-center justify-center rounded-t-md border-b border-linea">
-        {sinImagen ? (
-          <Icono categoria={producto.categoria} className="h-20 w-20 text-tenue" />
-        ) : (
-          <img
-            src={producto.imagen}
-            alt=""
-            className="h-full w-full object-contain p-4"
-            onError={() => setSinImagen(true)}
-          />
-        )}
-      </div>
+      <Vitrina
+        producto={producto}
+        categoria={producto.categoria}
+        className="aspect-[16/10] min-[480px]:aspect-[4/3]"
+      />
 
       <div className="flex flex-1 flex-col p-4">
         <p className="text-sm text-tenue">{producto.marca}</p>
-        <h3 className="mt-0.5 font-medium leading-snug group-hover:underline">
+        <h3 className="mt-0.5 text-[1.0625rem] font-semibold leading-snug group-hover:text-aura">
           {producto.modelo}
         </h3>
 
@@ -39,9 +30,12 @@ export default function ProductoCard({ producto }) {
           ))}
         </dl>
 
-        <p className="mt-auto pt-4 text-xl font-semibold tabular-nums">
-          {formatoPrecio(producto.precio)}
-        </p>
+        <div className="mt-auto pt-4">
+          <p className="text-2xl font-bold tabular-nums">{formatoPrecio(producto.precio)}</p>
+          <p className="mt-0.5 text-sm font-medium text-pcb tabular-nums">
+            {formatoPrecio(precioEfectivo(producto.precio))} en efectivo
+          </p>
+        </div>
       </div>
     </Link>
   )

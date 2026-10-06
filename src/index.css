@@ -2,46 +2,63 @@
 
 /* Los colores salen de variables: cambian solos entre modo claro y oscuro */
 @theme {
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
 
   --color-fondo: var(--fondo);
   --color-superficie: var(--superficie);
   --color-tinta: var(--tinta);
   --color-tenue: var(--tenue);
   --color-linea: var(--linea);
+
+  /* Violeta de la marca: botones, links y elemento activo */
+  --color-aura: var(--aura);
+  --color-aura-claro: var(--aura-claro);
+  --color-sobre-aura: var(--sobre-aura);
+
+  /* Verde: solo para ahorro y cosas a favor del comprador (efectivo, envío gratis) */
   --color-pcb: var(--pcb);
   --color-pcb-claro: var(--pcb-claro);
   --color-sobre-pcb: var(--sobre-pcb);
+
+  /* Índigo del encabezado, el hero y el pie. Es igual en modo claro y oscuro */
+  --color-noche: #1b1548;
+  --color-noche-2: #251d5e;
+  --color-sobre-noche: #f3f1ff;
+  --color-tenue-noche: #b4aede;
+  --color-linea-noche: #3a3182;
+  --color-aura-luz: #b9adff;
 }
 
 /* Modo claro */
 :root {
   color-scheme: light;
-  --fondo: #f5f6f8;
+  --fondo: #f3f2f8;
   --superficie: #ffffff;
-  --tinta: #1b1f27;
-  --tenue: #5d6472;
-  --linea: #e2e5ea;
-  --pcb: #0f6b4f;
-  --pcb-claro: #e7f1ec;
+  --tinta: #16142a;
+  --tenue: #5f5c78;
+  --linea: #e2e0ec;
+  --aura: #5b43f0;
+  --aura-claro: #ece9ff;
+  --sobre-aura: #ffffff;
+  --pcb: #0c7a52;
+  --pcb-claro: #e3f4ec;
   --sobre-pcb: #ffffff;
-  --plano: #f8f9fa;
-  --plano-linea: #e9ecef;
 }
 
 /* Modo oscuro: se activa con la clase "dark" en <html> */
 :root.dark {
   color-scheme: dark;
-  --fondo: #14171c;
-  --superficie: #1b1f26;
-  --tinta: #e7e9ed;
-  --tenue: #9aa2ae;
-  --linea: #2b313b;
-  --pcb: #4cc196;
-  --pcb-claro: #173329;
-  --sobre-pcb: #0c1712;
-  --plano: #181c22;
-  --plano-linea: #232830;
+  --fondo: #0f0d1f;
+  --superficie: #18162d;
+  --tinta: #eceaf7;
+  --tenue: #a29ebd;
+  --linea: #2b2849;
+  --aura: #a596ff;
+  --aura-claro: #262150;
+  --sobre-aura: #120f2a;
+  --pcb: #4fd3a0;
+  --pcb-claro: #12332a;
+  --sobre-pcb: #06140e;
 }
 
 body {
@@ -49,15 +66,110 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-pcb);
+  outline: 2px solid var(--color-aura);
   outline-offset: 2px;
 }
 
-/* Grilla tenue detrás de los dibujos de producto */
-.plano {
-  background-color: var(--plano);
-  background-image:
-    linear-gradient(var(--plano-linea) 1px, transparent 1px),
-    linear-gradient(90deg, var(--plano-linea) 1px, transparent 1px);
-  background-size: 16px 16px;
+/* Sobre el índigo el violeta no se ve: ahí el foco va en lila claro */
+.sobre-noche :focus-visible {
+  outline-color: var(--color-aura-luz);
+}
+
+/* Archivo es una tipografía de ancho variable: los títulos usan la versión ancha */
+@utility titular {
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+@utility subtitular {
+  font-stretch: 114%;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+/* En la capa de componentes, así las clases de Tailwind pueden pisar estos estilos */
+@layer components {
+  /* Anillo de colores del logo, como un cooler RGB */
+  .anillo {
+    background: conic-gradient(from 200deg, #ff4fa3, #8b6bff, #19c8f0, #5be49b, #ffc233, #ff4fa3);
+    mask: radial-gradient(closest-side, transparent 58%, #000 60%);
+  }
+
+  /*
+    Vitrina: el fondo oscuro donde se muestra cada producto.
+    El brillo toma el color de la marca (--h1) y una segunda luz (--h2);
+    los dos números los pone el componente Vitrina.
+  */
+  .vitrina {
+    --acento: hsl(var(--h1) 95% 74%);
+    --cuerpo: rgb(13 10 38 / 0.78);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background-color: #100c2c;
+    color: #f3f1ff;
+  }
+
+  .vitrina::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      radial-gradient(58% 68% at 30% 36%, hsl(var(--h1) 92% 58% / 0.62), transparent 72%),
+      radial-gradient(52% 62% at 76% 74%, hsl(var(--h2) 92% 56% / 0.5), transparent 72%);
+    opacity: 0.8;
+    transition: opacity 200ms ease-out;
+  }
+
+  /* El brillo sube cuando el cursor pasa por la tarjeta */
+  .group:hover .vitrina::before,
+  .group:focus-visible .vitrina::before {
+    opacity: 1;
+  }
+
+  /* Sin caja: el brillo se funde con el fondo (se usa en el hero) */
+  .vitrina-libre {
+    overflow: visible;
+    background-color: transparent;
+  }
+
+  /* Luces más chicas, para que se apaguen antes de llegar al borde y no se note el recuadro */
+  .vitrina-libre::before {
+    inset: -6%;
+    background-image:
+      radial-gradient(37% 39% at 38% 41%, hsl(var(--h1) 92% 58% / 0.62), transparent),
+      radial-gradient(33% 35% at 65% 63%, hsl(var(--h2) 92% 56% / 0.5), transparent);
+  }
+
+  /* Cuando hay foto real, fondo blanco y sin brillo */
+  .vitrina-foto {
+    background-color: #ffffff;
+    box-shadow: inset 0 0 0 1px var(--linea);
+  }
+
+  .vitrina-foto::before {
+    display: none;
+  }
+}
+
+/* El único movimiento automático del sitio: el brillo del hero "respira" */
+@keyframes respira {
+  from {
+    opacity: 0.65;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .vitrina-respira::before {
+    animation: respira 4s ease-in-out infinite alternate;
+  }
 }

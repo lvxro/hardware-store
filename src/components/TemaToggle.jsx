@@ -46,7 +46,7 @@ export default function TemaToggle() {
       onClick={() => setTema(oscuro ? 'claro' : 'oscuro')}
       aria-label={texto}
       title={texto}
-      className="rounded-full border border-linea-noche p-2.5 hover:bg-noche-2"
+      className="rounded-[3px] border border-linea p-2 text-tenue hover:border-tinta hover:text-tinta"
     >
       {oscuro ? <Sol /> : <Luna />}
     </button>

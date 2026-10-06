@@ -18,8 +18,8 @@
   --color-pcb-claro: var(--pcb-claro);
   --color-sobre-pcb: var(--sobre-pcb);
 
-  /* Nombres de la pasada anterior que todavía usan el listado, la ficha y el carrito.
-     Apuntan a los grises de arriba; se van cuando se rehagan esas páginas. */
+  /* Nombres de la primera pasada que todavía usa la página provisoria del carrito.
+     Apuntan a los grises de arriba; se van cuando se haga el carrito de verdad (T-018). */
   --color-aura: var(--tinta);
   --color-aura-claro: var(--plano);
   --color-sobre-aura: var(--fondo);
@@ -64,7 +64,7 @@ body {
   outline-offset: 2px;
 }
 
-/* De la pasada anterior: lo siguen usando los títulos del listado, la ficha y el carrito */
+/* De la primera pasada: lo sigue usando el título de la página provisoria del carrito */
 @utility subtitular {
   font-weight: 600;
   line-height: 1.2;

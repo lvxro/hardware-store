@@ -9,12 +9,12 @@ import Carrito from './pages/Carrito'
 
 function NoEncontrada() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16">
-      <h1 className="subtitular text-3xl">Esta página no existe</h1>
-      <p className="mt-3 text-tenue">Revisá que el enlace esté bien escrito o volvé al inicio.</p>
+    <div className="mx-auto max-w-7xl px-4 py-12">
+      <h1 className="text-2xl font-semibold">Esta página no existe</h1>
+      <p className="mt-2 text-tenue">Revisá que el enlace esté bien escrito o volvé al inicio.</p>
       <Link
         to="/"
-        className="mt-6 inline-block rounded-lg bg-aura px-5 py-3 font-semibold text-sobre-aura hover:opacity-90"
+        className="mt-5 inline-block rounded-[3px] border border-tinta px-4 py-2 text-sm font-medium hover:bg-tinta hover:text-fondo"
       >
         Ir al inicio
       </Link>

@@ -10,7 +10,6 @@ import {
   precioEfectivo as calcularEfectivo,
 } from "../data/reglas";
 import Vitrina from "../components/Vitrina";
-import ProductoCard from "../components/ProductoCard";
 
 const CAMPOS_BASE = [
   "id",
@@ -111,14 +110,14 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
 
   if (!resultado) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-16">
-        <h1 className="subtitular text-3xl">Producto no encontrado</h1>
-        <p className="mt-3 text-tenue">
+      <div className="mx-auto max-w-7xl px-4 py-12">
+        <h1 className="text-2xl font-semibold">Producto no encontrado</h1>
+        <p className="mt-2 text-tenue">
           Revisá que el enlace esté bien escrito o buscalo desde el inicio.
         </p>
         <Link
           to="/"
-          className="mt-6 inline-block rounded-lg bg-aura px-5 py-3 font-semibold text-sobre-aura hover:opacity-90"
+          className="mt-5 inline-block rounded-[3px] border border-tinta px-4 py-2 text-sm font-medium hover:bg-tinta hover:text-fondo"
         >
           Volver al inicio
         </Link>
@@ -136,9 +135,13 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
     ([clave]) => !CAMPOS_BASE.includes(clave)
   );
 
-  const parecidos = productosDe(categoria)
-    .filter((otro) => otro.id !== producto.id)
-    .slice(0, 4);
+  // Para la tabla comparativa: este producto primero y después otros cinco de la categoría
+  const deLaCategoria = productosDe(categoria);
+  const este = deLaCategoria.find((otro) => otro.id === producto.id);
+  const comparados = [
+    este,
+    ...deLaCategoria.filter((otro) => otro.id !== producto.id).slice(0, 5),
+  ];
 
   const agregar = () => {
     onAgregarAlCarrito?.(producto, cantidad);
@@ -157,7 +160,7 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-6">
       <nav className="text-sm text-tenue" aria-label="Ruta">
         <Link to="/" className="hover:text-tinta hover:underline">
           Inicio
@@ -173,119 +176,130 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
         <span className="text-tinta">{producto.modelo}</span>
       </nav>
 
-      <div className="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-[1.15fr_1fr]">
+      <div className="mt-5 grid gap-x-12 gap-y-6 lg:grid-cols-[1.15fr_1fr]">
         <div className="min-w-0">
           {/* En compu la imagen queda fija mientras se recorre la columna de compra */}
           <div className="lg:sticky lg:top-6">
             <Vitrina
               producto={producto}
               categoria={categoria}
-              className="aspect-[4/3] w-full rounded-2xl"
+              className="aspect-[4/3] w-full"
             />
           </div>
         </div>
 
         <div className="min-w-0">
-          <p className="font-medium text-tenue">{producto.marca}</p>
-          <h1 className="subtitular mt-1 text-3xl sm:text-4xl">
+          <p className="text-sm text-tenue">{producto.marca}</p>
+          <h1 className="text-2xl font-semibold sm:text-3xl">
             {producto.modelo}
           </h1>
-          <p className="mt-4 text-lg text-tenue">{producto.descripcion}</p>
+          <p className="mt-2 text-tenue">{producto.descripcion}</p>
 
-          <div className="mt-6 rounded-xl border border-linea bg-superficie">
-            <div className="p-5">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <p className="text-4xl font-bold tabular-nums">
-                  {formatearPesos(precioEfectivo)}
-                </p>
-                <span className="rounded-full bg-pcb-claro px-3 py-1 text-sm font-semibold text-pcb">
-                  {PORCENTAJE_EFECTIVO}% menos
+          {/* Precios: renglones separados por líneas, sin recuadro */}
+          <dl className="mt-5 tabular-nums">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-linea py-3">
+              <dt>
+                <span className="block font-medium">Precio efectivo</span>
+                <span className="block text-sm text-tenue">
+                  Por pago en efectivo o transferencia, {PORCENTAJE_EFECTIVO}%
+                  menos
                 </span>
-              </div>
-              <p className="mt-1 text-sm text-tenue">
-                Precio efectivo, por pago en efectivo o transferencia
-              </p>
+              </dt>
+              <dd className="text-3xl font-semibold text-pcb">
+                {formatearPesos(precioEfectivo)}
+              </dd>
             </div>
-
-            <div className="border-t border-linea p-5">
-              <p className="flex flex-wrap items-baseline gap-x-2">
-                <span className="text-xl font-bold tabular-nums">
-                  {formatearPesos(precioLista)}
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-linea py-3">
+              <dt>
+                <span className="block font-medium">Precio de lista</span>
+                <span className="block text-sm text-tenue">
+                  Todas las tarjetas de crédito bancarias
                 </span>
-                <span className="text-sm text-tenue">
-                  Precio de lista, todas las tarjetas de crédito bancarias
-                </span>
-              </p>
-
-              <p className="mt-5 text-sm font-semibold">Cuotas con Mercado Pago</p>
-              <ul className="mt-2 text-sm">
-                {CUOTAS.map(({ cantidad: cuotas, coeficiente }) => {
-                  const total = precioLista * coeficiente;
-                  const sinInteres = coeficiente === 1;
-                  return (
-                    <li
-                      key={cuotas}
-                      className="flex flex-wrap items-baseline justify-between gap-x-3 border-t border-linea py-2.5"
-                    >
-                      <span>
-                        {cuotas} cuotas {sinInteres ? "sin interés" : "fijas"} de{" "}
-                        <strong className="tabular-nums">
-                          {formatearPesos(total / cuotas)}
-                        </strong>
-                      </span>
-                      <span
-                        className={`shrink-0 tabular-nums ${
-                          sinInteres ? "font-medium text-pcb" : "text-tenue"
-                        }`}
-                      >
-                        Total {formatearPesos(total)}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
+              </dt>
+              <dd className="text-xl font-semibold">
+                {formatearPesos(precioLista)}
+              </dd>
             </div>
-          </div>
+          </dl>
+
+          <table className="w-full border-t border-linea text-sm tabular-nums">
+            <caption className="pb-2 pt-3 text-left font-medium">
+              Cuotas con Mercado Pago
+            </caption>
+            <thead>
+              <tr className="border-b border-linea text-xs text-tenue">
+                <th scope="col" className="py-1.5 pr-3 text-left font-medium">
+                  Plan
+                </th>
+                <th scope="col" className="px-3 py-1.5 text-right font-medium">
+                  Cada cuota
+                </th>
+                <th scope="col" className="py-1.5 pl-3 text-right font-medium">
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {CUOTAS.map(({ cantidad: cuotas, coeficiente }) => {
+                const total = precioLista * coeficiente;
+                return (
+                  <tr key={cuotas} className="border-b border-linea">
+                    <th scope="row" className="py-2 pr-3 text-left font-normal">
+                      {cuotas} cuotas{" "}
+                      {coeficiente === 1 ? "sin interés" : "fijas"}
+                    </th>
+                    <td className="px-3 py-2 text-right font-medium">
+                      {formatearPesos(total / cuotas)}
+                    </td>
+                    <td className="py-2 pl-3 text-right text-tenue">
+                      {formatearPesos(total)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
 
           <div className="mt-5 flex items-stretch gap-3">
-            <div className="flex items-center rounded-lg border border-linea bg-superficie">
+            <div className="flex items-center rounded-[3px] border border-linea">
               <button
                 type="button"
                 onClick={() => setCantidad((c) => Math.max(1, c - 1))}
-                className="h-full rounded-l-lg px-4 text-xl leading-none hover:bg-fondo"
+                className="h-full px-4 text-xl leading-none hover:bg-plano"
                 aria-label="Restar una unidad"
               >
                 −
               </button>
-              <span className="w-8 text-center font-semibold tabular-nums">
+              <span className="w-8 text-center font-medium tabular-nums">
                 {cantidad}
               </span>
               <button
                 type="button"
                 onClick={() => setCantidad((c) => Math.min(10, c + 1))}
-                className="h-full rounded-r-lg px-4 text-xl leading-none hover:bg-fondo"
+                className="h-full px-4 text-xl leading-none hover:bg-plano"
                 aria-label="Sumar una unidad"
               >
                 +
               </button>
             </div>
 
+            {/* El botón de comprar es uno de los tres lugares donde va el verde */}
             <button
               type="button"
               onClick={agregar}
-              className="flex-1 rounded-lg bg-aura px-6 py-4 text-lg font-semibold text-sobre-aura hover:opacity-90"
+              className="flex-1 rounded-[3px] bg-pcb px-6 py-3 font-semibold text-sobre-pcb hover:opacity-90"
             >
               {agregado ? "Agregado ✓" : "Agregar al carrito"}
             </button>
           </div>
 
-          <div className="mt-5 rounded-xl border border-linea bg-superficie p-5">
-            <p className="flex items-center gap-2 font-semibold text-pcb">
+          <div className="mt-6 border-t border-linea pt-4">
+            <p className="flex items-center gap-2 text-sm font-medium text-pcb tabular-nums">
               <IconoCamion />
               Envío gratis superando los {formatearPesos(ENVIO_GRATIS_DESDE)}
             </p>
 
-            <div className="mt-4 flex gap-2">
+            <div className="mt-3 flex gap-2">
               <input
                 type="text"
                 inputMode="numeric"
@@ -296,12 +310,12 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
                 }
                 placeholder="Tu código postal"
                 aria-label="Código postal"
-                className="min-w-0 flex-1 rounded-lg border border-linea bg-fondo px-3 py-2.5 text-tinta placeholder:text-tenue focus:border-aura focus:outline-none"
+                className="min-w-0 flex-1 rounded-[3px] border border-linea bg-transparent px-3 py-2 text-sm text-tinta tabular-nums placeholder:text-tenue focus:border-tinta focus:outline-none"
               />
               <button
                 type="button"
                 onClick={calcularEnvio}
-                className="rounded-lg border border-tinta px-5 py-2.5 font-semibold hover:bg-fondo"
+                className="rounded-[3px] border border-tinta px-4 py-2 text-sm font-medium hover:bg-tinta hover:text-fondo"
               >
                 Calcular
               </button>
@@ -310,12 +324,12 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
               href="https://www.correoargentino.com.ar/formularios/cpa"
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-block text-sm text-tenue underline hover:text-tinta"
+              className="mt-2 inline-block text-sm text-tenue underline hover:text-tinta"
             >
               No sé mi código
             </a>
             {mensajeEnvio && (
-              <p className="mt-3 text-sm font-medium" role="status">
+              <p className="mt-2 text-sm font-medium" role="status">
                 {mensajeEnvio}
               </p>
             )}
@@ -324,15 +338,15 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
       </div>
 
       <section className="mt-14" aria-labelledby="especificaciones">
-        <h2 id="especificaciones" className="subtitular text-2xl">
+        <h2 id="especificaciones" className="text-lg font-semibold">
           Especificaciones
         </h2>
-        <dl className="mt-5 grid gap-x-12 sm:grid-cols-2">
+        <dl className="mt-3 grid gap-x-12 border-b border-linea text-sm tabular-nums sm:grid-cols-2">
           {[["marca", producto.marca], ...especificaciones].map(
             ([clave, valor]) => (
               <div
                 key={clave}
-                className="flex justify-between gap-4 border-t border-linea py-3"
+                className="flex justify-between gap-4 border-t border-linea py-2.5"
               >
                 <dt className="text-tenue">{formatearCampo(clave)}</dt>
                 <dd className="text-right font-medium">
@@ -344,26 +358,96 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
         </dl>
       </section>
 
-      {parecidos.length > 0 && (
-        <section className="mt-14" aria-labelledby="parecidos">
-          <div className="mb-5 flex items-baseline justify-between gap-4">
-            <h2 id="parecidos" className="subtitular text-2xl">
-              Más {nombreCategoria.toLowerCase()}
+      {este && comparados.length > 1 && (
+        <section className="mt-14" aria-labelledby="comparacion">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 id="comparacion" className="text-lg font-semibold">
+              Otras opciones en {nombreCategoria}
             </h2>
             <Link
               to={`/categoria/${categoria}`}
-              className="shrink-0 font-semibold text-aura hover:underline"
+              className="shrink-0 text-sm font-medium underline hover:no-underline"
             >
               Ver todo
             </Link>
           </div>
-          <div className="-mx-4 flex snap-x scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0">
-            {parecidos.map((otro) => (
-              <div key={otro.id} className="w-64 shrink-0 snap-start md:w-auto">
-                <ProductoCard producto={otro} />
-              </div>
-            ))}
-          </div>
+          <table className="mt-3 w-full text-sm tabular-nums">
+            <thead>
+              <tr className="border-b border-tinta text-xs text-tenue">
+                <th scope="col" className="py-2 pl-3 pr-3 text-left font-medium">
+                  Modelo
+                </th>
+                {este.specs.map(([etiqueta], i) => (
+                  <th
+                    key={etiqueta}
+                    scope="col"
+                    className={`px-3 py-2 text-left font-medium ${
+                      i === 0 ? "hidden sm:table-cell" : "hidden md:table-cell"
+                    }`}
+                  >
+                    {etiqueta}
+                  </th>
+                ))}
+                <th
+                  scope="col"
+                  className="hidden px-3 py-2 text-right font-medium sm:table-cell"
+                >
+                  Precio de lista
+                </th>
+                <th scope="col" className="py-2 pl-3 pr-3 text-right font-medium">
+                  En efectivo
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparados.map((otro) => {
+                const actual = otro.id === producto.id;
+                return (
+                  <tr
+                    key={otro.id}
+                    className={`border-b border-linea ${actual ? "bg-plano" : ""}`}
+                  >
+                    <th
+                      scope="row"
+                      className="py-2.5 pl-3 pr-3 text-left font-medium"
+                    >
+                      {actual ? (
+                        <>
+                          {otro.nombre}{" "}
+                          <span className="font-normal text-tenue">
+                            (este producto)
+                          </span>
+                        </>
+                      ) : (
+                        <Link
+                          to={`/producto/${otro.id}`}
+                          className="hover:underline"
+                        >
+                          {otro.nombre}
+                        </Link>
+                      )}
+                    </th>
+                    {otro.specs.map(([etiqueta, valor], i) => (
+                      <td
+                        key={etiqueta}
+                        className={`px-3 py-2.5 ${
+                          i === 0 ? "hidden sm:table-cell" : "hidden md:table-cell"
+                        }`}
+                      >
+                        {valor}
+                      </td>
+                    ))}
+                    <td className="hidden px-3 py-2.5 text-right sm:table-cell">
+                      {formatoPrecio(otro.precio)}
+                    </td>
+                    <td className="py-2.5 pl-3 pr-3 text-right font-semibold text-pcb">
+                      {formatoPrecio(calcularEfectivo(otro.precio))}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </section>
       )}
     </div>

@@ -102,10 +102,23 @@ function Portada() {
         </h1>
         <Link
           to="/productos"
-          className="entra-subiendo mt-8 inline-block rounded-[3px] bg-lime px-5 py-2.5 font-mono text-sm font-bold text-bg hover:shadow-glow"
+          className="entra-subiendo group mt-8 inline-flex items-center gap-2 rounded-[3px] bg-lime px-5 py-2.5 font-mono text-sm font-bold text-bg hover:shadow-glow"
           style={{ '--espera': '1150ms' }}
         >
           Ver todos los productos
+          {/* La flecha avanza un poco al pasar el cursor */}
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:translate-x-1"
+            aria-hidden="true"
+          >
+            <path d="M2 8h11M9 4l4 4-4 4" />
+          </svg>
         </Link>
       </div>
     </section>

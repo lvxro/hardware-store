@@ -1,5 +1,5 @@
 // Animaciones que no se pueden hacer solo con CSS.
-// Las dos respetan "reducir movimiento" del sistema: en ese caso no hacen nada.
+// Todas respetan "reducir movimiento" del sistema: en ese caso no hacen nada.
 import { useEffect, useRef, useState } from 'react'
 
 const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -76,4 +76,109 @@ export function useAlVerse() {
   }, [])
 
   return [ref, visto]
+}
+
+/*
+  Traza un dibujo línea por línea. Mide cada línea y le deja el largo en "--largo";
+  la animación en sí está en index.css (.dibujo[data-trazado]).
+  "espera" son los milisegundos antes de empezar.
+*/
+const LINEAS = 'path, rect, circle, ellipse, line, polyline, polygon'
+
+export function trazar(svg, espera = 0) {
+  if (!svg || svg.dataset.trazado || sinMovimiento()) return
+
+  let n = 0
+  const tocadas = []
+  svg.querySelectorAll(LINEAS).forEach((forma) => {
+    // Las marcas llenas sin contorno no se trazan: aparecen con un fundido
+    if (getComputedStyle(forma).stroke === 'none') {
+      forma.dataset.relleno = ''
+      tocadas.push(forma)
+      return
+    }
+    let largo
+    try {
+      largo = forma.getTotalLength()
+    } catch {
+      return
+    }
+    if (!largo) return
+    // Según el navegador, el largo del trazo se cuenta en unidades del dibujo o en píxeles
+    // de pantalla. Se toma el mayor de los dos para que la línea siempre termine completa.
+    const m = forma.getScreenCTM?.()
+    const escala = m ? Math.hypot(m.a, m.b) : 1
+    forma.style.setProperty('--largo', Math.ceil(largo * Math.max(1, escala) * 1.05))
+    forma.style.setProperty('--n', n++)
+    forma.dataset.linea = ''
+    tocadas.push(forma)
+  })
+
+  svg.style.setProperty('--espera-trazo', `${espera}ms`)
+  svg.dataset.trazado = 'si'
+
+  // Al terminar se quita todo, así el dibujo queda igual que si nunca se hubiera animado
+  setTimeout(() => {
+    svg.dataset.trazado = 'listo'
+    tocadas.forEach((forma) => {
+      delete forma.dataset.linea
+      delete forma.dataset.relleno
+      forma.style.removeProperty('--largo')
+      forma.style.removeProperty('--n')
+    })
+  }, espera + 800 + n * 10 + 200)
+}
+
+/*
+  Un número que, cuando cambia, pasa por los valores intermedios en vez de saltar.
+  Devuelve el valor a mostrar en cada momento. Se usa en los precios del carrito.
+*/
+export function useNumeroAnimado(valor, duracion = 450) {
+  const [mostrado, setMostrado] = useState(valor)
+  const actual = useRef(valor)
+
+  useEffect(() => {
+    const desde = actual.current
+    if (desde === valor) return
+    const inmediato = sinMovimiento()
+    const inicio = performance.now()
+    let cuadro = requestAnimationFrame(function paso(ahora) {
+      const avance = inmediato ? 1 : Math.min(1, (ahora - inicio) / duracion)
+      const suave = 1 - Math.pow(1 - avance, 3) // arranca rápido y frena al llegar
+      actual.current = Math.round(desde + (valor - desde) * suave)
+      setMostrado(actual.current)
+      if (avance < 1) cuadro = requestAnimationFrame(paso)
+    })
+    return () => cancelAnimationFrame(cuadro)
+  }, [valor, duracion])
+
+  return mostrado
+}
+
+/*
+  Pliega un elemento (alto y opacidad a cero) y avisa cuando terminó.
+  Se usa al quitar un renglón del carrito, para que los de abajo suban sin salto.
+*/
+export function plegar(elemento, alTerminar) {
+  if (!elemento || sinMovimiento() || !elemento.animate) {
+    alTerminar()
+    return
+  }
+  const estilo = getComputedStyle(elemento)
+  const animacion = elemento.animate(
+    [
+      {
+        height: `${elemento.offsetHeight}px`,
+        paddingTop: estilo.paddingTop,
+        paddingBottom: estilo.paddingBottom,
+        opacity: 1,
+        transform: 'translateX(0)',
+      },
+      { opacity: 0, transform: 'translateX(-16px)', offset: 0.45 },
+      { height: '0px', paddingTop: '0px', paddingBottom: '0px', opacity: 0, transform: 'translateX(-16px)' },
+    ],
+    { duration: 380, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' },
+  )
+  elemento.style.overflow = 'hidden'
+  animacion.onfinish = alTerminar
 }

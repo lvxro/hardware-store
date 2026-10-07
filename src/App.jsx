@@ -35,12 +35,15 @@ function ScrollArriba() {
 export default function App() {
   // El carrito vive acá para que el encabezado, la ficha y la página del carrito vean lo mismo
   const carrito = useCarrito()
+  const { pathname } = useLocation()
 
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollArriba />
       <Header enCarrito={carrito.unidades} />
       <main className="flex-1">
+        {/* La key hace que, al cambiar de página, el contenido nuevo entre con un fundido corto */}
+        <div key={pathname} className="entra-pagina">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Listado />} />
@@ -64,6 +67,7 @@ export default function App() {
           />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
+        </div>
       </main>
       <Footer />
     </div>

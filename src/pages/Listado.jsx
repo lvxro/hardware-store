@@ -80,7 +80,7 @@ function Preguntas({ preguntas }) {
               {pregunta}
               <span
                 aria-hidden="true"
-                className="text-2xl font-normal leading-none text-muted transition-transform duration-200 group-open:rotate-45 group-open:text-lime"
+                className="text-2xl font-normal leading-none text-muted transition-[rotate,color] duration-300 ease-out group-open:rotate-45 group-open:text-lime"
               >
                 +
               </span>
@@ -128,7 +128,7 @@ function ListadoContenido({ slug, busqueda }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       <nav aria-label="Ruta" className="text-sm text-muted">
-        <Link to="/" className="border-b-2 border-transparent hover:border-lime hover:text-white">
+        <Link to="/" className="subrayado border-b-2 border-transparent hover:text-white">
           Inicio
         </Link>
         <span className="mx-2">/</span>

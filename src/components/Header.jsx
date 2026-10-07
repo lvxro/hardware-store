@@ -128,10 +128,11 @@ function Condiciones() {
   )
 }
 
-// Ítem de navegación: gris; con el cursor encima o en la página actual, blanco con subrayado lima.
+// Ítem de navegación: gris; con el cursor encima o en la página actual, blanco con subrayado lima
+// (el subrayado crece de izquierda a derecha, ver .subrayado en index.css).
 // NavLink marca la página actual con aria-current="page".
 const claseNav =
-  'block border-b-2 border-transparent px-3 py-2.5 text-muted hover:border-lime hover:text-white aria-[current=page]:border-lime aria-[current=page]:text-white'
+  'subrayado block border-b-2 border-transparent px-3 py-2.5 text-muted hover:text-white aria-[current=page]:text-white'
 
 /*
   Botón del carrito. "cantidad" es cuántos productos hay en el carrito:

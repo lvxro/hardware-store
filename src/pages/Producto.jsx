@@ -118,13 +118,13 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       <nav className="text-sm text-muted" aria-label="Ruta">
-        <Link to="/" className="border-b-2 border-transparent hover:border-lime hover:text-white">
+        <Link to="/" className="subrayado border-b-2 border-transparent hover:text-white">
           Inicio
         </Link>
         <span className="mx-2">/</span>
         <Link
           to={`/categoria/${categoria}`}
-          className="border-b-2 border-transparent hover:border-lime hover:text-white"
+          className="subrayado border-b-2 border-transparent hover:text-white"
         >
           {nombreCategoria}
         </Link>
@@ -135,11 +135,13 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
       <div className="mt-5 grid gap-x-12 gap-y-6 lg:grid-cols-[1.15fr_1fr]">
         <div className="min-w-0">
           {/* En compu la imagen queda fija mientras se recorre la columna de compra */}
+          {/* El dibujo del producto se traza línea por línea al entrar: es la única entrada de la ficha */}
           <div className="lg:sticky lg:top-6">
             <Vitrina
               producto={producto}
               categoria={categoria}
               className="aspect-[4/3] w-full"
+              trazo={0}
             />
           </div>
         </div>
@@ -226,8 +228,11 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
               >
                 −
               </button>
-              <span className="w-8 text-center font-mono font-medium">
-                {cantidad}
+              <span className="w-8 overflow-hidden text-center font-mono font-medium">
+                {/* La key hace que el número entre de nuevo cada vez que cambia */}
+                <span key={cantidad} className="cambia">
+                  {cantidad}
+                </span>
               </span>
               <button
                 type="button"
@@ -336,7 +341,7 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
               No sé mi código
             </a>
             {mensajeEnvio && (
-              <p className="mt-2 text-sm font-medium" role="status">
+              <p className="entra-subiendo mt-2 text-sm font-medium" role="status">
                 {mensajeEnvio}
               </p>
             )}

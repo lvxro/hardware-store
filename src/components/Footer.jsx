@@ -21,7 +21,7 @@ export default function Footer() {
                 .filter((c) => c.grupo === grupo)
                 .map((cat) => (
                   <li key={cat.slug}>
-                    <Link to={`/categoria/${cat.slug}`} className="border-b-2 border-transparent text-muted hover:border-lime hover:text-white">
+                    <Link to={`/categoria/${cat.slug}`} className="subrayado border-b-2 border-transparent text-muted hover:text-white">
                       {cat.nombre}
                     </Link>
                   </li>

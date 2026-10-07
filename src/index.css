@@ -113,7 +113,7 @@ body {
 
   /*
     Mosaico del home: fichas con productos del catálogo, apagadas, que se van
-    perdiendo hacia los bordes. La del centro, más ancha, lleva la marca.
+    perdiendo hacia los bordes. La del centro lleva la barra del logo.
     (El degradado es una máscara de transparencia, no un color que se vea.)
   */
   .mosaico {
@@ -143,11 +143,14 @@ body {
     color: var(--muted);
   }
 
+  /* Un filo claro arriba, como si le diera la luz, y el halo lima alrededor */
   .ficha-central {
     --cuerpo: var(--raised);
-    border-radius: 1.5rem;
+    border-radius: 1.75rem;
     background-color: var(--raised);
     color: var(--text);
-    box-shadow: var(--lime-glow-lg);
+    box-shadow:
+      inset 0 1px 0 var(--line-hover),
+      var(--lime-glow-lg);
   }
 }

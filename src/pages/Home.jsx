@@ -3,7 +3,7 @@ import categorias from '../data/categorias'
 import { productosDe, precioDesde, formatoPrecio } from '../data/catalogo'
 import Ilustracion from '../components/Ilustracion'
 
-/* ---------- Portada: mosaico de productos alrededor de la marca, y el título ---------- */
+/* ---------- Portada: mosaico de productos alrededor de la barra del logo, y el título ---------- */
 
 // Productos para las fichas del fondo. Cada fila arranca en una categoría distinta,
 // así no quedan columnas con el mismo tipo de producto repetido.
@@ -55,11 +55,24 @@ function Portada() {
           ))}
         </div>
 
-        {/* En el centro, la marca */}
-        <div className="ficha ficha-central absolute left-1/2 top-1/2 flex h-24 w-52 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-3xl font-semibold tracking-tight sm:h-32 sm:w-72 sm:text-[2.75rem]">
-          <span aria-hidden="true">
-            aura<span className="font-normal text-muted">/</span>ware
-          </span>
+        {/* En el centro, la barra del logo: el nombre completo ya está arriba a la izquierda */}
+        <div className="ficha ficha-central absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center sm:h-32 sm:w-32">
+          <svg viewBox="0 0 32 32" className="h-[66%] w-[66%]" aria-hidden="true">
+            <defs>
+              {/* De blanco arriba a gris abajo, para que la barra tenga algo de volumen */}
+              <linearGradient id="barra" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="var(--text)" />
+                <stop offset="1" stopColor="var(--muted)" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M19.5 5h4L12.5 27h-4z"
+              fill="url(#barra)"
+              stroke="url(#barra)"
+              strokeWidth="1.25"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
       </div>
 

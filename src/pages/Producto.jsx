@@ -9,6 +9,7 @@ import {
   aPesos,
   precioEfectivo as calcularEfectivo,
 } from "../data/reglas";
+import { MAXIMO_POR_PRODUCTO } from "../data/carrito";
 import { CAMPOS_BASE, formatearCampo, formatearValor } from "../data/campos";
 import Vitrina from "../components/Vitrina";
 import { volarAlCarrito } from "../components/animaciones";
@@ -49,7 +50,7 @@ function IconoCamion() {
   );
 }
 
-function FichaContenido({ id, onAgregarAlCarrito }) {
+function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
   const [cantidad, setCantidad] = useState(1);
   const [codigoPostal, setCodigoPostal] = useState("");
   const [mensajeEnvio, setMensajeEnvio] = useState("");
@@ -92,7 +93,12 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
     ...deLaCategoria.filter((otro) => otro.id !== producto.id).slice(0, 5),
   ];
 
+  // Cuántas unidades de este producto ya están en el carrito
+  const enCarrito = cantidadEnCarrito?.(producto.id) ?? 0;
+  const llegoAlMaximo = enCarrito >= MAXIMO_POR_PRODUCTO;
+
   const agregar = (e) => {
+    if (llegoAlMaximo) return;
     onAgregarAlCarrito?.(producto, cantidad);
     volarAlCarrito(e.currentTarget);
     setAgregado(true);
@@ -237,7 +243,8 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
             <button
               type="button"
               onClick={agregar}
-              className={`relative flex-1 overflow-hidden rounded-[3px] bg-lime px-6 py-3 font-bold text-bg hover:shadow-glow ${
+              disabled={llegoAlMaximo && !agregado}
+              className={`relative flex-1 overflow-hidden rounded-[3px] bg-lime px-6 py-3 font-bold text-bg hover:shadow-glow disabled:cursor-not-allowed disabled:bg-raised disabled:text-muted disabled:shadow-none ${
                 agregado ? "con-onda" : ""
               }`}
             >
@@ -248,7 +255,7 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
                   agregado ? "-translate-y-full opacity-0" : ""
                 }`}
               >
-                Agregar al carrito
+                {llegoAlMaximo ? "Ya tenés el máximo" : "Agregar al carrito"}
               </span>
               <span
                 aria-hidden={!agregado}
@@ -279,6 +286,19 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
               </span>
             </button>
           </div>
+
+          {enCarrito > 0 && (
+            <p className="mt-3 text-sm text-muted" role="status">
+              Tenés {enCarrito} en el carrito
+              {llegoAlMaximo && ` (el máximo es ${MAXIMO_POR_PRODUCTO} por producto)`}.{" "}
+              <Link
+                to="/carrito"
+                className="font-medium text-lime underline-offset-4 hover:underline"
+              >
+                Ver carrito
+              </Link>
+            </p>
+          )}
 
           <div className="mt-6 border-t border-line pt-4">
             <p className="flex items-center gap-2 text-sm font-medium text-white tabular-nums">
@@ -441,8 +461,15 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
   );
 }
 
-export default function FichaDeProducto({ onAgregarAlCarrito }) {
+export default function FichaDeProducto({ onAgregarAlCarrito, cantidadEnCarrito }) {
   const { id } = useParams();
   // key={id} reinicia cantidad, código postal e imagen al cambiar de producto
-  return <FichaContenido key={id} id={id} onAgregarAlCarrito={onAgregarAlCarrito} />;
+  return (
+    <FichaContenido
+      key={id}
+      id={id}
+      onAgregarAlCarrito={onAgregarAlCarrito}
+      cantidadEnCarrito={cantidadEnCarrito}
+    />
+  );
 }

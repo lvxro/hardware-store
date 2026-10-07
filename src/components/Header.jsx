@@ -157,7 +157,8 @@ function BotonCarrito({ cantidad }) {
         <circle cx="17" cy="19" r="1.25" />
       </svg>
       {lleno && (
-        <span className="absolute -right-2 -top-2 min-w-5 rounded-full border border-lime bg-bg px-1 text-center font-mono text-[11px] font-bold leading-[18px] text-lime">
+        // La key hace que el número dé un saltito cada vez que cambia
+        <span key={cantidad} className="salta absolute -right-2 -top-2 min-w-5 rounded-full border border-lime bg-bg px-1 text-center font-mono text-[11px] font-bold leading-[18px] text-lime">
           {cantidad}
         </span>
       )}
@@ -165,10 +166,7 @@ function BotonCarrito({ cantidad }) {
   )
 }
 
-/*
-  "enCarrito" es la cantidad de productos del carrito. Hoy nadie la pasa, porque el carrito
-  todavía no existe (T-018): cuando se haga, App se la pasa a Header y el botón cambia solo.
-*/
+// "enCarrito" es cuántas unidades hay en el carrito. Se la pasa App, que es donde vive el carrito.
 export default function Header({ enCarrito = 0 }) {
   const { pathname } = useLocation()
   const [parametros] = useSearchParams()

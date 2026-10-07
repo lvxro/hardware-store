@@ -257,7 +257,36 @@ body {
   }
 }
 
+/* El número del carrito da un saltito cada vez que cambia */
+@keyframes saltar {
+  0% {
+    scale: 0.5;
+  }
+  60% {
+    scale: 1.25;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+/* Un renglón del carrito se pliega al quitarlo */
+@keyframes plegar {
+  to {
+    opacity: 0;
+    translate: -12px 0;
+  }
+}
+
 @layer components {
+  .salta {
+    animation: saltar 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .se-va {
+    animation: plegar 220ms ease-in forwards;
+  }
+
   .entra-subiendo {
     animation: subir 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
     animation-delay: var(--espera, 0ms);

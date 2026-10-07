@@ -18,7 +18,7 @@ function Precios({ producto, grande = false }) {
   Tarjeta de producto, sin borde propio. Tiene dos tamaños:
   - compacta (la del home): marca, modelo y dos specs; las líneas divisorias las pone la grilla.
   - amplia (la de las páginas de categoría): nombre y descripción, con más aire;
-    las specs van aparte, en la comparación de más abajo.
+    las specs completas están en la ficha de cada producto.
 */
 export default function ProductoCard({ producto, amplia = false }) {
   if (amplia) {

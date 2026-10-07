@@ -1,13 +1,22 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import categorias from '../data/categorias'
 import { formatoPrecio } from '../data/catalogo'
 import { CUOTAS_SIN_INTERES, ENVIO_GRATIS_DESDE, PORCENTAJE_EFECTIVO } from '../data/reglas'
 import Logo from './Logo'
 
+const claseIcono = 'rounded-[3px] border border-linea p-2 text-tenue hover:border-tinta hover:text-tinta'
+
+/*
+  El buscador es un ícono, igual que el del carrito. Al tocarlo, el campo se despliega
+  desde el ícono hacia el centro del encabezado (en celular ocupa toda la fila).
+*/
 function Buscador({ inicial }) {
   const navegar = useNavigate()
   const [texto, setTexto] = useState(inicial)
+  // Si ya hay una búsqueda hecha, arranca desplegado mostrando lo que se buscó
+  const [abierto, setAbierto] = useState(inicial !== '')
+  const campo = useRef(null)
 
   const buscar = (e) => {
     e.preventDefault()
@@ -15,29 +24,71 @@ function Buscador({ inicial }) {
     navegar(limpio ? `/productos?q=${encodeURIComponent(limpio)}` : '/productos')
   }
 
+  // El ícono abre el campo; con texto escrito, busca; con el campo vacío, lo vuelve a cerrar
+  const alTocarIcono = (e) => {
+    if (!abierto) {
+      setAbierto(true)
+      setTimeout(() => campo.current?.focus(), 0)
+    } else if (texto.trim()) {
+      buscar(e)
+    } else {
+      setAbierto(false)
+    }
+  }
+
+  // Se cierra solo si quedó vacío y el foco salió del buscador
+  const alSalir = (e) => {
+    if (!texto.trim() && !e.currentTarget.contains(e.relatedTarget)) setAbierto(false)
+  }
+
+  const alTeclear = (e) => {
+    if (e.key === 'Escape') {
+      setAbierto(false)
+      e.currentTarget.blur()
+    }
+  }
+
   return (
     <form
       role="search"
       onSubmit={buscar}
-      className="order-3 flex w-full rounded-[3px] border border-linea focus-within:border-tinta md:order-2 md:w-auto md:max-w-xl md:flex-1"
+      onBlur={alSalir}
+      className={`flex min-w-0 flex-1 items-center justify-end gap-2 ${
+        abierto ? 'max-md:absolute max-md:inset-x-4 max-md:top-1/2 max-md:z-10 max-md:-translate-y-1/2 max-md:bg-fondo' : ''
+      }`}
     >
-      <input
-        type="search"
-        value={texto}
-        onChange={(e) => setTexto(e.target.value)}
-        placeholder="Buscá por marca o modelo"
-        aria-label="Buscar productos"
-        className="min-w-0 flex-1 bg-transparent py-2 pl-3 pr-2 text-sm text-tinta placeholder:text-tenue focus:outline-none sm:text-base"
-      />
-      <button
-        type="submit"
-        className="m-1 flex items-center gap-2 rounded-[2px] bg-tinta px-3 text-sm font-medium text-fondo hover:opacity-85"
+      <div
+        aria-hidden={!abierto}
+        className={`overflow-hidden rounded-[3px] transition-[width,opacity] duration-200 ease-out motion-reduce:transition-none ${
+          abierto
+            ? 'w-full border border-linea opacity-100 focus-within:border-tinta md:max-w-xl'
+            : 'w-0 opacity-0'
+        }`}
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" className="h-4 w-4" aria-hidden="true">
+        <input
+          ref={campo}
+          type="search"
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          onKeyDown={alTeclear}
+          tabIndex={abierto ? 0 : -1}
+          placeholder="Buscá por marca o modelo"
+          aria-label="Buscar productos"
+          className="w-full min-w-0 bg-transparent px-3 py-[7px] text-sm text-tinta placeholder:text-tenue focus:outline-none sm:text-base"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={alTocarIcono}
+        aria-label={abierto ? 'Buscar' : 'Abrir el buscador'}
+        aria-expanded={abierto}
+        title="Buscar"
+        className={`shrink-0 ${claseIcono} ${abierto ? 'border-tinta text-tinta' : ''}`}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" className="h-5 w-5" aria-hidden="true">
           <circle cx="11" cy="11" r="6.5" />
           <path d="m16 16 4.5 4.5" />
         </svg>
-        Buscar
       </button>
     </form>
   )
@@ -78,26 +129,19 @@ export default function Header() {
     <header>
       <Condiciones />
 
-      {/* En celular: logo y botones arriba, buscador abajo. En compu: todo en una fila */}
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-4 py-3">
-        <Logo className="order-1" />
+      {/* Logo a la izquierda; a la derecha, los íconos del buscador y del carrito */}
+      <div className="relative mx-auto flex max-w-7xl items-center gap-2 px-4 py-3">
+        <Logo className="mr-4" />
         {/* La key vacía el buscador al salir de una búsqueda */}
         <Buscador key={busqueda} inicial={busqueda} />
 
-        <div className="order-2 ml-auto flex items-center gap-2 md:order-3">
-          <Link
-            to="/carrito"
-            aria-label="Carrito"
-            title="Carrito"
-            className="rounded-[3px] border border-linea p-2 text-tenue hover:border-tinta hover:text-tinta"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
-              <path d="M3 4h2l2.4 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2" />
-              <circle cx="9.5" cy="19" r="1.25" />
-              <circle cx="17" cy="19" r="1.25" />
-            </svg>
-          </Link>
-        </div>
+        <Link to="/carrito" aria-label="Carrito" title="Carrito" className={`shrink-0 ${claseIcono}`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+            <path d="M3 4h2l2.4 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2" />
+            <circle cx="9.5" cy="19" r="1.25" />
+            <circle cx="17" cy="19" r="1.25" />
+          </svg>
+        </Link>
       </div>
 
       <nav aria-label="Categorías" className="border-y border-linea">

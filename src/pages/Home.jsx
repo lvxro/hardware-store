@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import categorias from '../data/categorias'
-import productos, { productosDe, formatoPrecio } from '../data/catalogo'
+import { productosDe, formatoPrecio } from '../data/catalogo'
 import { precioEfectivo } from '../data/reglas'
 import ProductoCard from '../components/ProductoCard'
 import Ilustracion from '../components/Ilustracion'
@@ -71,11 +71,6 @@ function Portada() {
         <h1 className="text-3xl font-medium tracking-tight sm:text-5xl">
           Componentes y periféricos para tu PC
         </h1>
-        <p className="mt-4 text-sm text-tenue">
-          {productos.length} productos en {categorias.length} categorías, con precios en pesos
-          argentinos.
-        </p>
-
         <nav aria-label="Categorías" className="mt-8 flex flex-wrap justify-center gap-2 text-sm">
           {categorias.map((cat) => (
             <Link

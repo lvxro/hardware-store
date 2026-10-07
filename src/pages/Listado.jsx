@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import categorias from '../data/categorias'
-import productos, { productosDe, formatoPrecio } from '../data/catalogo'
-import { precioEfectivo } from '../data/reglas'
-import { CAMPOS_BASE, formatearCampo, formatearValor } from '../data/campos'
+import productos, { productosDe } from '../data/catalogo'
 import guias from '../data/guias'
 import ProductoCard from '../components/ProductoCard'
 import Vitrina from '../components/Vitrina'
@@ -63,106 +61,6 @@ function Portada({ categoria }) {
         ))}
       </div>
     </header>
-  )
-}
-
-/* ---------- Comparación: todas las specs de lo que se está viendo ---------- */
-
-// Campos que agrega el catálogo y que no son specs del producto
-const NO_SON_SPECS = [...CAMPOS_BASE, 'categoria', 'precio', 'specs']
-
-function Comparacion({ categoria, lista }) {
-  const campos = Object.keys(lista[0]).filter((campo) => !NO_SON_SPECS.includes(campo))
-  const esNumero = (campo) => typeof lista[0][campo] === 'number'
-
-  return (
-    <section aria-labelledby="comparacion" className="mt-16">
-      <h2 id="comparacion" className="text-2xl font-semibold">
-        Comparar {categoria.nombre}
-      </h2>
-      <p className="mt-2 text-sm text-tenue">
-        {lista.length} modelos con todas sus especificaciones. El precio en violeta es en efectivo o
-        transferencia.
-        <span className="lg:hidden"> Tocá un modelo para ver el detalle.</span>
-      </p>
-
-      {/* En pantallas anchas, una tabla */}
-      <table className="mt-5 hidden w-full text-sm tabular-nums lg:table">
-        <thead>
-          <tr className="border-b border-tinta text-xs text-tenue">
-            <th scope="col" className="py-2 pr-3 text-left font-medium">
-              Modelo
-            </th>
-            {campos.map((campo) => (
-              <th
-                key={campo}
-                scope="col"
-                className={`px-3 py-2 font-medium ${esNumero(campo) ? 'text-right' : 'text-left'}`}
-              >
-                {formatearCampo(campo)}
-              </th>
-            ))}
-            <th scope="col" className="px-3 py-2 text-right font-medium">
-              Precio de lista
-            </th>
-            <th scope="col" className="py-2 pl-3 text-right font-medium">
-              En efectivo
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {lista.map((p) => (
-            <tr key={p.id} className="border-b border-linea align-baseline">
-              <th scope="row" className="py-2.5 pr-3 text-left font-medium">
-                <Link to={`/producto/${p.id}`} className="hover:underline">
-                  {p.nombre}
-                </Link>
-              </th>
-              {campos.map((campo) => (
-                <td key={campo} className={`px-3 py-2.5 ${esNumero(campo) ? 'text-right' : ''}`}>
-                  {formatearValor(p[campo])}
-                </td>
-              ))}
-              <td className="whitespace-nowrap px-3 py-2.5 text-right">{formatoPrecio(p.precio)}</td>
-              <td className="whitespace-nowrap py-2.5 pl-3 text-right font-semibold text-acento">
-                {formatoPrecio(precioEfectivo(p.precio))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* En celular y tablet, un renglón por producto que se abre para ver las specs */}
-      <div className="mt-5 border-b border-linea lg:hidden">
-        {lista.map((p) => (
-          <details key={p.id} className="group border-t border-linea">
-            <summary className="flex cursor-pointer list-none items-baseline justify-between gap-3 py-3 [&::-webkit-details-marker]:hidden">
-              <span className="min-w-0 text-sm font-medium group-open:font-semibold">{p.nombre}</span>
-              <span className="shrink-0 font-mono text-sm font-semibold text-acento tabular-nums">
-                {formatoPrecio(precioEfectivo(p.precio))}
-              </span>
-            </summary>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 pb-4 tabular-nums">
-              {campos.map((campo) => (
-                <div key={campo}>
-                  <dt className="text-xs text-tenue">{formatearCampo(campo)}</dt>
-                  <dd className="text-sm font-medium">{formatearValor(p[campo])}</dd>
-                </div>
-              ))}
-              <div>
-                <dt className="text-xs text-tenue">Precio de lista</dt>
-                <dd className="text-sm font-medium">{formatoPrecio(p.precio)}</dd>
-              </div>
-              <div className="self-end">
-                <Link to={`/producto/${p.id}`} className="font-sans text-sm font-medium underline hover:no-underline">
-                  Ver producto
-                </Link>
-              </div>
-            </dl>
-          </details>
-        ))}
-      </div>
-    </section>
   )
 }
 
@@ -320,7 +218,6 @@ function ListadoContenido({ slug, busqueda }) {
         </ul>
       )}
 
-      {categoria && lista.length > 1 && <Comparacion categoria={categoria} lista={lista} />}
       {guia && <Preguntas preguntas={guia.preguntas} />}
     </div>
   )

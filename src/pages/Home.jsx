@@ -1,66 +1,11 @@
 import { Link } from 'react-router-dom'
 import categorias, { grupos } from '../data/categorias'
-import productos, { productosDe, precioDesde, formatoPrecio } from '../data/catalogo'
+import productos, { productosDe, formatoPrecio } from '../data/catalogo'
 import { CUOTAS_SIN_INTERES, precioEfectivo } from '../data/reglas'
 import ProductoCard from '../components/ProductoCard'
 import Vitrina from '../components/Vitrina'
 
 const categoria = (slug) => categorias.find((c) => c.slug === slug)
-const unicos = (slug, campo) => [...new Set(productosDe(slug).map((p) => p[campo]))]
-const enumerar = new Intl.ListFormat('es', { type: 'conjunction' }) // "AM5, AM4 y LGA1700"
-const alternar = new Intl.ListFormat('es', { type: 'disjunction' }) // "DDR5 o DDR4"
-
-/* ---------- Armado por pasos ---------- */
-
-const consumos = productosDe('placas_de_video').map((p) => p.consumo_w)
-
-// El orden importa: cada elección condiciona la siguiente
-const PASOS = [
-  {
-    slug: 'procesadores',
-    nombre: 'Procesador',
-    nota: `Define el socket: ${enumerar.format(unicos('procesadores', 'socket'))}.`,
-  },
-  {
-    slug: 'placas_base',
-    nombre: 'Placa madre',
-    nota: 'Con el mismo socket que el procesador.',
-  },
-  {
-    slug: 'memorias_ram',
-    nombre: 'Memoria RAM',
-    nota: `${alternar.format(unicos('memorias_ram', 'tipo'))}, según la placa madre.`,
-  },
-  {
-    slug: 'placas_de_video',
-    nombre: 'Placa de video',
-    nota: `De ${Math.min(...consumos)} a ${Math.max(...consumos)} W de consumo.`,
-  },
-]
-
-function Pasos() {
-  return (
-    <section aria-labelledby="pasos" className="pt-8">
-      <h1 id="pasos" className="text-2xl font-semibold sm:text-3xl">
-        Armá tu PC en cuatro pasos
-      </h1>
-      <ol className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-[3px] border border-linea bg-linea lg:grid-cols-4">
-        {PASOS.map((paso, i) => (
-          <li key={paso.slug} className="bg-fondo">
-            <Link to={`/categoria/${paso.slug}`} className="group block h-full p-4 hover:bg-plano">
-              <p className="text-xs text-tenue tabular-nums">Paso {i + 1}</p>
-              <p className="mt-1 font-sans text-lg font-semibold group-hover:underline">{paso.nombre}</p>
-              <p className="mt-1 text-sm text-tenue">{paso.nota}</p>
-              <p className="mt-3 text-sm tabular-nums">
-                {productosDe(paso.slug).length} modelos desde {formatoPrecio(precioDesde(paso.slug))}
-              </p>
-            </Link>
-          </li>
-        ))}
-      </ol>
-    </section>
-  )
-}
 
 /* ---------- Categorías: lista de texto con la cantidad de productos ---------- */
 
@@ -132,7 +77,7 @@ function Destacado() {
                 <dd className="text-right font-medium">{valor}</dd>
               </div>
             ))}
-            <div className="flex justify-between gap-4 border-y border-linea py-2 text-pcb">
+            <div className="flex justify-between gap-4 border-y border-linea py-2 text-acento">
               <dt>En efectivo o transferencia</dt>
               <dd className="text-right text-base font-semibold">
                 {formatoPrecio(precioEfectivo(p.precio))}
@@ -209,7 +154,7 @@ function TablaProcesadores() {
               <td className={`${numero} hidden md:table-cell`}>{p.tdp_w} W</td>
               <td className={`${numero} hidden md:table-cell`}>{p.cache_l3_mb} MB</td>
               <td className={`${numero} hidden sm:table-cell`}>{formatoPrecio(p.precio)}</td>
-              <td className="py-2.5 pl-3 text-right font-semibold text-pcb">
+              <td className="py-2.5 pl-3 text-right font-semibold text-acento">
                 {formatoPrecio(precioEfectivo(p.precio))}
               </td>
             </tr>
@@ -262,7 +207,7 @@ function Lista({ slug }) {
                 </span>
                 <span className="shrink-0 text-right tabular-nums">
                   <span className="block text-sm font-semibold">{formatoPrecio(p.precio)}</span>
-                  <span className="block text-xs font-medium text-pcb">
+                  <span className="block text-xs font-medium text-acento">
                     {formatoPrecio(precioEfectivo(p.precio))} en efectivo
                   </span>
                 </span>
@@ -288,9 +233,9 @@ function DosListas({ slugs }) {
 export default function Home() {
   return (
     <div className="mx-auto max-w-7xl px-4">
-      <Pasos />
+      <h1 className="pt-8 text-2xl font-semibold sm:text-3xl">Componentes y periféricos para tu PC</h1>
 
-      <div className="mt-12 grid gap-x-12 gap-y-12 lg:grid-cols-[15rem_1fr]">
+      <div className="mt-8 grid gap-x-12 gap-y-12 lg:grid-cols-[15rem_1fr]">
         <Categorias />
         <Destacado />
       </div>

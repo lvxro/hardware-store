@@ -81,7 +81,7 @@ function Comparacion({ categoria, lista }) {
         Comparar {categoria.nombre}
       </h2>
       <p className="mt-2 text-sm text-tenue">
-        {lista.length} modelos con todas sus especificaciones. El precio en verde es en efectivo o
+        {lista.length} modelos con todas sus especificaciones. El precio en violeta es en efectivo o
         transferencia.
         <span className="lg:hidden"> Tocá un modelo para ver el detalle.</span>
       </p>
@@ -124,7 +124,7 @@ function Comparacion({ categoria, lista }) {
                 </td>
               ))}
               <td className="whitespace-nowrap px-3 py-2.5 text-right">{formatoPrecio(p.precio)}</td>
-              <td className="whitespace-nowrap py-2.5 pl-3 text-right font-semibold text-pcb">
+              <td className="whitespace-nowrap py-2.5 pl-3 text-right font-semibold text-acento">
                 {formatoPrecio(precioEfectivo(p.precio))}
               </td>
             </tr>
@@ -138,7 +138,7 @@ function Comparacion({ categoria, lista }) {
           <details key={p.id} className="group border-t border-linea">
             <summary className="flex cursor-pointer list-none items-baseline justify-between gap-3 py-3 [&::-webkit-details-marker]:hidden">
               <span className="min-w-0 text-sm font-medium group-open:font-semibold">{p.nombre}</span>
-              <span className="shrink-0 font-mono text-sm font-semibold text-pcb tabular-nums">
+              <span className="shrink-0 font-mono text-sm font-semibold text-acento tabular-nums">
                 {formatoPrecio(precioEfectivo(p.precio))}
               </span>
             </summary>

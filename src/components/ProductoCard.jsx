@@ -7,7 +7,7 @@ function Precios({ producto, grande = false }) {
   return (
     <div className="mt-auto pt-3 tabular-nums">
       <p className={`font-semibold ${grande ? 'text-lg' : ''}`}>{formatoPrecio(producto.precio)}</p>
-      <p className={`font-medium text-pcb ${grande ? 'text-xs sm:text-sm' : 'text-xs'}`}>
+      <p className={`font-medium text-acento ${grande ? 'text-xs sm:text-sm' : 'text-xs'}`}>
         {formatoPrecio(precioEfectivo(producto.precio))} en efectivo
       </p>
     </div>

@@ -153,7 +153,7 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
                   menos
                 </span>
               </dt>
-              <dd className="text-3xl font-semibold text-pcb">
+              <dd className="text-3xl font-semibold text-acento">
                 {formatearPesos(precioEfectivo)}
               </dd>
             </div>
@@ -231,18 +231,18 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
               </button>
             </div>
 
-            {/* El botón de comprar es uno de los tres lugares donde va el verde */}
+            {/* El botón de comprar es uno de los tres lugares donde va el violeta */}
             <button
               type="button"
               onClick={agregar}
-              className="flex-1 rounded-[3px] bg-pcb px-6 py-3 font-semibold text-sobre-pcb hover:opacity-90"
+              className="flex-1 rounded-[3px] bg-acento px-6 py-3 font-semibold text-sobre-acento hover:opacity-90"
             >
               {agregado ? "Agregado ✓" : "Agregar al carrito"}
             </button>
           </div>
 
           <div className="mt-6 border-t border-linea pt-4">
-            <p className="flex items-center gap-2 text-sm font-medium text-pcb tabular-nums">
+            <p className="flex items-center gap-2 text-sm font-medium text-acento tabular-nums">
               <IconoCamion />
               Envío gratis superando los {formatearPesos(ENVIO_GRATIS_DESDE)}
             </p>
@@ -388,7 +388,7 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
                     <td className="hidden px-3 py-2.5 text-right sm:table-cell">
                       {formatoPrecio(otro.precio)}
                     </td>
-                    <td className="py-2.5 pl-3 pr-3 text-right font-semibold text-pcb">
+                    <td className="py-2.5 pl-3 pr-3 text-right font-semibold text-acento">
                       {formatoPrecio(calcularEfectivo(otro.precio))}
                     </td>
                   </tr>

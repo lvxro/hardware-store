@@ -28,7 +28,7 @@ function Buscador({ inicial }) {
         onChange={(e) => setTexto(e.target.value)}
         placeholder="Buscá por marca o modelo"
         aria-label="Buscar productos"
-        className="min-w-0 flex-1 bg-transparent py-2 pl-3 pr-2 text-tinta placeholder:text-tenue focus:outline-none"
+        className="min-w-0 flex-1 bg-transparent py-2 pl-3 pr-2 text-sm text-tinta placeholder:text-tenue focus:outline-none sm:text-base"
       />
       <button
         type="submit"
@@ -49,7 +49,7 @@ function Condiciones() {
   const envio = `Envío gratis desde ${formatoPrecio(ENVIO_GRATIS_DESDE)}`
   return (
     <div className="bg-plano">
-      <p className="mx-auto max-w-7xl px-4 py-1.5 text-xs text-tenue tabular-nums">
+      <p className="mx-auto max-w-7xl px-4 py-1.5 font-sans text-xs text-tenue tabular-nums">
         <span className="sm:hidden">
           {envio} y {PORCENTAJE_EFECTIVO}% menos en efectivo.
         </span>

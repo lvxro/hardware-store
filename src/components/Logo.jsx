@@ -7,7 +7,7 @@ export default function Logo({ className = '' }) {
     <Link
       to="/"
       aria-label="Auraware"
-      className={`shrink-0 text-2xl font-semibold leading-none tracking-tight ${className}`}
+      className={`shrink-0 font-sans text-2xl font-semibold leading-none tracking-tight ${className}`}
     >
       aura<span className="font-normal text-tenue">/</span>ware
     </Link>

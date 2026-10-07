@@ -14,7 +14,7 @@ function NoEncontrada() {
       <p className="mt-2 text-tenue">Revisá que el enlace esté bien escrito o volvé al inicio.</p>
       <Link
         to="/"
-        className="mt-5 inline-block rounded-[3px] border border-tinta px-4 py-2 text-sm font-medium hover:bg-tinta hover:text-fondo"
+        className="mt-5 inline-block rounded-[3px] border border-tinta px-4 py-2 font-sans text-sm font-medium hover:bg-tinta hover:text-fondo"
       >
         Ir al inicio
       </Link>

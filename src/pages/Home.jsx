@@ -49,7 +49,7 @@ function Pasos() {
           <li key={paso.slug} className="bg-fondo">
             <Link to={`/categoria/${paso.slug}`} className="group block h-full p-4 hover:bg-plano">
               <p className="text-xs text-tenue tabular-nums">Paso {i + 1}</p>
-              <p className="mt-1 text-lg font-semibold group-hover:underline">{paso.nombre}</p>
+              <p className="mt-1 font-sans text-lg font-semibold group-hover:underline">{paso.nombre}</p>
               <p className="mt-1 text-sm text-tenue">{paso.nota}</p>
               <p className="mt-3 text-sm tabular-nums">
                 {productosDe(paso.slug).length} modelos desde {formatoPrecio(precioDesde(paso.slug))}
@@ -142,7 +142,7 @@ function Destacado() {
 
           <Link
             to={`/producto/${p.id}`}
-            className="mt-5 inline-block rounded-[3px] border border-tinta px-4 py-2 text-sm font-medium hover:bg-tinta hover:text-fondo"
+            className="mt-5 inline-block rounded-[3px] border border-tinta px-4 py-2 font-sans text-sm font-medium hover:bg-tinta hover:text-fondo"
           >
             Ver producto
           </Link>
@@ -162,7 +162,7 @@ function Titulo({ slug }) {
         {cat.nombre}{' '}
         <span className="text-sm font-normal text-tenue tabular-nums">{productosDe(slug).length}</span>
       </h2>
-      <Link to={`/categoria/${slug}`} className="shrink-0 text-sm font-medium underline hover:no-underline">
+      <Link to={`/categoria/${slug}`} className="shrink-0 font-sans text-sm font-medium underline hover:no-underline">
         Ver todo
       </Link>
     </div>
@@ -243,7 +243,7 @@ function FilaDeTarjetas({ slug }) {
 
 function Lista({ slug }) {
   return (
-    <section aria-labelledby={`fila-${slug}`}>
+    <section aria-labelledby={`fila-${slug}`} className="min-w-0">
       <Titulo slug={slug} />
       <ul className="mt-3 border-b border-linea">
         {productosDe(slug)

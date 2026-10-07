@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatoPrecio } from '../data/catalogo'
 import { MAXIMO_POR_PRODUCTO } from '../data/carrito'
@@ -9,6 +9,8 @@ import {
   precioEfectivo,
 } from '../data/reglas'
 import Vitrina from '../components/Vitrina'
+import NumeroAnimado from '../components/NumeroAnimado'
+import { plegar } from '../components/animaciones'
 
 // T-018: la página del carrito. Los datos y las acciones llegan desde App (ver data/carrito.js).
 
@@ -30,8 +32,11 @@ function Cantidad({ nombre, cantidad, onCambiar }) {
       >
         −
       </button>
-      <span className="w-8 text-center font-mono font-medium" aria-live="polite">
-        {cantidad}
+      <span className="w-8 overflow-hidden text-center font-mono font-medium" aria-live="polite">
+        {/* La key hace que el número entre de nuevo cada vez que cambia */}
+        <span key={cantidad} className="cambia">
+          {cantidad}
+        </span>
       </span>
       <button
         type="button"
@@ -46,22 +51,19 @@ function Cantidad({ nombre, cantidad, onCambiar }) {
   )
 }
 
-function Renglon({ item, onCambiarCantidad, onQuitar }) {
+function Renglon({ item, orden, onCambiarCantidad, onQuitar }) {
   const { producto, cantidad, subtotal } = item
-  const [saliendo, setSaliendo] = useState(false)
+  const renglon = useRef(null)
   const ficha = `/producto/${producto.id}`
 
-  // Primero se pliega y recién después se quita de la lista
-  const quitar = () => {
-    setSaliendo(true)
-    setTimeout(() => onQuitar(producto.id), 200)
-  }
+  // Primero se pliega (así los de abajo suben sin salto) y recién después se quita de la lista
+  const quitar = () => plegar(renglon.current, () => onQuitar(producto.id))
 
   return (
     <li
-      className={`grid grid-cols-[5rem_minmax(0,1fr)] gap-x-4 gap-y-3 border-t border-line py-4 sm:grid-cols-[6.5rem_minmax(0,1fr)_auto_9rem] sm:items-center ${
-        saliendo ? 'se-va' : ''
-      }`}
+      ref={renglon}
+      className="entra-subiendo grid grid-cols-[5rem_minmax(0,1fr)] gap-x-4 gap-y-3 border-t border-line py-4 sm:grid-cols-[6.5rem_minmax(0,1fr)_auto_9rem] sm:items-center"
+      style={{ '--espera': `${orden * 70}ms` }}
     >
       {/* La imagen también lleva a la ficha, pero el enlace "de verdad" es el nombre */}
       <Link to={ficha} tabIndex={-1} aria-hidden="true">
@@ -86,7 +88,9 @@ function Renglon({ item, onCambiarCantidad, onQuitar }) {
           onCambiar={(nueva) => onCambiarCantidad(producto.id, nueva)}
         />
         <div className="text-right">
-          <p className="font-mono text-lg font-bold">{formatoPrecio(subtotal)}</p>
+          <p className="font-mono text-lg font-bold">
+            <NumeroAnimado valor={subtotal} formato={formatoPrecio} />
+          </p>
           <button type="button" onClick={quitar} className={botonDeTexto} aria-label={`Quitar ${producto.modelo} del carrito`}>
             Quitar
           </button>
@@ -102,8 +106,18 @@ function Envio({ total }) {
   const avance = Math.min(100, Math.round((total / ENVIO_GRATIS_DESDE) * 100))
   return (
     <div className="border-t border-line py-4">
-      <p className="text-sm font-medium tabular-nums">
-        {falta <= 0 ? 'Esta compra tiene envío gratis' : `Te faltan ${formatoPrecio(falta)} para el envío gratis`}
+      <p className="flex items-center gap-2 text-sm font-medium tabular-nums">
+        {falta <= 0 ? (
+          <>
+            {/* Al llegar al envío gratis, el tilde se dibuja */}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0" aria-hidden="true">
+              <path d="M4 12.5l5 5L20 6.5" pathLength="1" className="tilde" />
+            </svg>
+            Esta compra tiene envío gratis
+          </>
+        ) : (
+          `Te faltan ${formatoPrecio(falta)} para el envío gratis`
+        )}
       </p>
       <div className="mt-2 h-1 overflow-hidden rounded-full bg-raised" aria-hidden="true">
         <div
@@ -119,7 +133,11 @@ function Resumen({ total, unidades, onVaciar }) {
   const [confirmando, setConfirmando] = useState(false)
 
   return (
-    <aside aria-labelledby="resumen" className="rounded-[3px] border border-line bg-surface p-5 lg:sticky lg:top-6">
+    <aside
+      aria-labelledby="resumen"
+      className="entra-subiendo rounded-[3px] border border-line bg-surface p-5 lg:sticky lg:top-6"
+      style={{ '--espera': '120ms' }}
+    >
       <h2 id="resumen" className="text-lg font-semibold">
         Resumen
       </h2>
@@ -135,32 +153,33 @@ function Resumen({ total, unidades, onVaciar }) {
             <span className="block text-sm text-muted">O por transferencia, {PORCENTAJE_EFECTIVO}% menos</span>
           </dt>
           <dd className="font-mono text-2xl font-bold text-lime" data-total-efectivo>
-            {formatoPrecio(precioEfectivo(total))}
+            <NumeroAnimado valor={precioEfectivo(total)} formato={formatoPrecio} />
           </dd>
         </div>
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-line py-3">
           <dt>
             <span className="block font-medium">Total de lista</span>
             <span className="block text-sm text-muted tabular-nums">
-              {CUOTAS_SIN_INTERES} cuotas sin interés de {formatoPrecio(Math.round(total / CUOTAS_SIN_INTERES))}
+              {CUOTAS_SIN_INTERES} cuotas sin interés de{' '}
+              <NumeroAnimado valor={Math.round(total / CUOTAS_SIN_INTERES)} formato={formatoPrecio} />
             </span>
           </dt>
           <dd className="font-mono text-lg font-medium text-muted" data-total-lista>
-            {formatoPrecio(total)}
+            <NumeroAnimado valor={total} formato={formatoPrecio} />
           </dd>
         </div>
       </dl>
 
       <Envio total={total} />
 
-      <Link to="/productos" className={`block ${botonSecundario}`}>
+      <Link to="/productos" className={`pulsable block ${botonSecundario}`}>
         Seguir comprando
       </Link>
 
       {/* Vaciar pide confirmación acá mismo, porque no se puede deshacer */}
       <div className="mt-4 text-center">
         {confirmando ? (
-          <p className="text-sm" role="alert">
+          <p className="entra-deslizando text-sm" role="alert" style={{ animationDelay: '0ms' }}>
             ¿Vaciar el carrito?{' '}
             <button type="button" onClick={onVaciar} className="ml-2 text-sm font-medium text-white underline underline-offset-4">
               Sí, vaciar
@@ -211,9 +230,10 @@ export default function Carrito({ items, total, unidades, onCambiarCantidad, onQ
       ) : (
         <div className="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
           <ul className="border-b border-line">
-            {items.map((item) => (
+            {items.map((item, i) => (
               <Renglon
                 key={item.producto.id}
+                orden={i}
                 item={item}
                 onCambiarCantidad={onCambiarCantidad}
                 onQuitar={onQuitar}

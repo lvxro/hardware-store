@@ -5,6 +5,8 @@ import productos, { productosDe } from '../data/catalogo'
 import guias from '../data/guias'
 import ProductoCard from '../components/ProductoCard'
 import Vitrina from '../components/Vitrina'
+import Aparece from '../components/Aparece'
+import NumeroAnimado from '../components/NumeroAnimado'
 
 const ordenes = {
   relevancia: { nombre: 'Destacados', fn: null },
@@ -47,14 +49,24 @@ function Portada({ categoria }) {
 
   return (
     <header className="mt-3 grid gap-x-10 gap-y-8 border border-line bg-surface px-5 pb-6 pt-8 sm:px-10 sm:pt-10 lg:grid-cols-[1fr_1.5fr] lg:items-center lg:pb-10">
+      {/* Entran el título, la bajada y los dos productos, uno después del otro; los dibujos se trazan */}
       <div>
-        <h1 className="text-3xl font-semibold sm:text-4xl">{categoria.nombre}</h1>
-        {guia && <p className="mt-3 max-w-sm text-sm text-muted sm:text-base">{guia.bajada}</p>}
+        <h1 className="entra-subiendo text-3xl font-semibold sm:text-4xl">{categoria.nombre}</h1>
+        {guia && (
+          <p className="entra-subiendo mt-3 max-w-sm text-sm text-muted sm:text-base" style={{ '--espera': '80ms' }}>
+            {guia.bajada}
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-x-4">
-        {[primero, segundo].filter(Boolean).map((p) => (
-          <Link key={p.id} to={`/producto/${p.id}`} className="group block">
-            <Vitrina producto={p} categoria={p.categoria} className="aspect-[4/3]" />
+        {[primero, segundo].filter(Boolean).map((p, i) => (
+          <Link
+            key={p.id}
+            to={`/producto/${p.id}`}
+            className="entra-subiendo group block"
+            style={{ '--espera': `${160 + i * 90}ms` }}
+          >
+            <Vitrina producto={p} categoria={p.categoria} className="aspect-[4/3]" trazo={260 + i * 120} />
             <span className="mt-2 block text-center text-xs text-lime underline-offset-4 group-hover:underline sm:text-sm">
               {p.nombre}
             </span>
@@ -69,7 +81,7 @@ function Portada({ categoria }) {
 
 function Preguntas({ preguntas }) {
   return (
-    <section aria-labelledby="preguntas" className="mx-auto mt-16 max-w-3xl">
+    <Aparece como="section" aria-labelledby="preguntas" className="mx-auto mt-16 max-w-3xl">
       <h2 id="preguntas" className="text-center text-2xl font-semibold">
         Preguntas frecuentes
       </h2>
@@ -80,7 +92,7 @@ function Preguntas({ preguntas }) {
               {pregunta}
               <span
                 aria-hidden="true"
-                className="text-2xl font-normal leading-none text-muted transition-transform duration-200 group-open:rotate-45 group-open:text-lime"
+                className="text-2xl font-normal leading-none text-muted transition-[rotate,color] duration-300 ease-out group-open:rotate-[135deg] group-open:text-lime"
               >
                 +
               </span>
@@ -89,7 +101,7 @@ function Preguntas({ preguntas }) {
           </details>
         ))}
       </div>
-    </section>
+    </Aparece>
   )
 }
 
@@ -128,7 +140,7 @@ function ListadoContenido({ slug, busqueda }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       <nav aria-label="Ruta" className="text-sm text-muted">
-        <Link to="/" className="border-b-2 border-transparent hover:border-lime hover:text-white">
+        <Link to="/" className="subrayado border-b-2 border-transparent hover:text-white">
           Inicio
         </Link>
         <span className="mx-2">/</span>
@@ -139,7 +151,7 @@ function ListadoContenido({ slug, busqueda }) {
         <Portada categoria={categoria} />
       ) : (
         <header className="mt-3">
-          <h1 className="text-2xl font-semibold sm:text-3xl">{titulo}</h1>
+          <h1 className="entra-subiendo text-2xl font-semibold sm:text-3xl">{titulo}</h1>
           {/* Con todo el catálogo a la vista, accesos a cada categoría */}
           {!busqueda && (
             <nav aria-label="Categorías" className="mt-4 flex flex-wrap gap-2">
@@ -160,7 +172,7 @@ function ListadoContenido({ slug, busqueda }) {
       {/* Barra con la cantidad a la izquierda y el filtro y el orden a la derecha */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-line pb-3 text-sm">
         <p className="text-muted tabular-nums">
-          {lista.length} {lista.length === 1 ? 'producto' : 'productos'}
+          <NumeroAnimado valor={lista.length} /> {lista.length === 1 ? 'producto' : 'productos'}
         </p>
 
         {base.length > 1 && (
@@ -197,7 +209,7 @@ function ListadoContenido({ slug, busqueda }) {
       </div>
 
       {lista.length === 0 ? (
-        <div className="py-8">
+        <div className="entra-subiendo py-8">
           <p className="text-lg font-semibold">
             {busqueda
               ? `No hay productos que coincidan con “${busqueda}”`
@@ -213,12 +225,13 @@ function ListadoContenido({ slug, busqueda }) {
           </Link>
         </div>
       ) : (
-        // Tarjetas con aire entre una y otra
-        <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
+        // Tarjetas con aire entre una y otra. Aparecen de a tandas a medida que entran en pantalla;
+        // la key hace que vuelvan a entrar cuando se cambia la marca o el orden.
+        <ul key={`${marca}|${orden}`} className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
           {lista.map((p) => (
-            <li key={p.id}>
+            <Aparece como="li" key={p.id}>
               <ProductoCard producto={p} />
-            </li>
+            </Aparece>
           ))}
         </ul>
       )}

@@ -25,6 +25,7 @@
 /* "color-scheme: dark" hace que el navegador dibuje en oscuro lo que no controla el CSS:
    desplegables, barras de desplazamiento y campos de texto */
 html {
+  interpolate-size: allow-keywords;
   color-scheme: dark;
   background: var(--bg);
 }
@@ -67,8 +68,13 @@ body {
   select,
   input,
   summary {
-    transition-property: color, background-color, border-color, box-shadow;
+    transition-property: color, background-color, border-color, box-shadow, translate, scale;
     transition-duration: 200ms;
+  }
+
+  /* Todo lo que se presiona se hunde apenas, para que el clic se sienta */
+  :is(button:not(:disabled), a.bg-lime, a.pulsable):active {
+    scale: 0.97;
   }
 }
 
@@ -94,6 +100,23 @@ body {
     border-radius: 2px;
     background-color: var(--raised);
     color: var(--muted);
+  }
+
+  .vitrina {
+    transition: color 200ms;
+  }
+
+  .vitrina svg {
+    transition: scale 450ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Dentro de un enlace (tarjetas, portada de categoría, carrito), el dibujo responde al cursor */
+  a:hover .vitrina {
+    color: var(--text);
+  }
+
+  a:hover .vitrina svg {
+    scale: 1.04;
   }
 
   /* El trazo de los dibujos mide siempre 1 px, sin importar el tamaño al que se muestren */
@@ -257,6 +280,44 @@ body {
   }
 }
 
+/* Cambio de página: el contenido nuevo entra con un fundido corto */
+@keyframes pagina {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+/* Solo fundido, para rótulos y marcas llenas de los dibujos */
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+/* La imagen grande de la ficha se acerca apenas al entrar */
+@keyframes acercar {
+  from {
+    opacity: 0;
+    scale: 0.97;
+  }
+}
+
+/* Los dibujos se trazan línea por línea, como si se dibujaran en el momento */
+@keyframes trazar {
+  from {
+    stroke-dashoffset: var(--largo);
+  }
+}
+
+/* El número de una cantidad entra desde abajo cuando cambia */
+@keyframes cambiar {
+  from {
+    opacity: 0;
+    translate: 0 45%;
+  }
+}
+
 /* El número del carrito da un saltito cada vez que cambia */
 @keyframes saltar {
   0% {
@@ -270,11 +331,10 @@ body {
   }
 }
 
-/* Un renglón del carrito se pliega al quitarlo */
-@keyframes plegar {
-  to {
-    opacity: 0;
-    translate: -12px 0;
+/* Un tilde que se dibuja de punta a punta (envío gratis alcanzado) */
+@keyframes tilde {
+  from {
+    stroke-dashoffset: 1;
   }
 }
 
@@ -283,8 +343,110 @@ body {
     animation: saltar 400ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .se-va {
-    animation: plegar 220ms ease-in forwards;
+  .entra-pagina {
+    animation: pagina 380ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .entra-acercando {
+    animation: acercar 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .cambia {
+    display: inline-block;
+    animation: cambiar 260ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  /*
+    Aparecer al entrar en pantalla (componente Aparece). Espera oculto y, cuando se ve,
+    sube a su lugar. Si entran varios juntos, "--orden" los escalona.
+  */
+  .aparece {
+    opacity: 0;
+  }
+
+  .aparece[data-visto] {
+    animation: subir 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--orden, 0) * 55ms);
+  }
+
+  /* Los hijos directos entran uno después del otro (columna de compra de la ficha) */
+  .en-cascada > * {
+    animation: subir 600ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .en-cascada > :nth-child(1) { animation-delay: 60ms; }
+  .en-cascada > :nth-child(2) { animation-delay: 110ms; }
+  .en-cascada > :nth-child(3) { animation-delay: 160ms; }
+  .en-cascada > :nth-child(4) { animation-delay: 220ms; }
+  .en-cascada > :nth-child(5) { animation-delay: 280ms; }
+  .en-cascada > :nth-child(6) { animation-delay: 340ms; }
+  .en-cascada > :nth-child(n + 7) { animation-delay: 400ms; }
+
+  /*
+    Dibujo que se traza (lo arranca trazar() en animaciones.js, que mide cada línea).
+    Primero las líneas; los rótulos y las marcas llenas aparecen cuando el trazo va por la mitad.
+  */
+  .dibujo[data-trazado="si"] [data-linea] {
+    stroke-dasharray: var(--largo);
+    animation: trazar 1100ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
+    animation-delay: calc(var(--espera-trazo, 0ms) + var(--n, 0) * 14ms);
+  }
+
+  .dibujo[data-trazado="si"] :is(text, [data-relleno]) {
+    animation: aparecer 500ms ease-out backwards;
+    animation-delay: calc(var(--espera-trazo, 0ms) + 650ms);
+  }
+
+  /*
+    Subrayado lima que crece de izquierda a derecha: menú, pie y ruta.
+    Va sobre el borde inferior transparente del enlace, así no mueve nada.
+  */
+  .subrayado {
+    position: relative;
+  }
+
+  .subrayado::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -2px 0;
+    height: 2px;
+    background-color: var(--lime);
+    scale: 0 1;
+    transform-origin: left;
+    transition: scale 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .subrayado:hover::after,
+  .subrayado[aria-current="page"]::after {
+    scale: 1 1;
+  }
+
+  /* El mosaico del home acompaña apenas al cursor ("--px" y "--py" van de -1 a 1) */
+  .mosaico {
+    translate: calc(var(--px, 0) * -10px) calc(var(--py, 0) * -8px);
+    transition: translate 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Preguntas frecuentes: la respuesta entra al abrir (y, donde el navegador lo permite, se despliega) */
+  details[open] > :not(summary) {
+    animation: subir 350ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 350ms cubic-bezier(0.16, 1, 0.3, 1),
+      content-visibility 350ms allow-discrete;
+  }
+
+  details[open]::details-content {
+    block-size: auto;
+  }
+
+  .tilde {
+    stroke-dasharray: 1;
+    animation: tilde 450ms cubic-bezier(0.65, 0, 0.35, 1) 150ms backwards;
   }
 
   .entra-subiendo {
@@ -371,6 +533,14 @@ body {
 
   .mosaico .ficha svg {
     animation: none;
+  }
+
+  .aparece {
+    opacity: 1;
+  }
+
+  .mosaico {
+    translate: none;
   }
 }
 

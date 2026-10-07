@@ -12,6 +12,7 @@ import {
 import { MAXIMO_POR_PRODUCTO } from "../data/carrito";
 import { CAMPOS_BASE, formatearCampo, formatearValor } from "../data/campos";
 import Vitrina from "../components/Vitrina";
+import Aparece from "../components/Aparece";
 import { volarAlCarrito } from "../components/animaciones";
 
 const NOMBRES_CATEGORIA = {
@@ -60,7 +61,7 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
 
   if (!resultado) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-12">
+      <div className="entra-subiendo mx-auto max-w-7xl px-4 py-12">
         <h1 className="text-2xl font-semibold">Producto no encontrado</h1>
         <p className="mt-2 text-muted">
           Revisá que el enlace esté bien escrito o buscalo desde el inicio.
@@ -118,13 +119,13 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       <nav className="text-sm text-muted" aria-label="Ruta">
-        <Link to="/" className="border-b-2 border-transparent hover:border-lime hover:text-white">
+        <Link to="/" className="subrayado border-b-2 border-transparent hover:text-white">
           Inicio
         </Link>
         <span className="mx-2">/</span>
         <Link
           to={`/categoria/${categoria}`}
-          className="border-b-2 border-transparent hover:border-lime hover:text-white"
+          className="subrayado border-b-2 border-transparent hover:text-white"
         >
           {nombreCategoria}
         </Link>
@@ -135,16 +136,19 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
       <div className="mt-5 grid gap-x-12 gap-y-6 lg:grid-cols-[1.15fr_1fr]">
         <div className="min-w-0">
           {/* En compu la imagen queda fija mientras se recorre la columna de compra */}
-          <div className="lg:sticky lg:top-6">
+          {/* La imagen se acerca apenas al entrar y el dibujo se traza línea por línea */}
+          <div className="entra-acercando lg:sticky lg:top-6">
             <Vitrina
               producto={producto}
               categoria={categoria}
               className="aspect-[4/3] w-full"
+              trazo={150}
             />
           </div>
         </div>
 
-        <div className="min-w-0">
+        {/* La columna de compra entra en cascada: marca, nombre, precios, cuotas, botón y envío */}
+        <div className="en-cascada min-w-0">
           <p className="text-sm text-muted">{producto.marca}</p>
           <h1 className="text-2xl font-semibold sm:text-3xl">
             {producto.modelo}
@@ -226,8 +230,11 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
               >
                 −
               </button>
-              <span className="w-8 text-center font-mono font-medium">
-                {cantidad}
+              <span className="w-8 overflow-hidden text-center font-mono font-medium">
+                {/* La key hace que el número entre de nuevo cada vez que cambia */}
+                <span key={cantidad} className="cambia">
+                  {cantidad}
+                </span>
               </span>
               <button
                 type="button"
@@ -288,7 +295,11 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
           </div>
 
           {enCarrito > 0 && (
-            <p className="mt-3 text-sm text-muted" role="status">
+            <p
+              className="mt-3 text-sm text-muted"
+              role="status"
+              style={{ animationDelay: "0ms" }}
+            >
               Tenés {enCarrito} en el carrito
               {llegoAlMaximo && ` (el máximo es ${MAXIMO_POR_PRODUCTO} por producto)`}.{" "}
               <Link
@@ -336,7 +347,7 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
               No sé mi código
             </a>
             {mensajeEnvio && (
-              <p className="mt-2 text-sm font-medium" role="status">
+              <p className="entra-subiendo mt-2 text-sm font-medium" role="status">
                 {mensajeEnvio}
               </p>
             )}
@@ -344,7 +355,7 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
         </div>
       </div>
 
-      <section className="mt-14" aria-labelledby="especificaciones">
+      <Aparece como="section" className="mt-14" aria-labelledby="especificaciones">
         <h2 id="especificaciones" className="text-lg font-semibold">
           Especificaciones
         </h2>
@@ -363,10 +374,10 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
             )
           )}
         </dl>
-      </section>
+      </Aparece>
 
       {este && comparados.length > 1 && (
-        <section className="mt-14" aria-labelledby="comparacion">
+        <Aparece como="section" className="mt-14" aria-labelledby="comparacion">
           <div className="flex items-baseline justify-between gap-4">
             <h2 id="comparacion" className="text-lg font-semibold">
               Otras opciones en {nombreCategoria}
@@ -455,7 +466,7 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
               })}
             </tbody>
           </table>
-        </section>
+        </Aparece>
       )}
     </div>
   );

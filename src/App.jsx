@@ -10,7 +10,7 @@ import { useCarrito } from './data/carrito'
 
 function NoEncontrada() {
   return (
-    <div className="entra-subiendo mx-auto max-w-7xl px-4 py-12">
+    <div className="mx-auto max-w-7xl px-4 py-12">
       <h1 className="text-2xl font-semibold">Esta página no existe</h1>
       <p className="mt-2 text-muted">Revisá que el enlace esté bien escrito o volvé al inicio.</p>
       <Link

@@ -51,7 +51,7 @@ function Cantidad({ nombre, cantidad, onCambiar }) {
   )
 }
 
-function Renglon({ item, orden, onCambiarCantidad, onQuitar }) {
+function Renglon({ item, onCambiarCantidad, onQuitar }) {
   const { producto, cantidad, subtotal } = item
   const renglon = useRef(null)
   const ficha = `/producto/${producto.id}`
@@ -62,8 +62,7 @@ function Renglon({ item, orden, onCambiarCantidad, onQuitar }) {
   return (
     <li
       ref={renglon}
-      className="entra-subiendo grid grid-cols-[5rem_minmax(0,1fr)] gap-x-4 gap-y-3 border-t border-line py-4 sm:grid-cols-[6.5rem_minmax(0,1fr)_auto_9rem] sm:items-center"
-      style={{ '--espera': `${orden * 70}ms` }}
+      className="grid grid-cols-[5rem_minmax(0,1fr)] gap-x-4 gap-y-3 border-t border-line py-4 sm:grid-cols-[6.5rem_minmax(0,1fr)_auto_9rem] sm:items-center"
     >
       {/* La imagen también lleva a la ficha, pero el enlace "de verdad" es el nombre */}
       <Link to={ficha} tabIndex={-1} aria-hidden="true">
@@ -88,6 +87,7 @@ function Renglon({ item, orden, onCambiarCantidad, onQuitar }) {
           onCambiar={(nueva) => onCambiarCantidad(producto.id, nueva)}
         />
         <div className="text-right">
+          {/* Los precios del carrito suben y bajan pasando por los valores intermedios */}
           <p className="font-mono text-lg font-bold">
             <NumeroAnimado valor={subtotal} formato={formatoPrecio} />
           </p>
@@ -133,11 +133,7 @@ function Resumen({ total, unidades, onVaciar }) {
   const [confirmando, setConfirmando] = useState(false)
 
   return (
-    <aside
-      aria-labelledby="resumen"
-      className="entra-subiendo rounded-[3px] border border-line bg-surface p-5 lg:sticky lg:top-6"
-      style={{ '--espera': '120ms' }}
-    >
+    <aside aria-labelledby="resumen" className="rounded-[3px] border border-line bg-surface p-5 lg:sticky lg:top-6">
       <h2 id="resumen" className="text-lg font-semibold">
         Resumen
       </h2>
@@ -200,7 +196,7 @@ function Resumen({ total, unidades, onVaciar }) {
 
 function Vacio() {
   return (
-    <div className="entra-subiendo mt-6 flex flex-col items-center rounded-[3px] border border-line bg-surface px-6 py-14 text-center">
+    <div className="mt-6 flex flex-col items-center rounded-[3px] border border-line bg-surface px-6 py-14 text-center">
       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-raised text-muted">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" aria-hidden="true">
           <path d="M3 4h2l2.4 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2" />
@@ -230,10 +226,9 @@ export default function Carrito({ items, total, unidades, onCambiarCantidad, onQ
       ) : (
         <div className="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
           <ul className="border-b border-line">
-            {items.map((item, i) => (
+            {items.map((item) => (
               <Renglon
                 key={item.producto.id}
-                orden={i}
                 item={item}
                 onCambiarCantidad={onCambiarCantidad}
                 onQuitar={onQuitar}

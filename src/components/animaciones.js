@@ -2,7 +2,7 @@
 // Todas respetan "reducir movimiento" del sistema: en ese caso no hacen nada.
 import { useEffect, useRef, useState } from 'react'
 
-export const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /*
   Al agregar un producto: un punto lima sale del botón, vuela hasta el ícono del carrito
@@ -126,55 +126,12 @@ export function trazar(svg, espera = 0) {
       forma.style.removeProperty('--largo')
       forma.style.removeProperty('--n')
     })
-  }, espera + 1100 + n * 14 + 200)
-}
-
-/*
-  Aparecer al entrar en pantalla. Hay un solo observador para todo el sitio.
-  Al elemento se le pone "data-visto" (el resto lo hace .aparece en index.css).
-  Si entran varios a la vez, se escalonan con "--orden".
-  Con "data-traza", además se trazan los dibujos que tenga adentro.
-*/
-let observador = null
-
-function mostrar(elemento, orden = 0) {
-  elemento.style.setProperty('--orden', orden)
-  elemento.dataset.visto = ''
-  if (elemento.dataset.traza !== undefined) {
-    elemento.querySelectorAll('svg.dibujo').forEach((svg) => trazar(svg, orden * 55 + 120))
-  }
-}
-
-function alCruzar(entradas) {
-  let orden = 0
-  for (const entrada of entradas) {
-    if (!entrada.isIntersecting) continue
-    observador.unobserve(entrada.target)
-    mostrar(entrada.target, Math.min(orden++, 8))
-  }
-}
-
-export function useAparecer() {
-  const ref = useRef(null)
-
-  useEffect(() => {
-    const elemento = ref.current
-    if (!elemento || elemento.dataset.visto !== undefined) return
-    if (!('IntersectionObserver' in window) || sinMovimiento()) {
-      mostrar(elemento)
-      return
-    }
-    observador ??= new IntersectionObserver(alCruzar, { threshold: 0.08 })
-    observador.observe(elemento)
-    return () => observador.unobserve(elemento)
-  }, [])
-
-  return ref
+  }, espera + 800 + n * 10 + 200)
 }
 
 /*
   Un número que, cuando cambia, pasa por los valores intermedios en vez de saltar.
-  Devuelve el valor a mostrar en cada momento.
+  Devuelve el valor a mostrar en cada momento. Se usa en los precios del carrito.
 */
 export function useNumeroAnimado(valor, duracion = 450) {
   const [mostrado, setMostrado] = useState(valor)

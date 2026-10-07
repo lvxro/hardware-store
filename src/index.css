@@ -106,17 +106,9 @@ body {
     transition: color 200ms;
   }
 
-  .vitrina svg {
-    transition: scale 450ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  /* Dentro de un enlace (tarjetas, portada de categoría, carrito), el dibujo responde al cursor */
+  /* Dentro de un enlace (tarjetas, portada de categoría, carrito), el dibujo se aclara con el cursor */
   a:hover .vitrina {
     color: var(--text);
-  }
-
-  a:hover .vitrina svg {
-    scale: 1.04;
   }
 
   /* El trazo de los dibujos mide siempre 1 px, sin importar el tamaño al que se muestren */
@@ -280,11 +272,10 @@ body {
   }
 }
 
-/* Cambio de página: el contenido nuevo entra con un fundido corto */
+/* Cambio de página: el contenido nuevo entra con un fundido muy corto, sin moverse */
 @keyframes pagina {
   from {
     opacity: 0;
-    translate: 0 10px;
   }
 }
 
@@ -292,14 +283,6 @@ body {
 @keyframes aparecer {
   from {
     opacity: 0;
-  }
-}
-
-/* La imagen grande de la ficha se acerca apenas al entrar */
-@keyframes acercar {
-  from {
-    opacity: 0;
-    scale: 0.97;
   }
 }
 
@@ -344,11 +327,7 @@ body {
   }
 
   .entra-pagina {
-    animation: pagina 380ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  }
-
-  .entra-acercando {
-    animation: acercar 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: pagina 200ms ease-out backwards;
   }
 
   .cambia {
@@ -357,44 +336,19 @@ body {
   }
 
   /*
-    Aparecer al entrar en pantalla (componente Aparece). Espera oculto y, cuando se ve,
-    sube a su lugar. Si entran varios juntos, "--orden" los escalona.
-  */
-  .aparece {
-    opacity: 0;
-  }
-
-  .aparece[data-visto] {
-    animation: subir 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: calc(var(--orden, 0) * 55ms);
-  }
-
-  /* Los hijos directos entran uno después del otro (columna de compra de la ficha) */
-  .en-cascada > * {
-    animation: subir 600ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  }
-
-  .en-cascada > :nth-child(1) { animation-delay: 60ms; }
-  .en-cascada > :nth-child(2) { animation-delay: 110ms; }
-  .en-cascada > :nth-child(3) { animation-delay: 160ms; }
-  .en-cascada > :nth-child(4) { animation-delay: 220ms; }
-  .en-cascada > :nth-child(5) { animation-delay: 280ms; }
-  .en-cascada > :nth-child(6) { animation-delay: 340ms; }
-  .en-cascada > :nth-child(n + 7) { animation-delay: 400ms; }
-
-  /*
-    Dibujo que se traza (lo arranca trazar() en animaciones.js, que mide cada línea).
+    Dibujo que se traza: solo el de la ficha de producto, una vez, al entrar
+    (lo arranca trazar() en animaciones.js, que mide cada línea).
     Primero las líneas; los rótulos y las marcas llenas aparecen cuando el trazo va por la mitad.
   */
   .dibujo[data-trazado="si"] [data-linea] {
     stroke-dasharray: var(--largo);
-    animation: trazar 1100ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
-    animation-delay: calc(var(--espera-trazo, 0ms) + var(--n, 0) * 14ms);
+    animation: trazar 800ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
+    animation-delay: calc(var(--espera-trazo, 0ms) + var(--n, 0) * 10ms);
   }
 
   .dibujo[data-trazado="si"] :is(text, [data-relleno]) {
-    animation: aparecer 500ms ease-out backwards;
-    animation-delay: calc(var(--espera-trazo, 0ms) + 650ms);
+    animation: aparecer 400ms ease-out backwards;
+    animation-delay: calc(var(--espera-trazo, 0ms) + 450ms);
   }
 
   /*
@@ -419,12 +373,6 @@ body {
   .subrayado:hover::after,
   .subrayado[aria-current="page"]::after {
     scale: 1 1;
-  }
-
-  /* El mosaico del home acompaña apenas al cursor ("--px" y "--py" van de -1 a 1) */
-  .mosaico {
-    translate: calc(var(--px, 0) * -10px) calc(var(--py, 0) * -8px);
-    transition: translate 900ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   /* Preguntas frecuentes: la respuesta entra al abrir (y, donde el navegador lo permite, se despliega) */
@@ -533,14 +481,6 @@ body {
 
   .mosaico .ficha svg {
     animation: none;
-  }
-
-  .aparece {
-    opacity: 1;
-  }
-
-  .mosaico {
-    translate: none;
   }
 }
 

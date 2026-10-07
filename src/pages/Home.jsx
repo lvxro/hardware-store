@@ -1,9 +1,8 @@
-import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import categorias from '../data/categorias'
 import { productosDe, precioDesde, formatoPrecio } from '../data/catalogo'
 import Ilustracion from '../components/Ilustracion'
-import { sinMovimiento, trazar, useAlVerse } from '../components/animaciones'
+import { useAlVerse } from '../components/animaciones'
 
 /* ---------- Portada: mosaico de productos alrededor de la barra del logo, y el título ---------- */
 
@@ -41,31 +40,12 @@ function tiempos(fila, columna, cuantas) {
 const TITULO = 'Componentes y periféricos para tu PC'.split(' ')
 
 function Portada() {
-  const mosaico = useRef(null)
-
-  // Con mouse, el mosaico acompaña apenas al cursor: da sensación de profundidad.
-  // Solo se actualizan dos variables de CSS, una vez por cuadro.
-  const alMover = (e) => {
-    if (e.pointerType !== 'mouse' || sinMovimiento()) return
-    const caja = e.currentTarget.getBoundingClientRect()
-    const px = ((e.clientX - caja.left) / caja.width) * 2 - 1
-    const py = ((e.clientY - caja.top) / caja.height) * 2 - 1
-    requestAnimationFrame(() => {
-      mosaico.current?.style.setProperty('--px', px.toFixed(3))
-      mosaico.current?.style.setProperty('--py', py.toFixed(3))
-    })
-  }
-  const alSalir = () => {
-    mosaico.current?.style.setProperty('--px', 0)
-    mosaico.current?.style.setProperty('--py', 0)
-  }
-
   return (
-    <section className="overflow-hidden pb-12" onPointerMove={alMover} onPointerLeave={alSalir}>
+    <section className="overflow-hidden pb-12">
       <div className="relative pt-8">
         {/* Las fichas son un atajo para quien usa mouse; con teclado y lector de pantalla
             se llega a los mismos productos desde las categorías de abajo */}
-        <div ref={mosaico} className="mosaico flex flex-col gap-3 sm:gap-4" aria-hidden="true">
+        <div className="mosaico flex flex-col gap-3 sm:gap-4" aria-hidden="true">
           {filasDelMosaico.map((fila, i) => (
             <div key={i} className="relative left-1/2 flex w-max -translate-x-1/2 gap-3 sm:gap-4">
               {fila.map((p, j) => (
@@ -158,13 +138,6 @@ const FORMAS = {
 function Categorias() {
   // Las fichas aparecen en cadena cuando la grilla entra en pantalla
   const [grilla, visto] = useAlVerse()
-
-  // Cuando aparecen, el dibujo de cada ficha se traza, una después de la otra
-  useEffect(() => {
-    if (!visto) return
-    grilla.current?.querySelectorAll('svg.dibujo').forEach((svg, i) => trazar(svg, 150 + i * 70))
-  }, [visto, grilla])
-
   return (
     <nav aria-label="Categorías" className="mx-auto max-w-7xl px-4">
       <ul

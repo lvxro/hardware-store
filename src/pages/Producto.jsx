@@ -11,6 +11,7 @@ import {
 } from "../data/reglas";
 import { CAMPOS_BASE, formatearCampo, formatearValor } from "../data/campos";
 import Vitrina from "../components/Vitrina";
+import { volarAlCarrito } from "../components/animaciones";
 
 const NOMBRES_CATEGORIA = {
   procesadores: "Procesadores",
@@ -91,8 +92,9 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
     ...deLaCategoria.filter((otro) => otro.id !== producto.id).slice(0, 5),
   ];
 
-  const agregar = () => {
+  const agregar = (e) => {
     onAgregarAlCarrito?.(producto, cantidad);
+    volarAlCarrito(e.currentTarget);
     setAgregado(true);
     setTimeout(() => setAgregado(false), 2000);
   };
@@ -235,9 +237,46 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
             <button
               type="button"
               onClick={agregar}
-              className="flex-1 rounded-[3px] bg-lime px-6 py-3 font-bold text-bg hover:shadow-glow"
+              className={`relative flex-1 overflow-hidden rounded-[3px] bg-lime px-6 py-3 font-bold text-bg hover:shadow-glow ${
+                agregado ? "con-onda" : ""
+              }`}
             >
-              {agregado ? "Agregado ✓" : "Agregar al carrito"}
+              {/* Los dos textos están apilados: uno sale hacia arriba y el otro entra desde abajo */}
+              <span
+                aria-hidden={agregado}
+                className={`block transition-[translate,opacity] duration-300 ease-out ${
+                  agregado ? "-translate-y-full opacity-0" : ""
+                }`}
+              >
+                Agregar al carrito
+              </span>
+              <span
+                aria-hidden={!agregado}
+                className={`absolute inset-0 flex items-center justify-center gap-2 transition-[translate,opacity] duration-300 ease-out ${
+                  agregado ? "" : "translate-y-full opacity-0"
+                }`}
+              >
+                Agregado
+                {/* El tilde se dibuja de punta a punta */}
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 12.5l5 5L20 6.5"
+                    pathLength="1"
+                    strokeDasharray="1"
+                    style={{ strokeDashoffset: agregado ? 0 : 1 }}
+                    className="transition-[stroke-dashoffset] delay-150 duration-300 ease-out"
+                  />
+                </svg>
+              </span>
             </button>
           </div>
 

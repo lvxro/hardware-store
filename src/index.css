@@ -127,7 +127,7 @@ body {
     border: 1px solid var(--line-strong);
     border-radius: 1rem;
     background-color: var(--surface);
-    color: color-mix(in srgb, var(--muted) 55%, transparent);
+    color: var(--muted);
   }
 
   /* Al pasar el cursor, como cualquier tarjeta: borde lima, resplandor y dibujo en blanco */
@@ -149,8 +149,199 @@ body {
     border-radius: 1.75rem;
     background-color: var(--raised);
     color: var(--text);
-    box-shadow:
-      inset 0 1px 0 var(--line-hover),
-      var(--lime-glow-lg);
+    isolation: isolate;
+    box-shadow: inset 0 1px 0 var(--line-hover);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Animaciones. Todas usan solo opacidad, posición y escala, que son las que
+   el navegador mueve sin recalcular la página.
+   --------------------------------------------------------------------------- */
+
+/* Aparecer subiendo: título, botón y fichas de categoría */
+@keyframes subir {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* Cada palabra del título entra desenfocada y se aclara */
+@keyframes palabra {
+  from {
+    opacity: 0;
+    translate: 0 0.35em;
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+}
+
+/* Las fichas del mosaico aparecen desde el centro hacia afuera */
+@keyframes ficha {
+  from {
+    opacity: 0;
+    scale: 0.8;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* La ficha del centro brota con un pequeño rebote */
+@keyframes brotar {
+  0% {
+    opacity: 0;
+    scale: 0.6;
+  }
+  60% {
+    opacity: 1;
+    scale: 1.07;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* De a ratos, alguna ficha del mosaico se enciende y se vuelve a apagar */
+@keyframes destello {
+  0%,
+  90%,
+  100% {
+    opacity: 0.5;
+  }
+  94% {
+    opacity: 1;
+  }
+}
+
+/* El halo lima del centro respira despacio */
+@keyframes halo {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Onda que sale del botón al agregar al carrito */
+@keyframes onda {
+  from {
+    box-shadow: 0 0 0 0 var(--lime-ring);
+  }
+  to {
+    box-shadow: 0 0 0 16px transparent;
+  }
+}
+
+/* El buscador: lo que hay adentro del campo entra un instante después de que se abre */
+@keyframes deslizar {
+  from {
+    opacity: 0;
+    translate: 14px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@layer components {
+  .entra-subiendo {
+    animation: subir 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--espera, 0ms);
+  }
+
+  .entra-palabra {
+    display: inline-block;
+    animation: palabra 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--espera, 0ms);
+  }
+
+  .mosaico .ficha {
+    animation: ficha 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--espera, 0ms);
+  }
+
+  .mosaico .ficha svg {
+    opacity: 0.5;
+    animation: destello 18s ease-in-out infinite;
+    animation-delay: var(--destello, 0s);
+  }
+
+  /* Con el cursor encima manda el hover, no el destello */
+  .mosaico a.ficha:hover svg {
+    animation: none;
+    opacity: 1;
+  }
+
+  .ficha-central {
+    animation: brotar 900ms cubic-bezier(0.16, 1, 0.3, 1) 150ms both;
+  }
+
+  /* El halo va en una capa aparte para poder animarle solo la opacidad */
+  .ficha-central::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    box-shadow: var(--lime-glow-lg), var(--lime-glow-lg);
+    animation: halo 3.5s ease-in-out 1s infinite alternate both;
+  }
+
+  /* Fichas de categoría: esperan ocultas hasta entrar en pantalla y aparecen en cadena */
+  .en-cadena > * {
+    opacity: 0;
+  }
+
+  .en-cadena.visto > * {
+    animation: subir 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+
+  /* El dibujo de la categoría se acerca apenas al pasar el cursor */
+  .ficha-categoria svg {
+    transition: scale 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .ficha-categoria:hover svg {
+    scale: 1.05;
+  }
+
+  .con-onda {
+    animation: onda 650ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .entra-deslizando {
+    animation: deslizar 350ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both;
+  }
+}
+
+/* Quien pidió menos movimiento en su sistema ve todo en su lugar, sin animaciones */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .mosaico .ficha svg {
+    animation: none;
+  }
+}
+

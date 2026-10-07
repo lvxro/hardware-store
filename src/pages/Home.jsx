@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import categorias from '../data/categorias'
 import { productosDe, precioDesde, formatoPrecio } from '../data/catalogo'
 import Ilustracion from '../components/Ilustracion'
+import { useAlVerse } from '../components/animaciones'
 
 /* ---------- Portada: mosaico de productos alrededor de la barra del logo, y el título ---------- */
 
@@ -27,6 +28,17 @@ const filasDelMosaico = FILAS.map(({ cantidad, arranca }) => {
   return fila
 })
 
+// Cuándo aparece cada ficha (las del centro primero) y cuándo le toca su destello
+function tiempos(fila, columna, cuantas) {
+  const distancia = Math.hypot(columna - (cuantas - 1) / 2, (fila - (FILAS.length - 1) / 2) * 1.2)
+  return {
+    '--espera': `${Math.round(200 + distancia * 90)}ms`,
+    '--destello': `${((fila * 7 + columna * 11) % 18) + 2}s`,
+  }
+}
+
+const TITULO = 'Componentes y periféricos para tu PC'.split(' ')
+
 function Portada() {
   return (
     <section className="overflow-hidden pb-12">
@@ -36,13 +48,14 @@ function Portada() {
         <div className="mosaico flex flex-col gap-3 sm:gap-4" aria-hidden="true">
           {filasDelMosaico.map((fila, i) => (
             <div key={i} className="relative left-1/2 flex w-max -translate-x-1/2 gap-3 sm:gap-4">
-              {fila.map((p) => (
+              {fila.map((p, j) => (
                 <Link
                   key={p.id}
                   to={`/producto/${p.id}`}
                   tabIndex={-1}
                   title={`${p.nombre}, ${formatoPrecio(p.precio)}`}
                   className="ficha h-16 w-16 p-2 sm:h-20 sm:w-20 sm:p-2.5"
+                  style={tiempos(i, j, fila.length)}
                 >
                   <Ilustracion
                     producto={p}
@@ -77,12 +90,20 @@ function Portada() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 text-center">
+        {/* El título entra palabra por palabra, después del mosaico */}
         <h1 className="text-3xl font-medium tracking-tight sm:text-5xl">
-          Componentes y periféricos para tu PC
+          {TITULO.map((palabra, i) => (
+            <span key={i}>
+              <span className="entra-palabra" style={{ '--espera': `${650 + i * 70}ms` }}>
+                {palabra}
+              </span>{' '}
+            </span>
+          ))}
         </h1>
         <Link
           to="/productos"
-          className="mt-8 inline-block rounded-[3px] bg-lime px-5 py-2.5 font-mono text-sm font-bold text-bg hover:shadow-glow"
+          className="entra-subiendo mt-8 inline-block rounded-[3px] bg-lime px-5 py-2.5 font-mono text-sm font-bold text-bg hover:shadow-glow"
+          style={{ '--espera': '1150ms' }}
         >
           Ver todos los productos
         </Link>
@@ -102,13 +123,20 @@ const FORMAS = {
 }
 
 function Categorias() {
+  // Las fichas aparecen en cadena cuando la grilla entra en pantalla
+  const [grilla, visto] = useAlVerse()
   return (
     <nav aria-label="Categorías" className="mx-auto max-w-7xl px-4">
-      <ul className="grid grid-flow-row-dense auto-rows-[11rem] grid-cols-2 gap-3 sm:auto-rows-[13rem] sm:gap-4 lg:grid-cols-4">
-        {categorias.map((cat) => {
+      <ul
+        ref={grilla}
+        className={`en-cadena grid grid-flow-row-dense auto-rows-[11rem] grid-cols-2 gap-3 sm:auto-rows-[13rem] sm:gap-4 lg:grid-cols-4 ${
+          visto ? 'visto' : ''
+        }`}
+      >
+        {categorias.map((cat, i) => {
           const lista = productosDe(cat.slug)
           return (
-            <li key={cat.slug} className={FORMAS[cat.slug] ?? ''}>
+            <li key={cat.slug} className={FORMAS[cat.slug] ?? ''} style={{ '--i': i }}>
               <Link
                 to={`/categoria/${cat.slug}`}
                 className="ficha ficha-categoria group flex h-full flex-col p-4 hover:border-lime hover:shadow-glow sm:p-5"

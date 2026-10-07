@@ -1,17 +1,9 @@
 import { Link } from 'react-router-dom'
 import categorias from '../data/categorias'
-import productos, { productosDe, formatoPrecio } from '../data/catalogo'
-import { precioEfectivo } from '../data/reglas'
-import ProductoCard from '../components/ProductoCard'
+import { productosDe, precioDesde, formatoPrecio } from '../data/catalogo'
 import Ilustracion from '../components/Ilustracion'
 
-const categoria = (slug) => categorias.find((c) => c.slug === slug)
-
-/* ---------- Portada: mosaico de productos, título y accesos a las categorías ---------- */
-
-// El producto del centro del mosaico: la placa de video más cara del catálogo
-const destacado =
-  [...productosDe('placas_de_video')].sort((a, b) => b.precio - a.precio)[0] ?? productos[0]
+/* ---------- Portada: mosaico de productos alrededor de la barra del logo, y el título ---------- */
 
 // Productos para las fichas del fondo. Cada fila arranca en una categoría distinta,
 // así no quedan columnas con el mismo tipo de producto repetido.
@@ -26,7 +18,7 @@ const filasDelMosaico = FILAS.map(({ cantidad, arranca }) => {
   const fila = []
   for (let i = 0; fila.length < cantidad && i < cantidad * 3; i++) {
     const cat = categorias[(arranca + i) % categorias.length]
-    const p = productosDe(cat.slug).filter((otro) => otro.id !== destacado.id)[usados[cat.slug] ?? 0]
+    const p = productosDe(cat.slug)[usados[cat.slug] ?? 0]
     if (p) {
       fila.push(p)
       usados[cat.slug] = (usados[cat.slug] ?? 0) + 1
@@ -37,10 +29,10 @@ const filasDelMosaico = FILAS.map(({ cantidad, arranca }) => {
 
 function Portada() {
   return (
-    <section className="overflow-hidden border-b border-linea pb-12">
+    <section className="overflow-hidden pb-12">
       <div className="relative pt-8">
         {/* Las fichas son un atajo para quien usa mouse; con teclado y lector de pantalla
-            se llega a los mismos productos desde las secciones de abajo */}
+            se llega a los mismos productos desde las categorías de abajo */}
         <div className="mosaico flex flex-col gap-3 sm:gap-4" aria-hidden="true">
           {filasDelMosaico.map((fila, i) => (
             <div key={i} className="relative left-1/2 flex w-max -translate-x-1/2 gap-3 sm:gap-4">
@@ -63,181 +55,82 @@ function Portada() {
           ))}
         </div>
 
-        <Link
-          to={`/producto/${destacado.id}`}
-          aria-label={`${destacado.nombre}, producto destacado`}
-          title={`${destacado.nombre}, ${formatoPrecio(destacado.precio)}`}
-          className="ficha ficha-central absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 p-3 sm:h-32 sm:w-32 sm:p-4"
-        >
-          <Ilustracion
-            producto={destacado}
-            categoria={destacado.categoria}
-            className="dibujo-sin-rotulos h-full w-full"
-          />
-        </Link>
+        {/* En el centro, la barra del logo: el nombre completo ya está arriba a la izquierda */}
+        <div className="ficha ficha-central absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center sm:h-32 sm:w-32">
+          <svg viewBox="0 0 32 32" className="h-[66%] w-[66%]" aria-hidden="true">
+            <defs>
+              {/* De blanco arriba a gris abajo, para que la barra tenga algo de volumen */}
+              <linearGradient id="barra" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="var(--text)" />
+                <stop offset="1" stopColor="var(--muted)" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M19.5 5h4L12.5 27h-4z"
+              fill="url(#barra)"
+              stroke="url(#barra)"
+              strokeWidth="1.25"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 text-center">
         <h1 className="text-3xl font-medium tracking-tight sm:text-5xl">
           Componentes y periféricos para tu PC
         </h1>
-        <p className="mt-4 text-sm text-tenue">
-          {productos.length} productos en {categorias.length} categorías, con precios en pesos
-          argentinos.
-        </p>
-
-        <nav aria-label="Categorías" className="mt-8 flex flex-wrap justify-center gap-2 text-sm">
-          {categorias.map((cat) => (
-            <Link
-              key={cat.slug}
-              to={`/categoria/${cat.slug}`}
-              className="rounded-md border border-linea px-3 py-1.5 hover:border-tenue hover:bg-plano"
-            >
-              {cat.nombre}{' '}
-              <span className="text-xs text-tenue tabular-nums">{productosDe(cat.slug).length}</span>
-            </Link>
-          ))}
-          <Link
-            to="/productos"
-            className="rounded-md bg-tinta px-3 py-1.5 font-medium text-fondo hover:opacity-85"
-          >
-            Ver todos los productos
-          </Link>
-        </nav>
+        <Link
+          to="/productos"
+          className="mt-8 inline-block rounded-[3px] bg-lime px-5 py-2.5 font-mono text-sm font-bold text-bg hover:shadow-glow"
+        >
+          Ver todos los productos
+        </Link>
       </div>
     </section>
   )
 }
 
-/* ---------- Encabezado común de las secciones por categoría ---------- */
+/* ---------- Las siete categorías, en fichas grandes ---------- */
 
-function Titulo({ slug }) {
-  const cat = categoria(slug)
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <h2 id={`fila-${slug}`} className="text-lg font-semibold">
-        {cat.nombre}{' '}
-        <span className="text-sm font-normal text-tenue tabular-nums">{productosDe(slug).length}</span>
-      </h2>
-      <Link to={`/categoria/${slug}`} className="shrink-0 font-sans text-sm font-medium underline hover:no-underline">
-        Ver todo
-      </Link>
-    </div>
-  )
+// Cuánto ocupa cada ficha en la grilla de 4 columnas (2 en celular).
+// La forma acompaña al dibujo: las memorias y los teclados son anchos; la placa de video va en grande.
+const FORMAS = {
+  placas_de_video: 'col-span-2 row-span-2',
+  memorias_ram: 'col-span-2',
+  teclados: 'col-span-2',
 }
 
-/* ---------- Tabla comparativa de procesadores ---------- */
-
-const numero = 'px-3 py-2.5 text-right'
-
-function TablaProcesadores() {
-  const lista = productosDe('procesadores').slice(0, 8)
+function Categorias() {
   return (
-    <section aria-labelledby="fila-procesadores" className="mt-14">
-      <Titulo slug="procesadores" />
-      <table className="mt-3 w-full text-sm tabular-nums">
-        <thead>
-          <tr className="border-b border-tinta text-xs text-tenue">
-            <th scope="col" className="py-2 pr-3 text-left font-medium">Modelo</th>
-            <th scope="col" className={`${numero} font-medium`}>Núcleos</th>
-            <th scope="col" className={`${numero} hidden font-medium md:table-cell`}>Hilos</th>
-            <th scope="col" className={`${numero} hidden font-medium md:table-cell`}>Frecuencia máx.</th>
-            <th scope="col" className="px-3 py-2 text-left font-medium">Socket</th>
-            <th scope="col" className={`${numero} hidden font-medium md:table-cell`}>TDP</th>
-            <th scope="col" className={`${numero} hidden font-medium md:table-cell`}>Caché L3</th>
-            <th scope="col" className={`${numero} hidden font-medium sm:table-cell`}>Precio de lista</th>
-            <th scope="col" className="py-2 pl-3 text-right font-medium">En efectivo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {lista.map((p) => (
-            <tr key={p.id} className="border-b border-linea">
-              <th scope="row" className="py-2.5 pr-3 text-left font-medium">
-                <Link to={`/producto/${p.id}`} className="hover:underline">
-                  {p.nombre}
-                </Link>
-              </th>
-              <td className={numero}>{p.nucleos}</td>
-              <td className={`${numero} hidden md:table-cell`}>{p.hilos}</td>
-              <td className={`${numero} hidden md:table-cell`}>
-                {p.frecuencia_boost_ghz.toLocaleString('es-AR', { minimumFractionDigits: 1 })} GHz
-              </td>
-              <td className="px-3 py-2.5">{p.socket}</td>
-              <td className={`${numero} hidden md:table-cell`}>{p.tdp_w} W</td>
-              <td className={`${numero} hidden md:table-cell`}>{p.cache_l3_mb} MB</td>
-              <td className={`${numero} hidden sm:table-cell`}>{formatoPrecio(p.precio)}</td>
-              <td className="py-2.5 pl-3 text-right font-semibold text-acento">
-                {formatoPrecio(precioEfectivo(p.precio))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
-  )
-}
-
-/* ---------- Fila de tarjetas compactas, separadas por líneas ---------- */
-
-function FilaDeTarjetas({ slug }) {
-  return (
-    <section aria-labelledby={`fila-${slug}`} className="mt-14">
-      <Titulo slug={slug} />
-      <ul className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-[3px] border border-linea bg-linea sm:grid-cols-3 lg:grid-cols-6">
-        {productosDe(slug)
-          .slice(0, 6)
-          .map((p) => (
-            <li key={p.id} className="bg-fondo">
-              <ProductoCard producto={p} />
-            </li>
-          ))}
-      </ul>
-    </section>
-  )
-}
-
-/* ---------- Dos categorías lado a lado, como listas de renglones ---------- */
-
-function Lista({ slug }) {
-  return (
-    <section aria-labelledby={`fila-${slug}`} className="min-w-0">
-      <Titulo slug={slug} />
-      <ul className="mt-3 border-b border-linea">
-        {productosDe(slug)
-          .slice(0, 6)
-          .map((p) => (
-            <li key={p.id}>
+    <nav aria-label="Categorías" className="mx-auto max-w-7xl px-4">
+      <ul className="grid grid-flow-row-dense auto-rows-[11rem] grid-cols-2 gap-3 sm:auto-rows-[13rem] sm:gap-4 lg:grid-cols-4">
+        {categorias.map((cat) => {
+          const lista = productosDe(cat.slug)
+          return (
+            <li key={cat.slug} className={FORMAS[cat.slug] ?? ''}>
               <Link
-                to={`/producto/${p.id}`}
-                className="group flex items-baseline justify-between gap-4 border-t border-linea py-2.5"
+                to={`/categoria/${cat.slug}`}
+                className="ficha ficha-categoria group flex h-full flex-col p-4 hover:border-lime hover:shadow-glow sm:p-5"
               >
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium group-hover:underline">{p.nombre}</span>
-                  <span className="block truncate text-xs text-tenue tabular-nums">
-                    {p.specs.map(([, valor]) => valor).join(', ')}
+                {/* El dibujo es el del primer producto de la categoría */}
+                <Ilustracion
+                  producto={lista[0]}
+                  categoria={cat.slug}
+                  className="min-h-0 w-full flex-1"
+                />
+                <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 text-white">
+                  <span className="text-base font-medium group-hover:underline sm:text-lg">{cat.nombre}</span>
+                  <span className="font-mono text-xs font-medium text-muted sm:text-sm">
+                    desde {formatoPrecio(precioDesde(cat.slug))}
                   </span>
-                </span>
-                <span className="shrink-0 text-right tabular-nums">
-                  <span className="block text-sm font-semibold">{formatoPrecio(p.precio)}</span>
-                  <span className="block text-xs font-medium text-acento">
-                    {formatoPrecio(precioEfectivo(p.precio))} en efectivo
-                  </span>
-                </span>
+                </div>
               </Link>
             </li>
-          ))}
+          )
+        })}
       </ul>
-    </section>
-  )
-}
-
-function DosListas({ slugs }) {
-  return (
-    <div className="mt-14 grid gap-x-12 gap-y-14 md:grid-cols-2">
-      {slugs.map((slug) => (
-        <Lista key={slug} slug={slug} />
-      ))}
-    </div>
+    </nav>
   )
 }
 
@@ -246,14 +139,7 @@ export default function Home() {
   return (
     <>
       <Portada />
-
-      <div className="mx-auto max-w-7xl px-4">
-        <TablaProcesadores />
-        <FilaDeTarjetas slug="placas_de_video" />
-        <DosListas slugs={['placas_base', 'memorias_ram']} />
-        <FilaDeTarjetas slug="monitores" />
-        <DosListas slugs={['teclados', 'mouses']} />
-      </div>
+      <Categorias />
     </>
   )
 }

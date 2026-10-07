@@ -15,7 +15,7 @@ const guias = {
       ],
       [
         '¿Qué significa X3D en los Ryzen?',
-        'Son los modelos con caché 3D V-Cache: tienen más caché L3 y rinden más en juegos. Se nota en la columna Caché L3 de la comparación.',
+        'Son los modelos con caché 3D V-Cache: tienen más caché L3 y rinden más en juegos. El dato figura como Caché L3 en la ficha de cada procesador.',
       ],
     ],
   },
@@ -32,7 +32,7 @@ const guias = {
       ],
       [
         '¿Todas traen WiFi?',
-        'No. La columna WiFi de la comparación lo indica modelo por modelo.',
+        'No. En la ficha de cada placa figura si trae WiFi o no.',
       ],
     ],
   },
@@ -62,7 +62,7 @@ const guias = {
       ],
       [
         '¿Qué fuente necesito?',
-        'La columna Consumo muestra lo que gasta la placa sola. La fuente tiene que cubrir eso más el resto del equipo, con margen.',
+        'El consumo que figura en la ficha es lo que gasta la placa sola. La fuente tiene que cubrir eso más el resto del equipo, con margen.',
       ],
       [
         '¿Por qué algunas tienen tres coolers?',

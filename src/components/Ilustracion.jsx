@@ -12,7 +12,16 @@ const LLENO = 'currentColor'
 
 function Texto({ x, y, size, children, anchor = 'middle' }) {
   return (
-    <text x={x} y={y} textAnchor={anchor} fontSize={size} fontWeight="600" fill="currentColor" stroke="none">
+    <text
+      x={x}
+      y={y}
+      textAnchor={anchor}
+      fontSize={size}
+      fontWeight="500"
+      fill="currentColor"
+      stroke="none"
+      style={{ fontFamily: 'var(--font-mono)' }}
+    >
       {children}
     </text>
   )

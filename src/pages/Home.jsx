@@ -9,10 +9,6 @@ const categoria = (slug) => categorias.find((c) => c.slug === slug)
 
 /* ---------- Portada: mosaico de productos, título y accesos a las categorías ---------- */
 
-// El producto del centro del mosaico: la placa de video más cara del catálogo
-const destacado =
-  [...productosDe('placas_de_video')].sort((a, b) => b.precio - a.precio)[0] ?? productos[0]
-
 // Productos para las fichas del fondo. Cada fila arranca en una categoría distinta,
 // así no quedan columnas con el mismo tipo de producto repetido.
 const FILAS = [
@@ -26,7 +22,7 @@ const filasDelMosaico = FILAS.map(({ cantidad, arranca }) => {
   const fila = []
   for (let i = 0; fila.length < cantidad && i < cantidad * 3; i++) {
     const cat = categorias[(arranca + i) % categorias.length]
-    const p = productosDe(cat.slug).filter((otro) => otro.id !== destacado.id)[usados[cat.slug] ?? 0]
+    const p = productosDe(cat.slug)[usados[cat.slug] ?? 0]
     if (p) {
       fila.push(p)
       usados[cat.slug] = (usados[cat.slug] ?? 0) + 1
@@ -63,18 +59,12 @@ function Portada() {
           ))}
         </div>
 
-        <Link
-          to={`/producto/${destacado.id}`}
-          aria-label={`${destacado.nombre}, producto destacado`}
-          title={`${destacado.nombre}, ${formatoPrecio(destacado.precio)}`}
-          className="ficha ficha-central absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 p-3 sm:h-32 sm:w-32 sm:p-4"
-        >
-          <Ilustracion
-            producto={destacado}
-            categoria={destacado.categoria}
-            className="dibujo-sin-rotulos h-full w-full"
-          />
-        </Link>
+        {/* En el centro, la marca */}
+        <div className="ficha ficha-central absolute left-1/2 top-1/2 flex h-24 w-52 -translate-x-1/2 -translate-y-1/2 items-center justify-center font-sans text-3xl font-semibold tracking-tight sm:h-32 sm:w-72 sm:text-[2.75rem]">
+          <span aria-hidden="true">
+            aura<span className="font-normal text-tenue">/</span>ware
+          </span>
+        </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 text-center">

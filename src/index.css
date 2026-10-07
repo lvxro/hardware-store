@@ -107,7 +107,7 @@ body {
 
   /*
     Mosaico del home: fichas con productos del catálogo, apagadas, que se van
-    perdiendo hacia los bordes. La del centro, más clara, es el producto destacado.
+    perdiendo hacia los bordes. La del centro, más clara y más ancha, lleva la marca.
   */
   .mosaico {
     mask-image: radial-gradient(ellipse 58% 62% at 50% 50%, #000 30%, transparent 76%);
@@ -126,7 +126,7 @@ body {
       border-color 150ms;
   }
 
-  .ficha:hover {
+  a.ficha:hover {
     border-color: rgb(255 255 255 / 0.22);
     color: var(--tinta);
   }

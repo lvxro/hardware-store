@@ -62,9 +62,9 @@ function Buscador({ inicial }) {
     >
       <div
         aria-hidden={!abierto}
-        className={`overflow-hidden rounded-[3px] transition-[width,opacity] duration-200 ease-out motion-reduce:transition-none ${
+        className={`overflow-hidden rounded-[3px] transition-[width,opacity,box-shadow] duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${
           abierto
-            ? 'w-full border border-line-strong bg-bg opacity-100 focus-within:border-lime md:max-w-xl'
+            ? 'w-full border border-line-strong bg-bg opacity-100 focus-within:border-lime focus-within:shadow-glow md:max-w-xl'
             : 'w-0 opacity-0'
         }`}
       >
@@ -77,7 +77,9 @@ function Buscador({ inicial }) {
           tabIndex={abierto ? 0 : -1}
           placeholder="Buscá por marca o modelo"
           aria-label="Buscar productos"
-          className="w-full min-w-0 bg-transparent px-3 py-[7px] text-sm text-white placeholder:text-muted focus:outline-none sm:text-base"
+          className={`w-full min-w-0 bg-transparent px-3 py-[7px] text-sm text-white placeholder:text-muted focus:outline-none sm:text-base ${
+            abierto ? 'entra-deslizando' : ''
+          }`}
         />
       </div>
       <button
@@ -88,7 +90,18 @@ function Buscador({ inicial }) {
         title="Buscar"
         className={`shrink-0 ${abierto ? claseIconoActivo : claseIcono}`}
       >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" className="h-5 w-5" aria-hidden="true">
+        {/* La lupa gira un cuarto de vuelta al abrir y vuelve al cerrar */}
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          className={`h-5 w-5 transition-transform duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ${
+            abierto ? 'rotate-90' : ''
+          }`}
+          aria-hidden="true"
+        >
           <circle cx="11" cy="11" r="6.5" />
           <path d="m16 16 4.5 4.5" />
         </svg>
@@ -131,6 +144,7 @@ function BotonCarrito({ cantidad }) {
       to="/carrito"
       aria-label={lleno ? `Carrito, ${cantidad} ${cantidad === 1 ? 'producto' : 'productos'}` : 'Carrito'}
       title="Carrito"
+      data-carrito
       className={`relative shrink-0 ${
         lleno
           ? 'rounded-[3px] border border-lime bg-lime p-2 text-bg shadow-glow hover:shadow-[var(--lime-glow),var(--lime-glow)]'
@@ -143,7 +157,8 @@ function BotonCarrito({ cantidad }) {
         <circle cx="17" cy="19" r="1.25" />
       </svg>
       {lleno && (
-        <span className="absolute -right-2 -top-2 min-w-5 rounded-full border border-lime bg-bg px-1 text-center font-mono text-[11px] font-bold leading-[18px] text-lime">
+        // La key hace que el número dé un saltito cada vez que cambia
+        <span key={cantidad} className="salta absolute -right-2 -top-2 min-w-5 rounded-full border border-lime bg-bg px-1 text-center font-mono text-[11px] font-bold leading-[18px] text-lime">
           {cantidad}
         </span>
       )}
@@ -151,10 +166,7 @@ function BotonCarrito({ cantidad }) {
   )
 }
 
-/*
-  "enCarrito" es la cantidad de productos del carrito. Hoy nadie la pasa, porque el carrito
-  todavía no existe (T-018): cuando se haga, App se la pasa a Header y el botón cambia solo.
-*/
+// "enCarrito" es cuántas unidades hay en el carrito. Se la pasa App, que es donde vive el carrito.
 export default function Header({ enCarrito = 0 }) {
   const { pathname } = useLocation()
   const [parametros] = useSearchParams()

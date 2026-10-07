@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Listado from './pages/Listado'
 import Producto from './pages/Producto'
 import Carrito from './pages/Carrito'
+import { useCarrito } from './data/carrito'
 
 function NoEncontrada() {
   return (
@@ -32,17 +33,35 @@ function ScrollArriba() {
 }
 
 export default function App() {
+  // El carrito vive acá para que el encabezado, la ficha y la página del carrito vean lo mismo
+  const carrito = useCarrito()
+
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollArriba />
-      <Header />
+      <Header enCarrito={carrito.unidades} />
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Listado />} />
           <Route path="/categoria/:slug" element={<Listado />} />
-          <Route path="/producto/:id" element={<Producto />} />
-          <Route path="/carrito" element={<Carrito />} />
+          <Route
+            path="/producto/:id"
+            element={<Producto onAgregarAlCarrito={carrito.agregar} cantidadEnCarrito={carrito.cantidadDe} />}
+          />
+          <Route
+            path="/carrito"
+            element={
+              <Carrito
+                items={carrito.items}
+                total={carrito.total}
+                unidades={carrito.unidades}
+                onCambiarCantidad={carrito.cambiarCantidad}
+                onQuitar={carrito.quitar}
+                onVaciar={carrito.vaciar}
+              />
+            }
+          />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
       </main>

@@ -208,11 +208,11 @@ function ListadoContenido({ slug, busqueda }) {
           </Link>
         </div>
       ) : (
-        // Tarjetas amplias, con aire entre una y otra
+        // Tarjetas con aire entre una y otra
         <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
           {lista.map((p) => (
             <li key={p.id}>
-              <ProductoCard producto={p} amplia />
+              <ProductoCard producto={p} />
             </li>
           ))}
         </ul>

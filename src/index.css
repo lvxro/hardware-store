@@ -131,6 +131,11 @@ body {
     color: var(--tinta);
   }
 
+  /* Fichas grandes de categoría: el dibujo un poco más visible que en el fondo de la portada */
+  .ficha-categoria {
+    color: #7d828c;
+  }
+
   .ficha-central {
     --cuerpo: #1b1c1f;
     border-color: rgb(255 255 255 / 0.16);

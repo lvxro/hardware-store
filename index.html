@@ -4,17 +4,11 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- El sitio es solo oscuro: se le avisa al navegador antes de que cargue el CSS -->
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#08090a" />
     <meta name="description" content="Auraware: componentes y periféricos para tu PC, con precios en pesos argentinos." />
     <title>Auraware</title>
-    <script>
-      // Modo oscuro: se aplica antes de dibujar la página para que no parpadee
-      try {
-        var tema = localStorage.getItem('tema')
-        if (tema === 'oscuro' || (!tema && matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark')
-        }
-      } catch (e) {}
-    </script>
   </head>
   <body>
     <div id="root"></div>

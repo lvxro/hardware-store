@@ -4,7 +4,6 @@ import categorias from '../data/categorias'
 import { formatoPrecio } from '../data/catalogo'
 import { CUOTAS_SIN_INTERES, ENVIO_GRATIS_DESDE, PORCENTAJE_EFECTIVO } from '../data/reglas'
 import Logo from './Logo'
-import TemaToggle from './TemaToggle'
 
 function Buscador({ inicial }) {
   const navegar = useNavigate()
@@ -86,7 +85,6 @@ export default function Header() {
         <Buscador key={busqueda} inicial={busqueda} />
 
         <div className="order-2 ml-auto flex items-center gap-2 md:order-3">
-          <TemaToggle />
           <Link
             to="/carrito"
             aria-label="Carrito"

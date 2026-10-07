@@ -366,7 +366,7 @@ export default function Ilustracion({ producto, categoria, className = '' }) {
       strokeWidth="1"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className}
+      className={`dibujo ${className}`}
       aria-hidden="true"
     >
       <Dibujo p={producto} />

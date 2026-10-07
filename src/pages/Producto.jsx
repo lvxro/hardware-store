@@ -9,17 +9,8 @@ import {
   aPesos,
   precioEfectivo as calcularEfectivo,
 } from "../data/reglas";
+import { CAMPOS_BASE, formatearCampo, formatearValor } from "../data/campos";
 import Vitrina from "../components/Vitrina";
-
-const CAMPOS_BASE = [
-  "id",
-  "marca",
-  "modelo",
-  "nombre",
-  "precio_usd_aprox",
-  "imagen",
-  "descripcion",
-];
 
 const NOMBRES_CATEGORIA = {
   procesadores: "Procesadores",
@@ -30,49 +21,6 @@ const NOMBRES_CATEGORIA = {
   teclados: "Teclados",
   mouses: "Mouses",
 };
-
-const PALABRAS = {
-  nucleos: "núcleos",
-  tdp: "TDP",
-  cache: "caché",
-  l3: "L3",
-  tamano: "tamaño",
-  resolucion: "resolución",
-  configuracion: "configuración",
-  conexion: "conexión",
-  iluminacion: "iluminación",
-  dpi: "DPI",
-  max: "máx.",
-  wifi: "WiFi",
-};
-
-const UNIDADES = {
-  w: "W",
-  ghz: "GHz",
-  mhz: "MHz",
-  hz: "Hz",
-  mb: "MB",
-  gb: "GB",
-  ms: "ms",
-  g: "g",
-};
-
-function formatearCampo(clave) {
-  const partes = clave.split("_");
-  let unidad = "";
-
-  if (partes.length > 1 && UNIDADES[partes[partes.length - 1]]) {
-    unidad = ` (${UNIDADES[partes.pop()]})`;
-  }
-
-  const texto = partes.map((parte) => PALABRAS[parte] ?? parte).join(" ");
-  return texto.charAt(0).toUpperCase() + texto.slice(1) + unidad;
-}
-
-function formatearValor(valor) {
-  if (typeof valor === "boolean") return valor ? "Sí" : "No";
-  return String(valor);
-}
 
 function formatearPesos(numero) {
   return formatoPrecio(Math.round(numero));
@@ -117,7 +65,7 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
         </p>
         <Link
           to="/"
-          className="mt-5 inline-block rounded-[3px] border border-tinta px-4 py-2 text-sm font-medium hover:bg-tinta hover:text-fondo"
+          className="mt-5 inline-block rounded-[3px] border border-tinta px-4 py-2 font-sans text-sm font-medium hover:bg-tinta hover:text-fondo"
         >
           Volver al inicio
         </Link>
@@ -161,7 +109,7 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
-      <nav className="text-sm text-tenue" aria-label="Ruta">
+      <nav className="font-sans text-sm text-tenue" aria-label="Ruta">
         <Link to="/" className="hover:text-tinta hover:underline">
           Inicio
         </Link>
@@ -205,7 +153,7 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
                   menos
                 </span>
               </dt>
-              <dd className="text-3xl font-semibold text-pcb">
+              <dd className="text-3xl font-semibold text-acento">
                 {formatearPesos(precioEfectivo)}
               </dd>
             </div>
@@ -223,7 +171,7 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
           </dl>
 
           <table className="w-full border-t border-linea text-sm tabular-nums">
-            <caption className="pb-2 pt-3 text-left font-medium">
+            <caption className="pb-2 pt-3 text-left font-sans font-medium">
               Cuotas con Mercado Pago
             </caption>
             <thead>
@@ -248,10 +196,10 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
                       {cuotas} cuotas{" "}
                       {coeficiente === 1 ? "sin interés" : "fijas"}
                     </th>
-                    <td className="px-3 py-2 text-right font-medium">
+                    <td className="whitespace-nowrap px-3 py-2 text-right font-medium">
                       {formatearPesos(total / cuotas)}
                     </td>
-                    <td className="py-2 pl-3 text-right text-tenue">
+                    <td className="whitespace-nowrap py-2 pl-3 text-right text-tenue">
                       {formatearPesos(total)}
                     </td>
                   </tr>
@@ -283,18 +231,18 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
               </button>
             </div>
 
-            {/* El botón de comprar es uno de los tres lugares donde va el verde */}
+            {/* El botón de comprar es uno de los tres lugares donde va el violeta */}
             <button
               type="button"
               onClick={agregar}
-              className="flex-1 rounded-[3px] bg-pcb px-6 py-3 font-semibold text-sobre-pcb hover:opacity-90"
+              className="flex-1 rounded-[3px] bg-acento px-6 py-3 font-semibold text-sobre-acento hover:opacity-90"
             >
               {agregado ? "Agregado ✓" : "Agregar al carrito"}
             </button>
           </div>
 
           <div className="mt-6 border-t border-linea pt-4">
-            <p className="flex items-center gap-2 text-sm font-medium text-pcb tabular-nums">
+            <p className="flex items-center gap-2 text-sm font-medium text-acento tabular-nums">
               <IconoCamion />
               Envío gratis superando los {formatearPesos(ENVIO_GRATIS_DESDE)}
             </p>
@@ -366,7 +314,7 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
             </h2>
             <Link
               to={`/categoria/${categoria}`}
-              className="shrink-0 text-sm font-medium underline hover:no-underline"
+              className="shrink-0 font-sans text-sm font-medium underline hover:no-underline"
             >
               Ver todo
             </Link>
@@ -440,7 +388,7 @@ function FichaContenido({ id, onAgregarAlCarrito }) {
                     <td className="hidden px-3 py-2.5 text-right sm:table-cell">
                       {formatoPrecio(otro.precio)}
                     </td>
-                    <td className="py-2.5 pl-3 pr-3 text-right font-semibold text-pcb">
+                    <td className="py-2.5 pl-3 pr-3 text-right font-semibold text-acento">
                       {formatoPrecio(calcularEfectivo(otro.precio))}
                     </td>
                   </tr>

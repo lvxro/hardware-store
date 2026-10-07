@@ -2,7 +2,9 @@
 
 /* Los colores salen de variables: cambian solos entre modo claro y oscuro */
 @theme {
-  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Poppins: títulos, navegación y botones. JetBrains Mono: texto, specs y precios */
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 
   /* Grises neutros, sin tinte */
   --color-fondo: var(--fondo);
@@ -12,11 +14,10 @@
   --color-tenue: var(--tenue);
   --color-linea: var(--linea);
 
-  /* El único color del sitio. Se usa solo en tres lugares:
+  /* El único color del sitio, un violeta. Se usa solo en tres lugares:
      precio en efectivo, envío gratis y el botón de comprar */
-  --color-pcb: var(--pcb);
-  --color-pcb-claro: var(--pcb-claro);
-  --color-sobre-pcb: var(--sobre-pcb);
+  --color-acento: var(--acento);
+  --color-sobre-acento: var(--sobre-acento);
 
   /* Nombres de la primera pasada que todavía usa la página provisoria del carrito.
      Apuntan a los grises de arriba; se van cuando se haga el carrito de verdad (T-018). */
@@ -35,9 +36,8 @@
   --tenue: #666666;
   --linea: #dcdcdc;
   --trazo: #4a4a4a;
-  --pcb: #0f6b4f;
-  --pcb-claro: #e7f1ec;
-  --sobre-pcb: #ffffff;
+  --acento: #6b3fd4;
+  --sobre-acento: #ffffff;
 }
 
 /* Modo oscuro: se activa con la clase "dark" en <html> */
@@ -50,13 +50,25 @@
   --tenue: #9e9e9e;
   --linea: #303030;
   --trazo: #b4b4b4;
-  --pcb: #4cc196;
-  --pcb-claro: #173329;
-  --sobre-pcb: #0c1712;
+  --acento: #b9a2ff;
+  --sobre-acento: #1a1033;
 }
 
 body {
-  @apply bg-fondo font-sans text-tinta antialiased;
+  @apply bg-fondo font-mono text-tinta antialiased;
+}
+
+/* El texto corre en JetBrains Mono; estos elementos van en Poppins */
+@layer base {
+  h1,
+  h2,
+  h3,
+  button,
+  select,
+  summary,
+  nav a {
+    font-family: var(--font-sans);
+  }
 }
 
 :focus-visible {

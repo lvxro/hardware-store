@@ -102,7 +102,7 @@ function Condiciones() {
   const envio = `Envío gratis desde ${formatoPrecio(ENVIO_GRATIS_DESDE)}`
   return (
     <div className="border-b border-line-subtle bg-bg">
-      <p className="mx-auto max-w-7xl px-4 py-1.5 text-xs text-muted tabular-nums">
+      <p className="mx-auto max-w-7xl px-4 py-1.5 text-center text-xs text-muted tabular-nums">
         <span className="sm:hidden">
           {envio} y {PORCENTAJE_EFECTIVO}% menos en efectivo.
         </span>

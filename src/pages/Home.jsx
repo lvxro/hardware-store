@@ -1,97 +1,109 @@
 import { Link } from 'react-router-dom'
-import categorias, { grupos } from '../data/categorias'
+import categorias from '../data/categorias'
 import productos, { productosDe, formatoPrecio } from '../data/catalogo'
-import { CUOTAS_SIN_INTERES, precioEfectivo } from '../data/reglas'
+import { precioEfectivo } from '../data/reglas'
 import ProductoCard from '../components/ProductoCard'
-import Vitrina from '../components/Vitrina'
+import Ilustracion from '../components/Ilustracion'
 
 const categoria = (slug) => categorias.find((c) => c.slug === slug)
 
-/* ---------- Categorías: lista de texto con la cantidad de productos ---------- */
+/* ---------- Portada: mosaico de productos, título y accesos a las categorías ---------- */
 
-function Categorias() {
-  const fila = 'flex items-baseline justify-between gap-4 border-t border-linea py-2 hover:underline'
-  return (
-    <nav aria-labelledby="categorias">
-      <h2 id="categorias" className="text-lg font-semibold">
-        Categorías
-      </h2>
-      {grupos.map((grupo) => (
-        <div key={grupo} className="mt-4">
-          <h3 className="pb-1.5 text-sm text-tenue">{grupo}</h3>
-          <ul>
-            {categorias
-              .filter((c) => c.grupo === grupo)
-              .map((cat) => (
-                <li key={cat.slug}>
-                  <Link to={`/categoria/${cat.slug}`} className={fila}>
-                    <span className="font-medium">{cat.nombre}</span>
-                    <span className="text-sm text-tenue tabular-nums">{productosDe(cat.slug).length}</span>
-                  </Link>
-                </li>
-              ))}
-          </ul>
-        </div>
-      ))}
-      <Link to="/productos" className={`mt-4 ${fila} border-b`}>
-        <span className="font-medium">Todos los productos</span>
-        <span className="text-sm text-tenue tabular-nums">{productos.length}</span>
-      </Link>
-    </nav>
-  )
-}
-
-/* ---------- Producto destacado, en grande ---------- */
-
-// La placa de video más cara del catálogo
+// El producto del centro del mosaico: la placa de video más cara del catálogo
 const destacado =
   [...productosDe('placas_de_video')].sort((a, b) => b.precio - a.precio)[0] ?? productos[0]
 
-function Destacado() {
-  const p = destacado
-  const filas = [
-    ...p.specs,
-    ['Precio de lista', formatoPrecio(p.precio)],
-    [`${CUOTAS_SIN_INTERES} cuotas sin interés de`, formatoPrecio(Math.round(p.precio / CUOTAS_SIN_INTERES))],
-  ]
+// Productos para las fichas del fondo. Cada fila arranca en una categoría distinta,
+// así no quedan columnas con el mismo tipo de producto repetido.
+const FILAS = [
+  { cantidad: 8, arranca: 0 },
+  { cantidad: 9, arranca: 3 },
+  { cantidad: 9, arranca: 5 },
+  { cantidad: 8, arranca: 1 },
+]
+const usados = {} // cuántos productos de cada categoría ya se pusieron
+const filasDelMosaico = FILAS.map(({ cantidad, arranca }) => {
+  const fila = []
+  for (let i = 0; fila.length < cantidad && i < cantidad * 3; i++) {
+    const cat = categorias[(arranca + i) % categorias.length]
+    const p = productosDe(cat.slug).filter((otro) => otro.id !== destacado.id)[usados[cat.slug] ?? 0]
+    if (p) {
+      fila.push(p)
+      usados[cat.slug] = (usados[cat.slug] ?? 0) + 1
+    }
+  }
+  return fila
+})
 
+function Portada() {
   return (
-    <section aria-labelledby="destacado">
-      <h2 id="destacado" className="text-lg font-semibold">
-        Producto destacado
-      </h2>
-      <div className="mt-4 grid gap-x-8 gap-y-5 md:grid-cols-[1.3fr_1fr]">
-        <Link to={`/producto/${p.id}`} aria-hidden="true" tabIndex={-1}>
-          <Vitrina producto={p} categoria={p.categoria} className="aspect-[4/3] w-full" />
-        </Link>
-
-        <div>
-          <p className="text-sm text-tenue">{p.marca}</p>
-          <h3 className="text-2xl font-semibold">{p.modelo}</h3>
-          <p className="mt-2 text-tenue">{p.descripcion}</p>
-
-          <dl className="mt-5 text-sm tabular-nums">
-            {filas.map(([etiqueta, valor]) => (
-              <div key={etiqueta} className="flex justify-between gap-4 border-t border-linea py-2">
-                <dt className="text-tenue">{etiqueta}</dt>
-                <dd className="text-right font-medium">{valor}</dd>
-              </div>
-            ))}
-            <div className="flex justify-between gap-4 border-y border-linea py-2 text-acento">
-              <dt>En efectivo o transferencia</dt>
-              <dd className="text-right text-base font-semibold">
-                {formatoPrecio(precioEfectivo(p.precio))}
-              </dd>
+    <section className="overflow-hidden border-b border-linea pb-12">
+      <div className="relative pt-8">
+        {/* Las fichas son un atajo para quien usa mouse; con teclado y lector de pantalla
+            se llega a los mismos productos desde las secciones de abajo */}
+        <div className="mosaico flex flex-col gap-3 sm:gap-4" aria-hidden="true">
+          {filasDelMosaico.map((fila, i) => (
+            <div key={i} className="relative left-1/2 flex w-max -translate-x-1/2 gap-3 sm:gap-4">
+              {fila.map((p) => (
+                <Link
+                  key={p.id}
+                  to={`/producto/${p.id}`}
+                  tabIndex={-1}
+                  title={`${p.nombre}, ${formatoPrecio(p.precio)}`}
+                  className="ficha h-16 w-16 p-2 sm:h-20 sm:w-20 sm:p-2.5"
+                >
+                  <Ilustracion
+                    producto={p}
+                    categoria={p.categoria}
+                    className="dibujo-sin-rotulos h-full w-full"
+                  />
+                </Link>
+              ))}
             </div>
-          </dl>
-
-          <Link
-            to={`/producto/${p.id}`}
-            className="mt-5 inline-block rounded-[3px] border border-tinta px-4 py-2 font-sans text-sm font-medium hover:bg-tinta hover:text-fondo"
-          >
-            Ver producto
-          </Link>
+          ))}
         </div>
+
+        <Link
+          to={`/producto/${destacado.id}`}
+          aria-label={`${destacado.nombre}, producto destacado`}
+          title={`${destacado.nombre}, ${formatoPrecio(destacado.precio)}`}
+          className="ficha ficha-central absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 p-3 sm:h-32 sm:w-32 sm:p-4"
+        >
+          <Ilustracion
+            producto={destacado}
+            categoria={destacado.categoria}
+            className="dibujo-sin-rotulos h-full w-full"
+          />
+        </Link>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 text-center">
+        <h1 className="text-3xl font-medium tracking-tight sm:text-5xl">
+          Componentes y periféricos para tu PC
+        </h1>
+        <p className="mt-4 text-sm text-tenue">
+          {productos.length} productos en {categorias.length} categorías, con precios en pesos
+          argentinos.
+        </p>
+
+        <nav aria-label="Categorías" className="mt-8 flex flex-wrap justify-center gap-2 text-sm">
+          {categorias.map((cat) => (
+            <Link
+              key={cat.slug}
+              to={`/categoria/${cat.slug}`}
+              className="rounded-md border border-linea px-3 py-1.5 hover:border-tenue hover:bg-plano"
+            >
+              {cat.nombre}{' '}
+              <span className="text-xs text-tenue tabular-nums">{productosDe(cat.slug).length}</span>
+            </Link>
+          ))}
+          <Link
+            to="/productos"
+            className="rounded-md bg-tinta px-3 py-1.5 font-medium text-fondo hover:opacity-85"
+          >
+            Ver todos los productos
+          </Link>
+        </nav>
       </div>
     </section>
   )
@@ -232,19 +244,16 @@ function DosListas({ slugs }) {
 // T-010: home con navegación por categorías
 export default function Home() {
   return (
-    <div className="mx-auto max-w-7xl px-4">
-      <h1 className="pt-8 text-2xl font-semibold sm:text-3xl">Componentes y periféricos para tu PC</h1>
+    <>
+      <Portada />
 
-      <div className="mt-8 grid gap-x-12 gap-y-12 lg:grid-cols-[15rem_1fr]">
-        <Categorias />
-        <Destacado />
+      <div className="mx-auto max-w-7xl px-4">
+        <TablaProcesadores />
+        <FilaDeTarjetas slug="placas_de_video" />
+        <DosListas slugs={['placas_base', 'memorias_ram']} />
+        <FilaDeTarjetas slug="monitores" />
+        <DosListas slugs={['teclados', 'mouses']} />
       </div>
-
-      <TablaProcesadores />
-      <FilaDeTarjetas slug="placas_de_video" />
-      <DosListas slugs={['placas_base', 'memorias_ram']} />
-      <FilaDeTarjetas slug="monitores" />
-      <DosListas slugs={['teclados', 'mouses']} />
-    </div>
+    </>
   )
 }

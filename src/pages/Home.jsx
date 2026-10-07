@@ -56,9 +56,9 @@ function Portada() {
         </div>
 
         {/* En el centro, la marca */}
-        <div className="ficha ficha-central absolute left-1/2 top-1/2 flex h-24 w-52 -translate-x-1/2 -translate-y-1/2 items-center justify-center font-sans text-3xl font-semibold tracking-tight sm:h-32 sm:w-72 sm:text-[2.75rem]">
+        <div className="ficha ficha-central absolute left-1/2 top-1/2 flex h-24 w-52 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-3xl font-semibold tracking-tight sm:h-32 sm:w-72 sm:text-[2.75rem]">
           <span aria-hidden="true">
-            aura<span className="font-normal text-tenue">/</span>ware
+            aura<span className="font-normal text-muted">/</span>ware
           </span>
         </div>
       </div>
@@ -69,7 +69,7 @@ function Portada() {
         </h1>
         <Link
           to="/productos"
-          className="mt-8 inline-block rounded-md bg-tinta px-4 py-2 font-sans text-sm font-medium text-fondo hover:opacity-85"
+          className="mt-8 inline-block rounded-[3px] bg-lime px-5 py-2.5 font-mono text-sm font-bold text-bg hover:shadow-glow"
         >
           Ver todos los productos
         </Link>
@@ -98,7 +98,7 @@ function Categorias() {
             <li key={cat.slug} className={FORMAS[cat.slug] ?? ''}>
               <Link
                 to={`/categoria/${cat.slug}`}
-                className="ficha ficha-categoria group flex h-full flex-col p-4 sm:p-5"
+                className="ficha ficha-categoria group flex h-full flex-col p-4 hover:border-lime hover:shadow-glow sm:p-5"
               >
                 {/* El dibujo es el del primer producto de la categoría */}
                 <Ilustracion
@@ -106,9 +106,9 @@ function Categorias() {
                   categoria={cat.slug}
                   className="min-h-0 w-full flex-1"
                 />
-                <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 text-tinta">
+                <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 text-white">
                   <span className="text-base font-medium group-hover:underline sm:text-lg">{cat.nombre}</span>
-                  <span className="font-mono text-xs text-tenue tabular-nums sm:text-sm">
+                  <span className="font-mono text-xs font-medium text-muted sm:text-sm">
                     desde {formatoPrecio(precioDesde(cat.slug))}
                   </span>
                 </div>

@@ -11,10 +11,10 @@ function NoEncontrada() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
       <h1 className="text-2xl font-semibold">Esta página no existe</h1>
-      <p className="mt-2 text-tenue">Revisá que el enlace esté bien escrito o volvé al inicio.</p>
+      <p className="mt-2 text-muted">Revisá que el enlace esté bien escrito o volvé al inicio.</p>
       <Link
         to="/"
-        className="mt-5 inline-block rounded-[3px] border border-tinta px-4 py-2 font-sans text-sm font-medium hover:bg-tinta hover:text-fondo"
+        className="mt-5 inline-block rounded-[3px] bg-lime px-4 py-2 font-mono text-sm font-bold text-bg hover:shadow-glow"
       >
         Ir al inicio
       </Link>

@@ -1,98 +1,99 @@
 @import "tailwindcss";
 
-/* El sitio es solo oscuro. Los colores salen de las variables de :root, más abajo */
-@theme {
-  /* Poppins: títulos, navegación y botones. JetBrains Mono: texto, specs y precios */
-  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
-
-  /* Grises neutros, sin tinte */
-  --color-fondo: var(--fondo);
-  --color-superficie: var(--superficie);
-  --color-plano: var(--plano);
-  --color-tinta: var(--tinta);
-  --color-tenue: var(--tenue);
-  --color-linea: var(--linea);
-
-  /* El único color del sitio, un violeta. Se usa solo en tres lugares:
-     precio en efectivo, envío gratis y el botón de comprar */
-  --color-acento: var(--acento);
-  --color-sobre-acento: var(--sobre-acento);
-
-  /* Nombres de la primera pasada que todavía usa la página provisoria del carrito.
-     Apuntan a los grises de arriba; se van cuando se haga el carrito de verdad (T-018). */
-  --color-aura: var(--tinta);
-  --color-aura-claro: var(--plano);
-  --color-sobre-aura: var(--fondo);
-}
-
 /*
-  Un único tema, oscuro. "color-scheme: dark" hace que el navegador dibuje en oscuro
-  lo que no controla el CSS: desplegables, barras de desplazamiento y campos de texto.
+  Tema del sitio: un solo modo, oscuro, con lima como único acento.
+  Estos son todos los colores que se usan; los componentes no llevan colores escritos a mano.
 */
 :root {
-  color-scheme: dark;
-  --fondo: #08090a;
-  --superficie: #0f1011;
-  --plano: #141516;
-  --tinta: #f7f8f8;
-  --tenue: #8a8f98;
-  --linea: #23252a;
-  --trazo: #9ea3ab;
-  --acento: #b9a2ff;
-  --sobre-acento: #1a1033;
+  --bg: #0E0E10;
+  --surface: #17171A;
+  --raised: #1F1F24;
+  --lime: #CBEB4C;
+  --text: #FFFFFF;
+  --muted: #9B9BA6;
+  --line-subtle: rgb(255 255 255 / 0.08);
+  --line: rgb(255 255 255 / 0.10);
+  --line-strong: rgb(255 255 255 / 0.15);
+  --line-hover: rgb(255 255 255 / 0.30);
+  --lime-ring: rgb(203 235 76 / 0.40);
+  --lime-glow: 0 0 12px rgb(203 235 76 / 0.30);
+  --lime-glow-lg: 0 0 80px rgb(203 235 76 / 0.15);
+  --font-sans: "Poppins", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-/* El color de fondo va también en <html>, para que no se vea blanco mientras carga
-   ni al rebotar el desplazamiento en celulares */
+/* "color-scheme: dark" hace que el navegador dibuje en oscuro lo que no controla el CSS:
+   desplegables, barras de desplazamiento y campos de texto */
 html {
-  background-color: var(--fondo);
-}
-
-::selection {
-  background-color: rgb(185 162 255 / 0.3);
+  color-scheme: dark;
+  background: var(--bg);
 }
 
 body {
-  @apply bg-fondo font-mono text-tinta antialiased;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* El texto corre en JetBrains Mono; estos elementos van en Poppins */
+/* Los mismos valores, como clases de Tailwind: bg-surface, text-muted, border-line, shadow-glow... */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-lime: var(--lime);
+  --color-muted: var(--muted);
+  --color-line-subtle: var(--line-subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-line-hover: var(--line-hover);
+  --color-lime-ring: var(--lime-ring);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --shadow-glow: var(--lime-glow);
+  --shadow-glow-lg: var(--lime-glow-lg);
+}
+
 @layer base {
-  h1,
-  h2,
-  h3,
+  /* Botones y desplegables van en JetBrains Mono, igual que los precios */
+  button,
+  select {
+    font-family: var(--font-mono);
+  }
+
+  /* Todo cambio de estado (hover, activo, foco) dura 200 ms */
+  a,
   button,
   select,
-  summary,
-  nav a {
-    font-family: var(--font-sans);
+  input,
+  summary {
+    transition-property: color, background-color, border-color, box-shadow;
+    transition-duration: 200ms;
   }
 }
 
+/* Foco de teclado: anillo lima de 2 px en todo el sitio */
 :focus-visible {
-  outline: 2px solid var(--color-tinta);
+  outline: 2px solid var(--lime-ring);
   outline-offset: 2px;
 }
 
-/* De la primera pasada: lo sigue usando el título de la página provisoria del carrito */
-@utility subtitular {
-  font-weight: 600;
-  line-height: 1.2;
+::selection {
+  background-color: var(--lime-ring);
 }
 
 /* En la capa de componentes, así las clases de Tailwind pueden pisar estos estilos */
 @layer components {
   /*
-    Vitrina: el recuadro gris oscuro liso donde va el dibujo de cada producto,
+    Vitrina: el recuadro liso donde va el dibujo de cada producto,
     en línea fina de un solo tono, como un diagrama de manual.
   */
   .vitrina {
-    --cuerpo: var(--plano);
+    --cuerpo: var(--raised);
     overflow: hidden;
     border-radius: 2px;
-    background-color: var(--plano);
-    color: var(--trazo);
+    background-color: var(--raised);
+    color: var(--muted);
   }
 
   /* El trazo de los dibujos mide siempre 1 px, sin importar el tamaño al que se muestren */
@@ -105,48 +106,48 @@ body {
     display: none;
   }
 
+  /* Cuando hay foto real en /public/img, va sobre blanco */
+  .vitrina-foto {
+    background-color: var(--text);
+  }
+
   /*
     Mosaico del home: fichas con productos del catálogo, apagadas, que se van
-    perdiendo hacia los bordes. La del centro, más clara y más ancha, lleva la marca.
+    perdiendo hacia los bordes. La del centro, más ancha, lleva la marca.
+    (El degradado es una máscara de transparencia, no un color que se vea.)
   */
   .mosaico {
-    mask-image: radial-gradient(ellipse 58% 62% at 50% 50%, #000 30%, transparent 76%);
+    mask-image: radial-gradient(ellipse 58% 62% at 50% 50%, black 30%, transparent 76%);
   }
 
   .ficha {
-    --cuerpo: #111214;
+    --cuerpo: var(--surface);
     display: block;
     flex: none;
-    border: 1px solid rgb(255 255 255 / 0.06);
+    border: 1px solid var(--line-strong);
     border-radius: 1rem;
-    background-color: #111214;
-    color: #5a5e66;
-    transition:
-      color 150ms,
-      border-color 150ms;
+    background-color: var(--surface);
+    color: color-mix(in srgb, var(--muted) 55%, transparent);
   }
 
+  /* Al pasar el cursor, como cualquier tarjeta: borde lima, resplandor y dibujo en blanco */
   a.ficha:hover {
-    border-color: rgb(255 255 255 / 0.22);
-    color: var(--tinta);
+    border-color: var(--lime);
+    box-shadow: var(--lime-glow);
+    color: var(--text);
   }
 
-  /* Fichas grandes de categoría: el dibujo un poco más visible que en el fondo de la portada */
+  /* Fichas grandes de categoría: borde de panel y el dibujo en gris pleno */
   .ficha-categoria {
-    color: #7d828c;
+    border-color: var(--line);
+    color: var(--muted);
   }
 
   .ficha-central {
-    --cuerpo: #1b1c1f;
-    border-color: rgb(255 255 255 / 0.16);
+    --cuerpo: var(--raised);
     border-radius: 1.5rem;
-    background-image: linear-gradient(180deg, #25262a, #17181b);
-    color: var(--tinta);
-    box-shadow: 0 16px 48px rgb(0 0 0 / 0.7);
-  }
-
-  /* Cuando hay foto real en /public/img, va sobre blanco */
-  .vitrina-foto {
-    background-color: #ffffff;
+    background-color: var(--raised);
+    color: var(--text);
+    box-shadow: var(--lime-glow-lg);
   }
 }

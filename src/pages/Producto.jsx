@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import productos from "../data/productos.json";
-import { formatoPrecio, productosDe } from "../data/catalogo";
+import { datos as productos, formatoPrecio, productosDe } from "../data/catalogo";
 import {
   CUOTAS,
   ENVIO_GRATIS_DESDE,

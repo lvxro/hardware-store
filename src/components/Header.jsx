@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import categorias from '../data/categorias'
 import { formatoPrecio } from '../data/catalogo'
@@ -167,8 +167,81 @@ function BotonCarrito({ cantidad }) {
   )
 }
 
-// "enCarrito" es cuántas unidades hay en el carrito. Se la pasa App, que es donde vive el carrito.
-export default function Header({ enCarrito = 0 }) {
+/*
+  Botón de la cuenta (T-019). Sin sesión, lleva a iniciar sesión. Con sesión, se llena de lima con la
+  inicial del nombre y abre un menú chico con el nombre y "Cerrar sesión".
+*/
+function BotonCuenta({ sesion }) {
+  const { usuario, nombre, cargando, salir } = sesion
+  const [abierto, setAbierto] = useState(false)
+  const caja = useRef(null)
+
+  // El menú se cierra al tocar afuera o con Escape
+  useEffect(() => {
+    if (!abierto) return
+    const afuera = (e) => {
+      if (!caja.current?.contains(e.target)) setAbierto(false)
+    }
+    const escape = (e) => e.key === 'Escape' && setAbierto(false)
+    document.addEventListener('pointerdown', afuera)
+    document.addEventListener('keydown', escape)
+    return () => {
+      document.removeEventListener('pointerdown', afuera)
+      document.removeEventListener('keydown', escape)
+    }
+  }, [abierto])
+
+  // Mientras se lee la sesión guardada, un lugar vacío evita que los íconos salten de lugar
+  if (cargando) return <span className="h-9 w-9 shrink-0" aria-hidden="true" />
+
+  if (!usuario) {
+    return (
+      <Link to="/ingresar" aria-label="Iniciar sesión" title="Iniciar sesión" className={`shrink-0 ${claseIcono}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+          <circle cx="12" cy="8.5" r="3.5" />
+          <path d="M5 20c.6-3.6 3.3-5.5 7-5.5s6.4 1.9 7 5.5" />
+        </svg>
+      </Link>
+    )
+  }
+
+  return (
+    <div ref={caja} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setAbierto((a) => !a)}
+        aria-label={`Cuenta de ${nombre}`}
+        aria-expanded={abierto}
+        aria-haspopup="menu"
+        title={nombre}
+        className="flex h-9 w-9 items-center justify-center rounded-[3px] border border-lime bg-surface font-mono text-sm font-bold uppercase text-lime shadow-glow hover:bg-raised"
+      >
+        {nombre.charAt(0)}
+      </button>
+      {abierto && (
+        <div role="menu" className="absolute right-0 top-full z-20 mt-2 w-56 rounded-[3px] border border-line-strong bg-surface p-3 shadow-glow-lg">
+          <p className="truncate text-sm font-medium">{nombre}</p>
+          <p className="truncate text-xs text-muted">{usuario.email}</p>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setAbierto(false)
+              salir()
+            }}
+            className="mt-3 w-full rounded-[3px] border border-line-strong px-3 py-2 text-center font-mono text-sm font-medium hover:border-line-hover hover:bg-raised"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// "enCarrito" es cuántas unidades hay en el carrito y "sesion" es la sesión del cliente.
+// Se las pasa App, que es donde viven las dos.
+export default function Header({ enCarrito = 0, sesion }) {
   const { pathname } = useLocation()
   const [parametros] = useSearchParams()
   // Lo que se está buscando ahora (vacío en cualquier otra página)
@@ -184,6 +257,7 @@ export default function Header({ enCarrito = 0 }) {
         {/* La key vacía el buscador al salir de una búsqueda */}
         <Buscador key={busqueda} inicial={busqueda} />
 
+        <BotonCuenta sesion={sesion} />
         <BotonCarrito cantidad={enCarrito} />
       </div>
 

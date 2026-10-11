@@ -6,7 +6,9 @@ import Home from './pages/Home'
 import Listado from './pages/Listado'
 import Producto from './pages/Producto'
 import Carrito from './pages/Carrito'
+import Acceso from './pages/Acceso'
 import { useCarrito } from './data/carrito'
+import { useSesion } from './data/sesion'
 
 function NoEncontrada() {
   return (
@@ -35,12 +37,14 @@ function ScrollArriba() {
 export default function App() {
   // El carrito vive acá para que el encabezado, la ficha y la página del carrito vean lo mismo
   const carrito = useCarrito()
+  // La sesión del cliente (T-019) también vive acá, por la misma razón
+  const sesion = useSesion()
   const { pathname } = useLocation()
 
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollArriba />
-      <Header enCarrito={carrito.unidades} />
+      <Header enCarrito={carrito.unidades} sesion={sesion} />
       <main className="flex-1">
         {/* La key hace que, al cambiar de página, el contenido nuevo entre con un fundido corto */}
         <div key={pathname} className="entra-pagina">
@@ -65,6 +69,8 @@ export default function App() {
               />
             }
           />
+          <Route path="/ingresar" element={<Acceso modo="ingreso" sesion={sesion} />} />
+          <Route path="/registro" element={<Acceso modo="registro" sesion={sesion} />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
         </div>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="supported-color-schemes" content="dark" />
+  <title>Verificá tu cuenta en aura/ware</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0E0E10;">
+  <!-- Texto que Gmail muestra al lado del asunto en la bandeja de entrada -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#0E0E10;">
+    Confirmá tu correo para completar el registro. El enlace expira en 15 minutos.
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0E0E10" style="background-color:#0E0E10;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#17171A" style="max-width:560px;background-color:#17171A;border:1px solid #26262B;border-radius:4px;">
+
+          <!-- Logo -->
+          <tr>
+            <td align="center" style="padding:40px 32px 8px 32px;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:28px;font-weight:600;letter-spacing:-0.5px;line-height:1;color:#FFFFFF;">
+              aura<span style="color:#CBEB4C;font-weight:400;">/</span>ware
+            </td>
+          </tr>
+
+          <!-- Título -->
+          <tr>
+            <td align="center" style="padding:32px 40px 0 40px;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:32px;font-weight:500;line-height:1.25;color:#FFFFFF;">
+              Confirmá tu gmail para completar el registro
+            </td>
+          </tr>
+
+          <!-- Bajada -->
+          <tr>
+            <td align="center" style="padding:16px 40px 0 40px;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#9B9BA6;">
+              Verificá haciendo clic en el botón de abajo
+            </td>
+          </tr>
+
+          <!-- Botón. {{ .ConfirmationURL }} lo completa Supabase con el enlace de confirmación -->
+          <tr>
+            <td align="center" style="padding:32px 40px 0 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" bgcolor="#CBEB4C" style="background-color:#CBEB4C;border-radius:4px;">
+                    <a href="{{ .ConfirmationURL }}" target="_blank" style="display:block;padding:16px 24px;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;line-height:1.2;color:#0E0E10;text-decoration:none;">
+                      Verificar correo electrónico
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Aviso de vencimiento -->
+          <tr>
+            <td align="center" style="padding:28px 40px 0 40px;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#9B9BA6;">
+              Este enlace expira en 15 minutos.
+            </td>
+          </tr>
+
+          <!-- Pie -->
+          <tr>
+            <td align="center" style="padding:40px 40px 32px 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="border-top:1px solid #26262B;padding-top:20px;font-family:Poppins,Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#9B9BA6;">
+                    &copy; 2026 aura/ware. Todos los derechos reservados.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

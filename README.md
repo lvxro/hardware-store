@@ -34,3 +34,14 @@ El registro y el inicio de sesión los maneja Supabase Auth (correo y contraseñ
   - Providers → Email activado.
   - URL Configuration → Site URL `https://aurawarestore.vercel.app` y, en Redirect URLs, también `http://localhost:5173`, para que el enlace del correo de confirmación vuelva a la tienda.
   - Si "Confirm email" está activado, tras registrarse el cliente debe confirmar su correo antes de ingresar; la web ya muestra ese aviso.
+
+### Correo de confirmación
+
+Al registrarse, el cliente recibe un mail para verificar su correo. El diseño está en `supabase/plantilla-confirmar-correo.html`. Al tocar el botón, Supabase confirma la cuenta, abre la sesión y lo manda a `/cuenta-confirmada` (`src/pages/CuentaConfirmada.jsx`), que lo lleva a la tienda a los pocos segundos. Si el enlace venció o ya se usó, esa página lo avisa.
+
+La plantilla no se aplica sola: hay que cargarla en el panel de Supabase.
+
+- **Authentication → Email Templates → Confirm signup:** asunto `Verificá tu cuenta en aura/ware` y, como contenido, el HTML de `supabase/plantilla-confirmar-correo.html`. El enlace del botón es `{{ .ConfirmationURL }}`, que completa Supabase.
+- **Authentication → URL Configuration → Redirect URLs:** agregar `https://aurawarestore.vercel.app/**` y `http://localhost:5173/**`. Si la dirección no está en la lista, Supabase manda al cliente a la Site URL y se pierde la página de confirmación.
+- **Vencimiento:** el mail dice que el enlace expira en 15 minutos. Hay que poner la expiración del correo en 900 segundos (Authentication → Providers → Email); por defecto es 1 hora.
+- **Remitente:** con el envío de mails que trae Supabase, el remitente es el de Supabase. Para que figure `aura/ware` hace falta configurar un SMTP propio (Authentication → SMTP Settings) con un dominio del equipo.

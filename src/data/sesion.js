@@ -74,8 +74,8 @@ export function useSesion() {
       password: clave,
       options: {
         data: { nombre },
-        // Adonde vuelve el cliente al tocar el enlace del correo de confirmación
-        emailRedirectTo: window.location.origin,
+        // Adonde vuelve el cliente al tocar el enlace del correo de confirmación (ver pages/CuentaConfirmada.jsx)
+        emailRedirectTo: `${window.location.origin}/cuenta-confirmada`,
       },
     })
     if (error) return { error: traducir(error) }

@@ -7,6 +7,7 @@ import Listado from './pages/Listado'
 import Producto from './pages/Producto'
 import Carrito from './pages/Carrito'
 import Acceso from './pages/Acceso'
+import CuentaConfirmada from './pages/CuentaConfirmada'
 import { useCarrito } from './data/carrito'
 import { useSesion } from './data/sesion'
 
@@ -71,6 +72,7 @@ export default function App() {
           />
           <Route path="/ingresar" element={<Acceso modo="ingreso" sesion={sesion} />} />
           <Route path="/registro" element={<Acceso modo="registro" sesion={sesion} />} />
+          <Route path="/cuenta-confirmada" element={<CuentaConfirmada sesion={sesion} />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
         </div>

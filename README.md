@@ -45,3 +45,12 @@ La plantilla no se aplica sola: hay que cargarla en el panel de Supabase.
 - **Authentication → URL Configuration → Redirect URLs:** agregar `https://aurawarestore.vercel.app/**` y `http://localhost:5173/**`. Si la dirección no está en la lista, Supabase manda al cliente a la Site URL y se pierde la página de confirmación.
 - **Vencimiento:** el mail dice que el enlace expira en 15 minutos. Hay que poner la expiración del correo en 900 segundos (Authentication → Providers → Email); por defecto es 1 hora.
 - **Remitente:** con el envío de mails que trae Supabase, el remitente es el de Supabase. Para que figure `aura/ware` hace falta configurar un SMTP propio (Authentication → SMTP Settings) con un dominio del equipo.
+
+## Ofertas (T-021)
+
+La tienda tiene 6 productos en oferta, con el 25 % menos que su precio de lista. Se ven en el home (sección "Ofertas"), en la página `/ofertas` y en cada tarjeta, ficha y carrito: primero el precio de lista tachado y abajo el precio de oferta.
+
+- Qué productos están en oferta y cuánto se descuenta se define en `src/data/ofertas.js` (`IDS_EN_OFERTA` y `DESCUENTO_OFERTA`). Para cambiarlos, se reemplazan los id por otros de la tabla `productos` de Supabase.
+- En un producto en oferta, `precio` ya es el precio con el 25 % menos y `precioAnterior` es el de lista. Todo lo demás (carrito, cuotas, envío gratis) parte de `precio`.
+- El 10 % por pago en efectivo se calcula sobre el precio de oferta.
+- En el listado, "Ofertas" reemplaza a "Destacados" en "Ordenar por": muestra primero los productos en oferta.

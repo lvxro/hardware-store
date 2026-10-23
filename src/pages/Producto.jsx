@@ -5,9 +5,9 @@ import {
   CUOTAS,
   ENVIO_GRATIS_DESDE,
   PORCENTAJE_EFECTIVO,
-  aPesos,
   precioEfectivo as calcularEfectivo,
 } from "../data/reglas";
+import { PORCENTAJE_OFERTA } from "../data/ofertas";
 import { MAXIMO_POR_PRODUCTO } from "../data/carrito";
 import { CAMPOS_BASE, formatearCampo, formatearValor } from "../data/campos";
 import Vitrina from "../components/Vitrina";
@@ -77,7 +77,10 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
   const { producto, categoria } = resultado;
   const nombreCategoria = NOMBRES_CATEGORIA[categoria] ?? categoria;
 
-  const precioLista = aPesos(producto.precio_usd_aprox);
+  // T-021: "este" es el producto del catálogo, con su precio final. En oferta, "precio" ya es
+  // el de lista menos el 25 % y "precioAnterior" es el de lista.
+  const este = productosDe(categoria).find((otro) => otro.id === producto.id);
+  const precioLista = este.precio;
   const precioEfectivo = calcularEfectivo(precioLista);
 
   const especificaciones = Object.entries(producto).filter(
@@ -86,7 +89,6 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
 
   // Para la tabla comparativa: este producto primero y después otros cinco de la categoría
   const deLaCategoria = productosDe(categoria);
-  const este = deLaCategoria.find((otro) => otro.id === producto.id);
   const comparados = [
     este,
     ...deLaCategoria.filter((otro) => otro.id !== producto.id).slice(0, 5),
@@ -151,6 +153,11 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
             {producto.modelo}
           </h1>
           <p className="mt-2 text-muted">{producto.descripcion}</p>
+          {este.enOferta && (
+            <p className="mt-3 inline-block rounded-[3px] border border-lime bg-bg px-2 py-0.5 font-mono text-xs font-bold text-lime">
+              Oferta: {PORCENTAJE_OFERTA} % menos
+            </p>
+          )}
 
           {/* Precios: renglones separados por líneas, sin recuadro */}
           <dl className="mt-5">
@@ -173,7 +180,13 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
                   Todas las tarjetas de crédito bancarias
                 </span>
               </dt>
-              <dd className="font-mono text-xl font-medium text-muted">
+              <dd className="text-right font-mono text-xl font-medium text-muted">
+                {este.enOferta && (
+                  <span className="block text-base line-through">
+                    <span className="sr-only">Precio anterior </span>
+                    {formatearPesos(este.precioAnterior)}
+                  </span>
+                )}
                 {formatearPesos(precioLista)}
               </dd>
             </div>
@@ -449,6 +462,12 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
                       </td>
                     ))}
                     <td className="hidden px-3 py-2.5 text-right font-mono font-medium text-muted sm:table-cell">
+                      {otro.enOferta && (
+                        <span className="block text-xs line-through">
+                          <span className="sr-only">Precio anterior </span>
+                          {formatoPrecio(otro.precioAnterior)}
+                        </span>
+                      )}
                       {formatoPrecio(otro.precio)}
                     </td>
                     <td className="py-2.5 pl-3 pr-3 text-right font-mono font-bold text-lime">

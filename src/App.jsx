@@ -53,6 +53,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Listado />} />
           <Route path="/categoria/:slug" element={<Listado />} />
+          <Route path="/ofertas" element={<Listado soloOfertas />} />
           <Route
             path="/producto/:id"
             element={<Producto onAgregarAlCarrito={carrito.agregar} cantidadEnCarrito={carrito.cantidadDe} />}

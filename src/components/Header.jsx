@@ -263,6 +263,11 @@ export default function Header({ enCarrito = 0, sesion }) {
 
       <nav aria-label="Categorías" className="border-t border-line-subtle">
         <ul className="mx-auto flex max-w-7xl overflow-x-auto whitespace-nowrap px-1 text-sm">
+          <li>
+            <NavLink to="/ofertas" className={claseNav}>
+              Ofertas
+            </NavLink>
+          </li>
           {categorias.map((cat) => (
             <li key={cat.slug}>
               <NavLink to={`/categoria/${cat.slug}`} className={claseNav}>

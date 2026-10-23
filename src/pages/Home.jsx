@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import categorias from '../data/categorias'
-import { productosDe, precioDesde, formatoPrecio } from '../data/catalogo'
+import { productosDe, precioDesde, formatoPrecio, ofertas } from '../data/catalogo'
+import { PORCENTAJE_OFERTA } from '../data/ofertas'
 import Ilustracion from '../components/Ilustracion'
+import ProductoCard from '../components/ProductoCard'
 import { useAlVerse } from '../components/animaciones'
 
 /* ---------- Portada: mosaico de productos alrededor de la barra del logo, y el título ---------- */
@@ -175,11 +177,46 @@ function Categorias() {
   )
 }
 
-// T-010: home con navegación por categorías
+/* ---------- Ofertas: los seis productos con el 25 % menos (T-021) ---------- */
+
+function Ofertas() {
+  // Las tarjetas aparecen en cadena cuando la grilla entra en pantalla, igual que las categorías
+  const [grilla, visto] = useAlVerse()
+  return (
+    <section aria-labelledby="ofertas" className="mx-auto max-w-7xl px-4 pb-14">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <div>
+          <h2 id="ofertas" className="text-2xl font-semibold sm:text-3xl">
+            Ofertas
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {ofertas.length} productos con {PORCENTAJE_OFERTA} % menos que su precio de lista.
+          </p>
+        </div>
+        <Link to="/ofertas" className="text-sm font-medium text-lime underline-offset-4 hover:underline">
+          Ver todas las ofertas
+        </Link>
+      </div>
+      <ul
+        ref={grilla}
+        className={`en-cadena mt-6 grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-3 ${visto ? 'visto' : ''}`}
+      >
+        {ofertas.map((p, i) => (
+          <li key={p.id} style={{ '--i': i }}>
+            <ProductoCard producto={p} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+// T-010: home con navegación por categorías. T-021 le suma las ofertas.
 export default function Home() {
   return (
     <>
       <Portada />
+      <Ofertas />
       <Categorias />
     </>
   )

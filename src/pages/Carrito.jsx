@@ -76,7 +76,15 @@ function Renglon({ item, onCambiarCantidad, onQuitar }) {
             {producto.modelo}
           </Link>
         </h2>
-        <p className="mt-1 font-mono text-sm font-medium text-muted">{formatoPrecio(producto.precio)} c/u</p>
+        <p className="mt-1 font-mono text-sm font-medium text-muted">
+          {producto.enOferta && (
+            <span className="mr-2 line-through">
+              <span className="sr-only">Precio anterior </span>
+              {formatoPrecio(producto.precioAnterior)}
+            </span>
+          )}
+          {formatoPrecio(producto.precio)} c/u
+        </p>
       </div>
 
       {/* En celular, la cantidad y el subtotal van en una fila aparte, debajo */}

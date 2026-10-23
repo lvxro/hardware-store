@@ -3,11 +3,14 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import categorias from '../data/categorias'
 import productos, { productosDe } from '../data/catalogo'
 import guias from '../data/guias'
+import { PORCENTAJE_OFERTA } from '../data/ofertas'
 import ProductoCard from '../components/ProductoCard'
 import Vitrina from '../components/Vitrina'
 
+// T-021: "Ofertas" reemplaza a "Destacados". Pone primero los productos en oferta y deja los demás
+// en su orden de siempre (el orden de sort es estable).
 const ordenes = {
-  relevancia: { nombre: 'Destacados', fn: null },
+  ofertas: { nombre: 'Ofertas', fn: (a, b) => Number(b.enOferta) - Number(a.enOferta) },
   menor: { nombre: 'Menor precio', fn: (a, b) => a.precio - b.precio },
   mayor: { nombre: 'Mayor precio', fn: (a, b) => b.precio - a.precio },
 }
@@ -93,8 +96,8 @@ function Preguntas({ preguntas }) {
   )
 }
 
-function ListadoContenido({ slug, busqueda }) {
-  const [orden, setOrden] = useState('relevancia')
+function ListadoContenido({ slug, busqueda, soloOfertas }) {
+  const [orden, setOrden] = useState('ofertas')
   const [marca, setMarca] = useState(null)
   const categoria = categorias.find((c) => c.slug === slug)
 
@@ -113,6 +116,7 @@ function ListadoContenido({ slug, busqueda }) {
   const titulo = busqueda ? `Resultados para “${busqueda}”` : 'Todos los productos'
 
   let base = categoria ? productos.filter((p) => p.categoria === slug) : [...productos]
+  if (soloOfertas) base = base.filter((p) => p.enOferta)
   if (busqueda) base = buscar(base, busqueda)
 
   // Marcas presentes en lo que se está viendo, con cuántos productos tiene cada una
@@ -132,10 +136,19 @@ function ListadoContenido({ slug, busqueda }) {
           Inicio
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-white">{categoria ? categoria.nombre : 'Todos los productos'}</span>
+        <span className="text-white">
+          {soloOfertas ? 'Ofertas' : categoria ? categoria.nombre : 'Todos los productos'}
+        </span>
       </nav>
 
-      {categoria ? (
+      {soloOfertas ? (
+        <header className="mt-3">
+          <h1 className="text-2xl font-semibold sm:text-3xl">Ofertas</h1>
+          <p className="mt-2 text-sm text-muted sm:text-base">
+            {base.length} productos con {PORCENTAJE_OFERTA} % menos que su precio de lista.
+          </p>
+        </header>
+      ) : categoria ? (
         <Portada categoria={categoria} />
       ) : (
         <header className="mt-3">
@@ -229,10 +242,18 @@ function ListadoContenido({ slug, busqueda }) {
 }
 
 // T-011: listado de productos. Sirve para /productos (todos, o una búsqueda con ?q=) y /categoria/:slug
-export default function Listado() {
+// Con "soloOfertas" (ruta /ofertas, T-021) muestra solo los productos en oferta
+export default function Listado({ soloOfertas = false }) {
   const { slug } = useParams()
   const [parametros] = useSearchParams()
-  const busqueda = slug ? '' : (parametros.get('q') ?? '').trim()
+  const busqueda = slug || soloOfertas ? '' : (parametros.get('q') ?? '').trim()
   // La key reinicia el orden y la marca elegida al cambiar de categoría o de búsqueda
-  return <ListadoContenido key={`${slug}|${busqueda}`} slug={slug} busqueda={busqueda} />
+  return (
+    <ListadoContenido
+      key={`${slug}|${busqueda}|${soloOfertas}`}
+      slug={slug}
+      busqueda={busqueda}
+      soloOfertas={soloOfertas}
+    />
+  )
 }

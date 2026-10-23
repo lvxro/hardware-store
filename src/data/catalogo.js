@@ -4,6 +4,7 @@
 import { supabase } from './supabase'
 import respaldo from './productos.json'
 import categorias from './categorias'
+import { IDS_EN_OFERTA, precioConOferta } from './ofertas'
 // Dólar oficial de referencia (Banco Nación). Cambiar este número cuando se actualice.
 export const DOLAR = 1540
 
@@ -42,15 +43,26 @@ export const datos = await leerDeSupabase().catch((error) => {
   return respaldo
 })
 
+// T-021: en un producto en oferta, "precio" ya es el precio con el 25 % menos y "precioAnterior"
+// es el de lista (el que se muestra tachado). Fuera de oferta, "precioAnterior" no existe.
 const productos = categorias.flatMap((cat) =>
-  (datos[cat.slug] ?? []).map((p) => ({
-    ...p,
-    categoria: cat.slug,
-    nombre: p.nombre ?? `${p.marca} ${p.modelo}`,
-    precio: Math.round((p.precio_usd_aprox * DOLAR) / 1000) * 1000,
-    specs: cat.specs(p),
-  })),
+  (datos[cat.slug] ?? []).map((p) => {
+    const precioLista = Math.round((p.precio_usd_aprox * DOLAR) / 1000) * 1000
+    const enOferta = IDS_EN_OFERTA.includes(p.id)
+    return {
+      ...p,
+      categoria: cat.slug,
+      nombre: p.nombre ?? `${p.marca} ${p.modelo}`,
+      precio: enOferta ? precioConOferta(precioLista) : precioLista,
+      precioAnterior: enOferta ? precioLista : null,
+      enOferta,
+      specs: cat.specs(p),
+    }
+  }),
 )
+
+// Los productos en oferta, en el orden de IDS_EN_OFERTA
+export const ofertas = IDS_EN_OFERTA.map((id) => productos.find((p) => p.id === id)).filter(Boolean)
 
 export function productosDe(slug) {
   return productos.filter((p) => p.categoria === slug)

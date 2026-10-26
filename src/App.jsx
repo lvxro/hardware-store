@@ -73,6 +73,8 @@ export default function App() {
   const favoritos = useFavoritos()
   const { pathname } = useLocation()
   useAdelantarPaginas()
+  // T-029: los productos del carrito, para revisar compatibilidad en listados y fichas
+  const enCarrito = carrito.items.map((i) => i.producto)
 
   return (
     <FavoritosContext.Provider value={favoritos}>
@@ -85,12 +87,12 @@ export default function App() {
         <Suspense fallback={<Esperando />}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/productos" element={<Listado />} />
-          <Route path="/categoria/:slug" element={<Listado />} />
-          <Route path="/ofertas" element={<Listado soloOfertas />} />
+          <Route path="/productos" element={<Listado enCarrito={enCarrito} />} />
+          <Route path="/categoria/:slug" element={<Listado enCarrito={enCarrito} />} />
+          <Route path="/ofertas" element={<Listado soloOfertas enCarrito={enCarrito} />} />
           <Route
             path="/producto/:id"
-            element={<Producto onAgregarAlCarrito={carrito.agregar} cantidadEnCarrito={carrito.cantidadDe} />}
+            element={<Producto onAgregarAlCarrito={carrito.agregar} cantidadEnCarrito={carrito.cantidadDe} enCarrito={enCarrito} />}
           />
           <Route
             path="/carrito"

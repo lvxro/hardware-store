@@ -5,6 +5,7 @@ import productos, { formatoPrecio, productosDe } from '../data/catalogo'
 import guias from '../data/guias'
 import { PORCENTAJE_OFERTA } from '../data/ofertas'
 import ProductoCard from '../components/ProductoCard'
+import { compatibleCon } from '../data/compatibilidad'
 import Vitrina from '../components/Vitrina'
 
 // T-021: "Ofertas" reemplaza a "Destacados". Pone primero los productos en oferta y deja los demás
@@ -152,12 +153,14 @@ function Preguntas({ preguntas }) {
   )
 }
 
-function ListadoContenido({ slug, busqueda, soloOfertas }) {
+function ListadoContenido({ slug, busqueda, soloOfertas, enCarrito, compatiblesInicial }) {
   const [orden, setOrden] = useState('ofertas')
   const [marca, setMarca] = useState(null)
   // T-026: rango de precio, en pesos (precio de lista). Vacío = sin límite
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
+  // T-029: ver solo lo que va con el carrito (se abre activado desde los enlaces del carrito)
+  const [soloCompatibles, setSoloCompatibles] = useState(compatiblesInicial)
   const categoria = categorias.find((c) => c.slug === slug)
 
   if (slug && !categoria) {
@@ -193,6 +196,12 @@ function ListadoContenido({ slug, busqueda, soloOfertas }) {
   if (piso != null && techo != null && piso > techo) [piso, techo] = [techo, piso]
   const filtraPrecio = piso != null || techo != null
   if (filtraPrecio) lista = lista.filter((p) => (piso == null || p.precio >= piso) && (techo == null || p.precio <= techo))
+
+  // T-029: compatibilidad de cada producto con el carrito (null = no hay con qué comparar)
+  const compat = new Map(base.map((p) => [p.id, compatibleCon(p, enCarrito)]))
+  const hayCompat = base.some((p) => compat.get(p.id))
+  const filtraCompat = soloCompatibles && hayCompat
+  if (filtraCompat) lista = lista.filter((p) => compat.get(p.id)?.ok !== false)
   if (ordenes[orden].fn) lista = [...lista].sort(ordenes[orden].fn)
 
   const guia = categoria ? guias[categoria.slug] : null
@@ -246,6 +255,17 @@ function ListadoContenido({ slug, busqueda, soloOfertas }) {
 
         {base.length > 1 && (
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            {hayCompat && (
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={soloCompatibles}
+                  onChange={(e) => setSoloCompatibles(e.target.checked)}
+                  className="h-4 w-4 accent-[var(--lime)]"
+                />
+                <span className={soloCompatibles ? 'text-lime' : 'text-muted'}>Solo compatibles con tu carrito</span>
+              </label>
+            )}
             <FiltroPrecio desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} minimo={minimo} maximo={maximo} />
             {marcas.length > 1 && (
               <label className="flex items-center gap-2">
@@ -325,7 +345,7 @@ function ListadoContenido({ slug, busqueda, soloOfertas }) {
         <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
           {lista.map((p) => (
             <li key={p.id}>
-              <ProductoCard producto={p} />
+              <ProductoCard producto={p} compat={compat.get(p.id)} />
             </li>
           ))}
         </ul>
@@ -338,7 +358,7 @@ function ListadoContenido({ slug, busqueda, soloOfertas }) {
 
 // T-011: listado de productos. Sirve para /productos (todos, o una búsqueda con ?q=) y /categoria/:slug
 // Con "soloOfertas" (ruta /ofertas, T-021) muestra solo los productos en oferta
-export default function Listado({ soloOfertas = false }) {
+export default function Listado({ soloOfertas = false, enCarrito = [] }) {
   const { slug } = useParams()
   const [parametros] = useSearchParams()
   const busqueda = slug || soloOfertas ? '' : (parametros.get('q') ?? '').trim()
@@ -349,6 +369,8 @@ export default function Listado({ soloOfertas = false }) {
       slug={slug}
       busqueda={busqueda}
       soloOfertas={soloOfertas}
+      enCarrito={enCarrito}
+      compatiblesInicial={parametros.get('compatibles') === '1'}
     />
   )
 }

@@ -23,7 +23,8 @@ function limpiarCarrito(carrito) {
   if (!Array.isArray(carrito) || carrito.length === 0 || carrito.length > MAXIMO_RENGLONES) return null
   const cantidades = new Map()
   for (const renglon of carrito) {
-    const id = typeof renglon?.id === 'string' ? renglon.id : null
+    // T-030: solo códigos con la forma de los del catálogo ("cpu-001", "mb-014")
+    const id = typeof renglon?.id === 'string' && /^[a-z]{2,4}-\d{3,4}$/.test(renglon.id) ? renglon.id : null
     const cantidad = Number(renglon?.cantidad)
     if (!id || !Number.isInteger(cantidad) || cantidad < 1) return null
     cantidades.set(id, Math.min(MAXIMO_POR_PRODUCTO, (cantidades.get(id) ?? 0) + cantidad))
@@ -42,7 +43,21 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'El pago con Mercado Pago todavía no está configurado.' })
   }
 
-  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body ?? {})
+  // T-030: solo pedidos que vienen de la propia tienda, y en JSON
+  const origen = req.headers.origin
+  if (origen && origen !== direccionDelSitio(req) && origen !== `https://${req.headers.host}`) {
+    return res.status(403).json({ error: 'Pedido no permitido.' })
+  }
+  if (!String(req.headers['content-type'] ?? '').includes('application/json')) {
+    return res.status(415).json({ error: 'Formato no válido.' })
+  }
+
+  let body
+  try {
+    body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body ?? {})
+  } catch {
+    return res.status(400).json({ error: 'El carrito no es válido.' })
+  }
   const cantidades = limpiarCarrito(body.carrito)
   if (!cantidades) return res.status(400).json({ error: 'El carrito no es válido.' })
 
@@ -81,7 +96,8 @@ export default async function handler(req, res) {
   }))
 
   // El correo del cliente, si inició sesión, para que Mercado Pago lo complete solo
-  const correo = typeof body.correo === 'string' && /^\S+@\S+\.\S+$/.test(body.correo) ? body.correo : null
+  const correo =
+    typeof body.correo === 'string' && body.correo.length <= 254 && /^\S+@\S+\.\S+$/.test(body.correo) ? body.correo : null
   // Número de pedido propio: vuelve en el aviso de Mercado Pago (api/webhook.js) y en la vuelta a la tienda
   const pedido = randomUUID()
   const conHttps = sitio.startsWith('https://')

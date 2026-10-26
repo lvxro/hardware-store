@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import Vitrina from './Vitrina'
 import BotonFavorito from './BotonFavorito'
+import { MarcaCompatibilidad } from './Compatibilidad'
 import { formatoPrecio } from '../data/catalogo'
 import { precioEfectivo } from '../data/reglas'
 import { PORCENTAJE_OFERTA } from '../data/ofertas'
@@ -13,7 +14,8 @@ import { PORCENTAJE_OFERTA } from '../data/ofertas'
 // ir dentro de un enlace), encima, en la misma esquina.
 // Al pasar el cursor, el borde pasa a lima con resplandor, la tarjeta sube apenas
 // y el dibujo se aclara (esto último está en index.css, .vitrina).
-export default function ProductoCard({ producto }) {
+// T-029: "compat" (opcional) dice si va con lo que hay en el carrito
+export default function ProductoCard({ producto, compat = null }) {
   const agotado = producto.stock === 0
   const ultimas = producto.stock != null && producto.stock > 0 && producto.stock <= 3
 
@@ -40,6 +42,11 @@ export default function ProductoCard({ producto }) {
         </div>
         <h3 className="mt-3 font-semibold leading-snug group-hover:underline">{producto.nombre}</h3>
         <p className="mt-1 text-xs text-muted sm:text-sm">{producto.descripcion}</p>
+        {compat && (
+          <div className="mt-2">
+            <MarcaCompatibilidad resultado={compat} />
+          </div>
+        )}
         <div className="mt-auto pt-3 font-mono">
           {producto.enOferta && (
             <p className="text-sm text-muted line-through">

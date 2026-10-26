@@ -95,3 +95,31 @@ El mail va al correo de la cuenta de la tienda; si el cliente compró sin inicia
    - Con Resend (necesita dominio propio): `smtp.resend.com`, puerto `465`, usuario `resend` y la API key como contraseña.
 
 Después, redesplegar. Sin estas variables el pago funciona igual, solo que no se anotan pedidos ni sale el mail.
+
+## Panel de administración y stock (T-025)
+
+En `/admin` un administrador agrega, edita y borra productos y ajusta el stock. La seguridad está en Supabase: aunque alguien abra la página, la base de datos solo deja cambiar productos a los correos de la tabla `administradores`.
+
+1. En Supabase → SQL Editor, correr `supabase/admin-stock.sql` (crea la columna `stock`, la tabla `administradores` y las reglas). Los productos que ya estaban arrancan con 10 unidades.
+2. Agregar los administradores, con una cuenta ya creada y confirmada en la tienda:
+   `insert into public.administradores (correo) values ('correo@ejemplo.com');` (en minúsculas)
+3. Con esa cuenta, el menú de la cuenta muestra "Panel de administración".
+
+La tienda muestra "Sin stock" y "Últimas unidades", y no deja agregar más de lo que hay. `api/checkout.js` vuelve a controlar el stock antes de cobrar, y `api/webhook.js` lo descuenta cuando Mercado Pago aprueba el pago (necesita `SUPABASE_SERVICE_ROLE_KEY` y la tabla `pedidos`).
+
+## Filtro de precio (T-026) y favoritos (T-027)
+
+- En cada listado, "Precio" desde/hasta (precio de lista), combinable con marca y orden.
+- El corazón de cada producto lo guarda en `/favoritos`. Se guarda en el navegador, como el carrito.
+
+## Compatibilidad (T-029)
+
+`src/data/compatibilidad.js` cruza procesador y placa madre (socket), memoria con placa o procesador (DDR4/DDR5), avisa si un procesador no tiene video integrado y estima la fuente. Se ve en el carrito (panel "Compatibilidad"), en la ficha y en las tarjetas, y en procesadores, placas y memorias aparece "Solo compatibles con tu carrito".
+
+## Velocidad y seguridad (T-028, T-030)
+
+- `public/precarga.js` pide el catálogo mientras baja el resto del sitio, y guarda una copia por 10 minutos para que las visitas siguientes no esperen a Supabase. El precio y el stock que valen se vuelven a leer al pagar.
+- Las páginas y la biblioteca de Supabase se bajan aparte, cuando hacen falta. `/assets` queda en caché por un año.
+- `vercel.json` agrega encabezados de seguridad: política de contenido (CSP) que solo permite scripts propios, nada de iframes de otros sitios, HSTS y otros.
+- `api/checkout.js` solo acepta pedidos de la propia tienda, en JSON y con códigos de producto válidos.
+- Si se suma un servicio externo (analytics, chat, etc.), hay que agregarlo a la CSP en `vercel.json` o el navegador lo va a bloquear.

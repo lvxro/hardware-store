@@ -12,30 +12,28 @@
     <!-- Poppins para el texto y JetBrains Mono para precios, botones y etiquetas -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- T-028: las fuentes no frenan el primer dibujo: se muestra la del sistema y se cambia al llegar -->
+    <!-- T-028: las fuentes no frenan el primer dibujo: se muestra la del sistema y se cambia al llegar
+         (el cambio de media lo hace precarga.js) -->
     <link
       rel="preload"
       as="style"
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Poppins:wght@400;500;600&display=swap"
     />
     <link
+      data-fuentes
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Poppins:wght@400;500;600&display=swap"
       rel="stylesheet"
       media="print"
-      onload="this.media='all'"
     />
-    <!-- T-028: el catálogo se pide acá, mientras baja el JS, en vez de después.
-         Lo retoma src/data/catalogo.js. La clave es la pública (la misma que usa la web). -->
+    <!-- T-028: el catálogo se pide acá, mientras baja el JS (ver public/precarga.js) -->
     <link rel="preconnect" href="https://jsgnjdtqktfxgfwuixfv.supabase.co" crossorigin />
-    <script>
-      window.__catalogo = fetch(
-        'https://jsgnjdtqktfxgfwuixfv.supabase.co/rest/v1/productos?select=*&order=id.asc&apikey=sb_publishable_ERypV6QKT8oNZZcxm-2FXQ_80ZWexRE',
-      ).then(function (r) {
-        if (!r.ok) throw new Error('Supabase respondió ' + r.status)
-        return r.json()
-      })
-      window.__catalogo.catch(function () {})
-    </script>
+    <script src="/precarga.js"></script>
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Poppins:wght@400;500;600&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
   </head>
   <body>
     <!-- Se ve mientras llegan los productos de la base de datos; React lo reemplaza al cargar -->

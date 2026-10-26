@@ -12,6 +12,16 @@ import { formatoPrecio } from '../data/catalogo'
 
 const STOCK_BAJO = 3
 
+// T-030: la tienda guarda una copia del catálogo por 10 minutos (public/precarga.js).
+// Al cambiar algo desde acá se borra, así en este navegador se ve al recargar.
+function olvidarCopiaDelCatalogo() {
+  try {
+    localStorage.removeItem('catalogo-cache')
+  } catch {
+    // sin almacenamiento no hay copia
+  }
+}
+
 const botonPrimario =
   'rounded-[3px] bg-lime px-4 py-2.5 font-mono text-sm font-bold text-bg hover:shadow-glow disabled:cursor-wait disabled:opacity-60'
 const botonSecundario =
@@ -52,6 +62,7 @@ function ControlStock({ producto, onGuardado }) {
       setEstado('error')
       return
     }
+    olvidarCopiaDelCatalogo()
     onGuardado(data)
     setEstado('listo')
     setTimeout(() => setEstado(''), 1500)
@@ -162,6 +173,9 @@ function Formulario({ producto, productos, onCerrar, onGuardado, onBorrado }) {
     if (!datos.marca.trim() || !datos.modelo.trim()) return setError('Completá la marca y el modelo.')
     if (!(usd > 0)) return setError('El precio en dólares tiene que ser mayor a cero.')
     if (!Number.isInteger(stock) || stock < 0) return setError('El stock tiene que ser un número entero, 0 o más.')
+    // T-030: la imagen, solo desde la tienda (/img/...) o por https
+    const imagen = datos.imagen.trim()
+    if (imagen && !/^(https:\/\/|\/)/.test(imagen)) return setError('La imagen tiene que empezar con https:// o con /.')
 
     const specsLimpias = {}
     for (const [campo, tipo] of Object.entries(tipos)) {
@@ -202,6 +216,7 @@ function Formulario({ producto, productos, onCerrar, onGuardado, onBorrado }) {
       )
       return
     }
+    olvidarCopiaDelCatalogo()
     onGuardado(data, esNuevo)
   }
 
@@ -213,6 +228,7 @@ function Formulario({ producto, productos, onCerrar, onGuardado, onBorrado }) {
       setError('No se pudo borrar.')
       return
     }
+    olvidarCopiaDelCatalogo()
     onBorrado(id)
   }
 
@@ -505,7 +521,7 @@ function Panel() {
         {lista.length === 0 && <li className="py-8 text-center text-muted">No hay productos con esos filtros.</li>}
       </ul>
 
-      <p className="mt-4 text-xs text-muted">Los cambios se ven en la tienda al recargar la página.</p>
+      <p className="mt-4 text-xs text-muted">Los cambios se ven en este navegador al recargar la tienda; en los demás, en hasta 10 minutos. El precio y el stock se vuelven a controlar al pagar.</p>
 
       {editando && (
         <Formulario

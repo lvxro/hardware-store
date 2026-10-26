@@ -12,6 +12,8 @@ import Vitrina from '../components/Vitrina'
 import NumeroAnimado from '../components/NumeroAnimado'
 import { plegar } from '../components/animaciones'
 import { iniciarPago } from '../data/pago'
+import { revisar } from '../data/compatibilidad'
+import { PanelCompatibilidad } from '../components/Compatibilidad'
 
 // T-018: la página del carrito. Los datos y las acciones llegan desde App (ver data/carrito.js).
 
@@ -291,6 +293,7 @@ export default function Carrito({ items, total, unidades, correo, hayAgotados, o
         <Vacio />
       ) : (
         <div className="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+          <div className="min-w-0">
           <ul className="border-b border-line">
             {items.map((item) => (
               <Renglon
@@ -301,6 +304,9 @@ export default function Carrito({ items, total, unidades, correo, hayAgotados, o
               />
             ))}
           </ul>
+          {/* T-029: ¿lo que hay en el carrito es compatible entre sí? */}
+          <PanelCompatibilidad chequeos={revisar(items.map((i) => i.producto))} />
+          </div>
           <Resumen items={items} total={total} unidades={unidades} correo={correo} hayAgotados={hayAgotados} onVaciar={onVaciar} />
         </div>
       )}

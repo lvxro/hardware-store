@@ -12,6 +12,8 @@ import { maximoDe } from "../data/carrito";
 import { CAMPOS_BASE, formatearCampo, formatearValor } from "../data/campos";
 import Vitrina from "../components/Vitrina";
 import BotonFavorito from "../components/BotonFavorito";
+import { MarcaCompatibilidad } from "../components/Compatibilidad";
+import { compatibleCon } from "../data/compatibilidad";
 import { volarAlCarrito } from "../components/animaciones";
 
 const NOMBRES_CATEGORIA = {
@@ -50,7 +52,7 @@ function IconoCamion() {
   );
 }
 
-function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
+function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito, productosEnCarrito = [] }) {
   const [cantidad, setCantidad] = useState(1);
   const [codigoPostal, setCodigoPostal] = useState("");
   const [mensajeEnvio, setMensajeEnvio] = useState("");
@@ -252,6 +254,13 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
                 <span className="text-white">En stock</span>
               )}
             </p>
+          )}
+
+          {/* T-029: ¿va con lo que ya está en el carrito? */}
+          {compatibleCon(este, productosEnCarrito) && (
+            <div className="mt-3">
+              <MarcaCompatibilidad resultado={compatibleCon(este, productosEnCarrito)} grande />
+            </div>
           )}
 
           <div className={`${este.stock != null ? "mt-3" : "mt-5"} flex items-stretch gap-3`}>
@@ -516,7 +525,7 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
   );
 }
 
-export default function FichaDeProducto({ onAgregarAlCarrito, cantidadEnCarrito }) {
+export default function FichaDeProducto({ onAgregarAlCarrito, cantidadEnCarrito, enCarrito }) {
   const { id } = useParams();
   // key={id} reinicia cantidad, código postal e imagen al cambiar de producto
   return (
@@ -525,6 +534,7 @@ export default function FichaDeProducto({ onAgregarAlCarrito, cantidadEnCarrito 
       id={id}
       onAgregarAlCarrito={onAgregarAlCarrito}
       cantidadEnCarrito={cantidadEnCarrito}
+      productosEnCarrito={enCarrito}
     />
   );
 }

@@ -10,6 +10,7 @@ export const CAMPOS_BASE = [
   'precio_usd_aprox',
   'imagen',
   'descripcion',
+  'stock', // T-025
 ]
 
 const PALABRAS = {

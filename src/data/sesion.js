@@ -3,7 +3,9 @@
 // nuestras tablas, Supabase la guarda cifrada. Esto vive en App (una sola copia para todo el sitio),
 // igual que el carrito.
 import { useEffect, useState } from 'react'
-import { supabase } from './supabase'
+// T-028: la biblioteca de Supabase (la parte más pesada del sitio) se baja aparte, después del
+// primer dibujo. Mientras tanto, el encabezado muestra el lugar de la cuenta vacío.
+const conSupabase = () => import('./supabase').then((m) => m.supabase)
 
 export const CLAVE_MINIMA = 8
 
@@ -30,6 +32,14 @@ function traducir(error) {
     default:
       break
   }
+  // Supabase no pudo mandar el mail de confirmación (por ejemplo, el correo SMTP está mal configurado)
+  if (error.code === 'unexpected_failure' || /confirmation email/i.test(error.message ?? '')) {
+    return 'No pudimos mandarte el mail de confirmación. Probá de nuevo en unos minutos.'
+  }
+  // Sin respuesta del servidor (status 0 es que no hubo conexión)
+  if (error.name === 'AuthRetryableFetchError' && error.status >= 500) {
+    return 'El servidor no respondió. Probá de nuevo en unos minutos.'
+  }
   if (error.name === 'AuthRetryableFetchError') {
     return 'No pudimos conectarnos. Revisá tu conexión y volvé a probar.'
   }
@@ -40,13 +50,21 @@ export function useSesion() {
   const [usuario, setUsuario] = useState(null)
   // Mientras se lee la sesión guardada no se sabe si hay alguien adentro
   const [cargando, setCargando] = useState(true)
+  // T-025: si la cuenta figura en la tabla administradores de Supabase (función es_admin)
+  const [adminDe, setAdminDe] = useState(null) // { id del usuario, es o no }
 
   useEffect(() => {
     let vivo = true
+    let suscripcion = null
 
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
+    conSupabase()
+      .then(async (supabase) => {
+        if (!vivo) return
+        // Se entera de los cambios: ingreso, cierre, o sesión abierta o cerrada en otra pestaña
+        suscripcion = supabase.auth.onAuthStateChange((_evento, sesion) => {
+          setUsuario(sesion?.user ?? null)
+        }).data.subscription
+        const { data } = await supabase.auth.getSession()
         if (vivo) setUsuario(data.session?.user ?? null)
       })
       .catch(() => {
@@ -56,19 +74,32 @@ export function useSesion() {
         if (vivo) setCargando(false)
       })
 
-    // Se entera de los cambios: ingreso, cierre, o sesión abierta o cerrada en otra pestaña
-    const { data } = supabase.auth.onAuthStateChange((_evento, sesion) => {
-      setUsuario(sesion?.user ?? null)
-    })
-
     return () => {
       vivo = false
-      data.subscription.unsubscribe()
+      suscripcion?.unsubscribe()
     }
   }, [])
 
+  // T-025: se pregunta una vez por cada cuenta que inicia sesión. Si la función no existe todavía, no es admin.
+  useEffect(() => {
+    if (!usuario) return
+    let vivo = true
+    conSupabase()
+      .then((supabase) => supabase.rpc('es_admin'))
+      .then(({ data }) => vivo && setAdminDe({ id: usuario.id, es: data === true }))
+      .catch(() => vivo && setAdminDe({ id: usuario.id, es: false }))
+    return () => {
+      vivo = false
+    }
+  }, [usuario])
+
+  const esAdmin = Boolean(usuario) && adminDe?.id === usuario.id && adminDe.es
+  // Mientras no se sabe si es admin (recién inició sesión), el panel espera
+  const verificandoAdmin = Boolean(usuario) && adminDe?.id !== usuario.id
+
   // Cada función devuelve { error } con el mensaje ya traducido, o { ok: true }
   const registrar = async ({ nombre, correo, clave }) => {
+    const supabase = await conSupabase()
     const { data, error } = await supabase.auth.signUp({
       email: correo,
       password: clave,
@@ -89,16 +120,18 @@ export function useSesion() {
   }
 
   const ingresar = async ({ correo, clave }) => {
+    const supabase = await conSupabase()
     const { error } = await supabase.auth.signInWithPassword({ email: correo, password: clave })
     return error ? { error: traducir(error) } : { ok: true }
   }
 
   const salir = async () => {
     // scope local: cierra solo este navegador, no los demás dispositivos del cliente
+    const supabase = await conSupabase()
     await supabase.auth.signOut({ scope: 'local' })
   }
 
   const nombre = usuario?.user_metadata?.nombre?.trim() || usuario?.email?.split('@')[0] || ''
 
-  return { usuario, nombre, cargando, registrar, ingresar, salir }
+  return { usuario, nombre, cargando, esAdmin, verificandoAdmin, registrar, ingresar, salir }
 }

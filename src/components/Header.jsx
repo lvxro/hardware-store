@@ -4,6 +4,7 @@ import categorias from '../data/categorias'
 import { formatoPrecio } from '../data/catalogo'
 import { CUOTAS_SIN_INTERES, ENVIO_GRATIS_DESDE, PORCENTAJE_EFECTIVO } from '../data/reglas'
 import Logo from './Logo'
+import { Corazon } from './BotonFavorito'
 
 // Botón de ícono (buscador y carrito vacío). Abierto o presionado pasa a lima.
 const claseIcono =
@@ -167,12 +168,32 @@ function BotonCarrito({ cantidad }) {
   )
 }
 
+// T-027: acceso a favoritos. Con algo guardado, el corazón se llena de lima y muestra cuántos hay.
+function BotonFavoritos({ cantidad }) {
+  const hay = cantidad > 0
+  return (
+    <Link
+      to="/favoritos"
+      aria-label={hay ? `Favoritos, ${cantidad} ${cantidad === 1 ? 'producto' : 'productos'}` : 'Favoritos'}
+      title="Favoritos"
+      className={`relative shrink-0 ${hay ? 'rounded-[3px] border border-line-strong bg-surface p-2 text-lime hover:border-lime hover:bg-raised' : claseIcono}`}
+    >
+      <Corazon lleno={hay} className="h-5 w-5" />
+      {hay && (
+        <span key={cantidad} className="salta absolute -right-2 -top-2 min-w-5 rounded-full border border-lime bg-bg px-1 text-center font-mono text-[11px] font-bold leading-[18px] text-lime">
+          {cantidad}
+        </span>
+      )}
+    </Link>
+  )
+}
+
 /*
   Botón de la cuenta (T-019). Sin sesión, lleva a iniciar sesión. Con sesión, se llena de lima con la
   inicial del nombre y abre un menú chico con el nombre y "Cerrar sesión".
 */
 function BotonCuenta({ sesion }) {
-  const { usuario, nombre, cargando, salir } = sesion
+  const { usuario, nombre, cargando, esAdmin, salir } = sesion
   const [abierto, setAbierto] = useState(false)
   const caja = useRef(null)
 
@@ -222,6 +243,17 @@ function BotonCuenta({ sesion }) {
         <div role="menu" className="absolute right-0 top-full z-20 mt-2 w-56 rounded-[3px] border border-line-strong bg-surface p-3 shadow-glow-lg">
           <p className="truncate text-sm font-medium">{nombre}</p>
           <p className="truncate text-xs text-muted">{usuario.email}</p>
+          {/* T-025: acceso al panel, solo para administradores */}
+          {esAdmin && (
+            <Link
+              to="/admin"
+              role="menuitem"
+              onClick={() => setAbierto(false)}
+              className="mt-3 block w-full rounded-[3px] border border-lime px-3 py-2 text-center font-mono text-sm font-medium text-lime hover:bg-raised"
+            >
+              Panel de administración
+            </Link>
+          )}
           <button
             type="button"
             role="menuitem"
@@ -241,7 +273,7 @@ function BotonCuenta({ sesion }) {
 
 // "enCarrito" es cuántas unidades hay en el carrito y "sesion" es la sesión del cliente.
 // Se las pasa App, que es donde viven las dos.
-export default function Header({ enCarrito = 0, sesion }) {
+export default function Header({ enCarrito = 0, enFavoritos = 0, sesion }) {
   const { pathname } = useLocation()
   const [parametros] = useSearchParams()
   // Lo que se está buscando ahora (vacío en cualquier otra página)
@@ -258,6 +290,7 @@ export default function Header({ enCarrito = 0, sesion }) {
         <Buscador key={busqueda} inicial={busqueda} />
 
         <BotonCuenta sesion={sesion} />
+        <BotonFavoritos cantidad={enFavoritos} />
         <BotonCarrito cantidad={enCarrito} />
       </div>
 

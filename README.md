@@ -54,3 +54,26 @@ La tienda tiene 6 productos en oferta, con el 25 % menos que su precio de lista.
 - En un producto en oferta, `precio` ya es el precio con el 25 % menos y `precioAnterior` es el de lista. Todo lo demás (carrito, cuotas, envío gratis) parte de `precio`.
 - El 10 % por pago en efectivo se calcula sobre el precio de oferta.
 - En el listado, "Ofertas" reemplaza a "Destacados" en "Ordenar por": muestra primero los productos en oferta.
+
+## Pago con Mercado Pago (T-022)
+
+El botón "Pagar con Mercado Pago" del carrito usa Checkout Pro: el cliente paga en la página de Mercado Pago (tarjeta, débito, dinero en cuenta, cuotas) y vuelve a la tienda.
+
+- **Cómo funciona:** el carrito manda solo los id y las cantidades a `api/checkout.js` (una función de Vercel). Esa función lee los precios de Supabase, los pasa a pesos con el mismo cálculo que la tienda (`src/data/precios.js`, ofertas incluidas) y le pide el pago a Mercado Pago. Así nadie puede cambiar el precio desde el navegador.
+- **Qué se cobra:** el total de lista. El 10 % de efectivo/transferencia no se aplica en Mercado Pago. El envío no se cobra en el pago.
+- **Vuelta a la tienda:** `/compra/aprobada`, `/compra/pendiente` y `/compra/rechazada` (`src/pages/ResultadoPago.jsx`). Con el pago aprobado, el carrito se vacía.
+- **Confirmación del cobro:** Mercado Pago avisa cada pago a `api/webhook.js`, que lo consulta y lo deja en los logs de Vercel. La página `/compra/aprobada` sola no prueba que se cobró. Cuando haya tabla de pedidos, ahí se guarda.
+
+### Configuración
+
+En Vercel → Settings → Environment Variables:
+
+- `MP_ACCESS_TOKEN` (obligatoria): el Access Token de la aplicación en Mercado Pago Developers. Primero el de prueba (credenciales de prueba); para cobrar de verdad, el de producción.
+- `MP_WEBHOOK_SECRET` (recomendada): la clave secreta de Webhooks de la aplicación. Con ella, el webhook rechaza avisos que no vengan de Mercado Pago.
+- `SITIO_URL` (opcional): por ejemplo `https://aurawarestore.vercel.app`. Si no está, se usa la dirección desde la que se pidió el pago.
+
+Después de cargarlas hay que volver a desplegar. En el panel de Mercado Pago, en Webhooks, la URL es `https://aurawarestore.vercel.app/api/webhook` con el evento "Pagos".
+
+### Probar en la computadora
+
+`npm run dev` no levanta las funciones de `api/`. Para probar el pago en local: `npx vercel dev` (con las variables en `.env.local`, que no se sube). En `http` Mercado Pago no vuelve solo a la tienda ni avisa al webhook: eso se prueba en el deploy de Vercel.

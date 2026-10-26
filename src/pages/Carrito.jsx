@@ -11,11 +11,14 @@ import {
 import Vitrina from '../components/Vitrina'
 import NumeroAnimado from '../components/NumeroAnimado'
 import { plegar } from '../components/animaciones'
+import { iniciarPago } from '../data/pago'
 
 // T-018: la página del carrito. Los datos y las acciones llegan desde App (ver data/carrito.js).
 
 const botonSecundario =
   'rounded-[3px] border border-line-strong px-4 py-2.5 text-center font-mono text-sm font-medium text-white hover:border-line-hover hover:bg-raised'
+const botonPrimario =
+  'rounded-[3px] bg-lime px-4 py-3 text-center font-mono font-bold text-bg hover:shadow-glow disabled:cursor-wait disabled:opacity-60 disabled:hover:shadow-none'
 const botonDeTexto = 'text-sm text-muted underline-offset-4 hover:text-white hover:underline'
 
 // Los botones − y + de cada renglón. En 1 no baja más (para sacarlo está "Quitar").
@@ -137,7 +140,41 @@ function Envio({ total }) {
   )
 }
 
-function Resumen({ total, unidades, onVaciar }) {
+// T-022: manda al cliente a Mercado Pago. Mientras se arma el pago, el botón queda esperando.
+function Pagar({ items, correo }) {
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState('')
+
+  const pagar = async () => {
+    setEnviando(true)
+    setError('')
+    const { url, error } = await iniciarPago(items, correo)
+    if (url) {
+      window.location.assign(url) // se queda "esperando" hasta que carga Mercado Pago
+      return
+    }
+    setError(error)
+    setEnviando(false)
+  }
+
+  return (
+    <div className="mb-3">
+      <button type="button" onClick={pagar} disabled={enviando} className={`pulsable block w-full ${botonPrimario}`}>
+        {enviando ? 'Conectando con Mercado Pago…' : 'Pagar con Mercado Pago'}
+      </button>
+      <p className="mt-2 text-center text-xs text-muted">
+        Se cobra el total de lista. Tarjeta, débito o dinero en cuenta; las cuotas se eligen en Mercado Pago.
+      </p>
+      {error && (
+        <p role="alert" className="entra-deslizando mt-2 text-center text-sm text-white" style={{ animationDelay: '0ms' }}>
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function Resumen({ items, total, unidades, correo, onVaciar }) {
   const [confirmando, setConfirmando] = useState(false)
 
   return (
@@ -175,6 +212,8 @@ function Resumen({ total, unidades, onVaciar }) {
       </dl>
 
       <Envio total={total} />
+
+      <Pagar items={items} correo={correo} />
 
       <Link to="/productos" className={`pulsable block ${botonSecundario}`}>
         Seguir comprando
@@ -224,7 +263,7 @@ function Vacio() {
   )
 }
 
-export default function Carrito({ items, total, unidades, onCambiarCantidad, onQuitar, onVaciar }) {
+export default function Carrito({ items, total, unidades, correo, onCambiarCantidad, onQuitar, onVaciar }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <h1 className="text-3xl font-semibold sm:text-4xl">Carrito</h1>
@@ -243,7 +282,7 @@ export default function Carrito({ items, total, unidades, onCambiarCantidad, onQ
               />
             ))}
           </ul>
-          <Resumen total={total} unidades={unidades} onVaciar={onVaciar} />
+          <Resumen items={items} total={total} unidades={unidades} correo={correo} onVaciar={onVaciar} />
         </div>
       )}
     </div>

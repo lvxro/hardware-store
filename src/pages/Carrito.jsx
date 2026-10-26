@@ -164,13 +164,35 @@ function Pagar({ items, correo, bloqueado }) {
   const pagar = async () => {
     setEnviando(true)
     setError('')
-    const { url, error } = await iniciarPago(items, correo)
+    const { url, error } = await iniciarPago(items)
     if (url) {
       window.location.assign(url) // se queda "esperando" hasta que carga Mercado Pago
       return
     }
     setError(error)
     setEnviando(false)
+  }
+
+  // T-031: para comprar hace falta una cuenta. Después de entrar, vuelve al carrito.
+  if (!correo) {
+    return (
+      <div className="mb-3">
+        <Link
+          to="/ingresar"
+          state={{ desde: '/carrito' }}
+          className={`pulsable block w-full ${botonPrimario}`}
+        >
+          Iniciá sesión para comprar
+        </Link>
+        <p className="mt-2 text-center text-xs text-muted">
+          ¿No tenés cuenta?{' '}
+          <Link to="/registro" state={{ desde: '/carrito' }} className="text-white underline-offset-4 hover:underline">
+            Creala en un minuto
+          </Link>
+          . Así tus compras quedan en Mis pedidos.
+        </p>
+      </div>
+    )
   }
 
   return (

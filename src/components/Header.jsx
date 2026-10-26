@@ -243,13 +243,22 @@ function BotonCuenta({ sesion }) {
         <div role="menu" className="absolute right-0 top-full z-20 mt-2 w-56 rounded-[3px] border border-line-strong bg-surface p-3 shadow-glow-lg">
           <p className="truncate text-sm font-medium">{nombre}</p>
           <p className="truncate text-xs text-muted">{usuario.email}</p>
+          {/* T-031: historial de compras */}
+          <Link
+            to="/mis-pedidos"
+            role="menuitem"
+            onClick={() => setAbierto(false)}
+            className="mt-3 block w-full rounded-[3px] border border-line-strong px-3 py-2 text-center font-mono text-sm font-medium hover:border-line-hover hover:bg-raised"
+          >
+            Mis pedidos
+          </Link>
           {/* T-025: acceso al panel, solo para administradores */}
           {esAdmin && (
             <Link
               to="/admin"
               role="menuitem"
               onClick={() => setAbierto(false)}
-              className="mt-3 block w-full rounded-[3px] border border-lime px-3 py-2 text-center font-mono text-sm font-medium text-lime hover:bg-raised"
+              className="mt-2 block w-full rounded-[3px] border border-lime px-3 py-2 text-center font-mono text-sm font-medium text-lime hover:bg-raised"
             >
               Panel de administración
             </Link>

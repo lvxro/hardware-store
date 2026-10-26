@@ -123,3 +123,10 @@ La tienda muestra "Sin stock" y "Últimas unidades", y no deja agregar más de l
 - `vercel.json` agrega encabezados de seguridad: política de contenido (CSP) que solo permite scripts propios, nada de iframes de otros sitios, HSTS y otros.
 - `api/checkout.js` solo acepta pedidos de la propia tienda, en JSON y con códigos de producto válidos.
 - Si se suma un servicio externo (analytics, chat, etc.), hay que agregarlo a la CSP en `vercel.json` o el navegador lo va a bloquear.
+
+## Historial de pedidos y compra con cuenta (T-031)
+
+- Para comprar hace falta una cuenta con el correo confirmado. `api/checkout.js` verifica la sesión con Supabase y el pedido queda a nombre de ese correo (no del que mande el navegador). Sin sesión, el carrito muestra "Iniciá sesión para comprar" y vuelve al carrito después de entrar.
+- `/mis-pedidos` (menú de la cuenta → Mis pedidos): cada cliente ve sus compras con fecha, productos, total, estado y número de operación.
+- `/admin` → pestaña Pedidos: todas las ventas, total vendido, ventas del día, búsqueda y filtro por estado.
+- Configuración: correr `supabase/pedidos-historial.sql` (reglas de lectura) y tener `SUPABASE_SERVICE_ROLE_KEY` en Vercel, que es lo que permite registrar los pedidos.

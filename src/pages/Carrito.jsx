@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatoPrecio } from '../data/catalogo'
-import { MAXIMO_POR_PRODUCTO } from '../data/carrito'
+import { maximoDe } from '../data/carrito'
 import {
   CUOTAS_SIN_INTERES,
   ENVIO_GRATIS_DESDE,
@@ -18,11 +18,11 @@ import { iniciarPago } from '../data/pago'
 const botonSecundario =
   'rounded-[3px] border border-line-strong px-4 py-2.5 text-center font-mono text-sm font-medium text-white hover:border-line-hover hover:bg-raised'
 const botonPrimario =
-  'rounded-[3px] bg-lime px-4 py-3 text-center font-mono font-bold text-bg hover:shadow-glow disabled:cursor-wait disabled:opacity-60 disabled:hover:shadow-none'
+  'rounded-[3px] bg-lime px-4 py-3 text-center font-mono font-bold text-bg hover:shadow-glow disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none'
 const botonDeTexto = 'text-sm text-muted underline-offset-4 hover:text-white hover:underline'
 
 // Los botones − y + de cada renglón. En 1 no baja más (para sacarlo está "Quitar").
-function Cantidad({ nombre, cantidad, onCambiar }) {
+function Cantidad({ nombre, cantidad, maximo, onCambiar }) {
   const paso = 'h-full px-3.5 text-lg leading-none hover:bg-raised disabled:text-muted disabled:opacity-40 disabled:hover:bg-transparent'
   return (
     <div className="flex h-10 items-center overflow-hidden rounded-[3px] border border-line-strong bg-surface">
@@ -44,7 +44,7 @@ function Cantidad({ nombre, cantidad, onCambiar }) {
       <button
         type="button"
         onClick={() => onCambiar(cantidad + 1)}
-        disabled={cantidad >= MAXIMO_POR_PRODUCTO}
+        disabled={cantidad >= maximo}
         className={paso}
         aria-label={`Sumar una unidad de ${nombre}`}
       >
@@ -55,7 +55,7 @@ function Cantidad({ nombre, cantidad, onCambiar }) {
 }
 
 function Renglon({ item, onCambiarCantidad, onQuitar }) {
-  const { producto, cantidad, subtotal } = item
+  const { producto, cantidad, subtotal, agotado } = item
   const renglon = useRef(null)
   const ficha = `/producto/${producto.id}`
 
@@ -88,6 +88,19 @@ function Renglon({ item, onCambiarCantidad, onQuitar }) {
           )}
           {formatoPrecio(producto.precio)} c/u
         </p>
+        {/* T-025: avisos de stock */}
+        {agotado ? (
+          <p className="mt-1 text-sm font-medium text-white" role="alert">
+            Se quedó sin stock. Quitalo para poder pagar.
+          </p>
+        ) : (
+          producto.stock != null &&
+          producto.stock <= 3 && (
+            <p className="mt-1 font-mono text-xs text-lime">
+              {producto.stock === 1 ? 'Última unidad' : `Últimas ${producto.stock} unidades`}
+            </p>
+          )
+        )}
       </div>
 
       {/* En celular, la cantidad y el subtotal van en una fila aparte, debajo */}
@@ -95,6 +108,7 @@ function Renglon({ item, onCambiarCantidad, onQuitar }) {
         <Cantidad
           nombre={producto.modelo}
           cantidad={cantidad}
+          maximo={maximoDe(producto)}
           onCambiar={(nueva) => onCambiarCantidad(producto.id, nueva)}
         />
         <div className="text-right">
@@ -141,7 +155,7 @@ function Envio({ total }) {
 }
 
 // T-022: manda al cliente a Mercado Pago. Mientras se arma el pago, el botón queda esperando.
-function Pagar({ items, correo }) {
+function Pagar({ items, correo, bloqueado }) {
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
 
@@ -159,12 +173,17 @@ function Pagar({ items, correo }) {
 
   return (
     <div className="mb-3">
-      <button type="button" onClick={pagar} disabled={enviando} className={`pulsable block w-full ${botonPrimario}`}>
+      <button type="button" onClick={pagar} disabled={enviando || bloqueado} className={`pulsable block w-full ${botonPrimario}`}>
         {enviando ? 'Conectando con Mercado Pago…' : 'Pagar con Mercado Pago'}
       </button>
       <p className="mt-2 text-center text-xs text-muted">
         Se cobra el total de lista. Tarjeta, débito o dinero en cuenta; las cuotas se eligen en Mercado Pago.
       </p>
+      {bloqueado && (
+        <p role="alert" className="mt-2 text-center text-sm text-white">
+          Hay productos sin stock en el carrito. Quitalos para seguir.
+        </p>
+      )}
       {error && (
         <p role="alert" className="entra-deslizando mt-2 text-center text-sm text-white" style={{ animationDelay: '0ms' }}>
           {error}
@@ -174,7 +193,7 @@ function Pagar({ items, correo }) {
   )
 }
 
-function Resumen({ items, total, unidades, correo, onVaciar }) {
+function Resumen({ items, total, unidades, correo, hayAgotados, onVaciar }) {
   const [confirmando, setConfirmando] = useState(false)
 
   return (
@@ -213,7 +232,7 @@ function Resumen({ items, total, unidades, correo, onVaciar }) {
 
       <Envio total={total} />
 
-      <Pagar items={items} correo={correo} />
+      <Pagar items={items} correo={correo} bloqueado={hayAgotados} />
 
       <Link to="/productos" className={`pulsable block ${botonSecundario}`}>
         Seguir comprando
@@ -263,7 +282,7 @@ function Vacio() {
   )
 }
 
-export default function Carrito({ items, total, unidades, correo, onCambiarCantidad, onQuitar, onVaciar }) {
+export default function Carrito({ items, total, unidades, correo, hayAgotados, onCambiarCantidad, onQuitar, onVaciar }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <h1 className="text-3xl font-semibold sm:text-4xl">Carrito</h1>
@@ -282,7 +301,7 @@ export default function Carrito({ items, total, unidades, correo, onCambiarCanti
               />
             ))}
           </ul>
-          <Resumen items={items} total={total} unidades={unidades} correo={correo} onVaciar={onVaciar} />
+          <Resumen items={items} total={total} unidades={unidades} correo={correo} hayAgotados={hayAgotados} onVaciar={onVaciar} />
         </div>
       )}
     </div>

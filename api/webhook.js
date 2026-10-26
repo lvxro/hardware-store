@@ -44,6 +44,11 @@ async function actualizarPedido(pago, sitio) {
     return
   }
 
+  // T-025: descuenta el stock una sola vez por pedido (la función de Supabase se fija si ya lo hizo).
+  // Si falla (por ejemplo, si todavía no se corrió supabase/admin-stock.sql), queda en los logs y sigue.
+  const { error: errorStock } = await supabaseAdmin.rpc('descontar_stock', { p_pedido: id })
+  if (errorStock) console.error('No se pudo descontar el stock', id, errorStock)
+
   // Se "reserva" el envío marcando la hora solo si todavía no tenía. Si dos avisos llegan juntos,
   // uno solo consigue la fila: el otro no manda nada.
   const { data: pedido, error } = await supabaseAdmin

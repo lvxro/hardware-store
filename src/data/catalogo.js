@@ -1,8 +1,6 @@
 // Arma la lista de productos que recorren y filtran el home, el listado, la ficha y el carrito.
 // Los productos se leen de la tabla "productos" de Supabase. Si Supabase no responde, se usa
 // productos.json (el archivo de Gabriel) como respaldo, así la tienda sigue andando.
-import { supabase } from './supabase'
-import respaldo from './productos.json'
 import categorias from './categorias'
 import { IDS_EN_OFERTA } from './ofertas'
 import { precioDeProducto } from './precios'
@@ -20,17 +18,39 @@ function ordenarSpecs(specs, campos) {
 }
 
 // Lee la tabla y la devuelve con la misma forma que productos.json: { categoria: [productos] }
-async function leerDeSupabase() {
+// Si una promesa tarda más de "ms", se rinde
+function conLimite(promesa, ms) {
+  return Promise.race([promesa, new Promise((_, no) => setTimeout(() => no(new Error('tardó demasiado')), ms))])
+}
+
+// T-028: las filas de la tabla. index.html ya empezó a pedirlas mientras bajaba este archivo;
+// si ese pedido falló, se pide de nuevo con la biblioteca de Supabase.
+async function filasDeSupabase() {
+  if (window.__catalogo) {
+    try {
+      const filas = await conLimite(window.__catalogo, 5000)
+      if (Array.isArray(filas)) return filas
+    } catch {
+      // se prueba de nuevo abajo
+    }
+  }
+  const { supabase } = await import('./supabase') // T-028: solo si el pedido de index.html falló
   const { data, error } = await supabase
     .from('productos')
-    .select('id, categoria, marca, modelo, nombre, precio_usd_aprox, imagen, descripcion, specs')
+    // "*" y no una lista: así, si la columna stock (T-025) todavía no existe, la tienda sigue andando
+    .select('*')
     .order('id')
     .abortSignal(AbortSignal.timeout(5000)) // si en 5 segundos no contestó, se usa el respaldo
   if (error) throw error
+  return data
+}
+
+async function leerDeSupabase() {
+  const data = await filasDeSupabase()
   if (data.length === 0) throw new Error('la tabla productos está vacía')
 
   const porCategoria = {}
-  for (const { categoria, specs, ...comunes } of data) {
+  for (const { categoria, specs = {}, ...comunes } of data) {
     const campos = categorias.find((cat) => cat.slug === categoria)?.campos ?? []
     porCategoria[categoria] ??= []
     porCategoria[categoria].push({ ...comunes, ...ordenarSpecs(specs, campos) })
@@ -39,9 +59,10 @@ async function leerDeSupabase() {
 }
 
 // Este "await" hace que el sitio espere a tener los productos antes de mostrarse
-export const datos = await leerDeSupabase().catch((error) => {
+// El respaldo se baja solo si hace falta (T-028: así no pesa en la carga normal)
+export const datos = await leerDeSupabase().catch(async (error) => {
   console.warn('No se pudo leer Supabase: se usa productos.json como respaldo.', error)
-  return respaldo
+  return (await import('./productos.json')).default
 })
 
 // T-021: en un producto en oferta, "precio" ya es el precio con el 25 % menos y "precioAnterior"
@@ -52,6 +73,8 @@ const productos = categorias.flatMap((cat) =>
     categoria: cat.slug,
     nombre: p.nombre ?? `${p.marca} ${p.modelo}`,
     ...precioDeProducto(p.id, p.precio_usd_aprox),
+    // T-025: unidades disponibles. null = sin control de stock (por ejemplo, con el respaldo productos.json)
+    stock: Number.isInteger(p.stock) ? p.stock : null,
     specs: cat.specs(p),
   })),
 )

@@ -8,9 +8,10 @@ import {
   precioEfectivo as calcularEfectivo,
 } from "../data/reglas";
 import { PORCENTAJE_OFERTA } from "../data/ofertas";
-import { MAXIMO_POR_PRODUCTO } from "../data/carrito";
+import { maximoDe } from "../data/carrito";
 import { CAMPOS_BASE, formatearCampo, formatearValor } from "../data/campos";
 import Vitrina from "../components/Vitrina";
+import BotonFavorito from "../components/BotonFavorito";
 import { volarAlCarrito } from "../components/animaciones";
 
 const NOMBRES_CATEGORIA = {
@@ -96,11 +97,15 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
 
   // Cuántas unidades de este producto ya están en el carrito
   const enCarrito = cantidadEnCarrito?.(producto.id) ?? 0;
-  const llegoAlMaximo = enCarrito >= MAXIMO_POR_PRODUCTO;
+  // T-025: el tope es 10 o lo que quede en stock
+  const maximo = maximoDe(este);
+  const agotado = este.stock === 0;
+  const llegoAlMaximo = !agotado && enCarrito >= maximo;
+  const quedan = Math.max(0, maximo - enCarrito);
 
   const agregar = (e) => {
-    if (llegoAlMaximo) return;
-    onAgregarAlCarrito?.(producto, cantidad);
+    if (llegoAlMaximo || agotado) return;
+    onAgregarAlCarrito?.(producto, Math.min(cantidad, quedan));
     volarAlCarrito(e.currentTarget);
     setAgregado(true);
     setTimeout(() => setAgregado(false), 2000);
@@ -230,7 +235,26 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
             </tbody>
           </table>
 
-          <div className="mt-5 flex items-stretch gap-3">
+          {/* T-025: disponibilidad */}
+          {este.stock != null && (
+            <p className="mt-5 flex items-center gap-2 font-mono text-sm">
+              <span
+                aria-hidden="true"
+                className={`h-2 w-2 rounded-full ${agotado ? "bg-muted" : "bg-lime"}`}
+              />
+              {agotado ? (
+                <span className="text-muted">Sin stock por ahora</span>
+              ) : este.stock <= 3 ? (
+                <span className="text-lime">
+                  {este.stock === 1 ? "Queda la última unidad" : `Quedan ${este.stock} unidades`}
+                </span>
+              ) : (
+                <span className="text-white">En stock</span>
+              )}
+            </p>
+          )}
+
+          <div className={`${este.stock != null ? "mt-3" : "mt-5"} flex items-stretch gap-3`}>
             <div className="flex items-center overflow-hidden rounded-[3px] border border-line-strong bg-surface">
               <button
                 type="button"
@@ -248,8 +272,9 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
               </span>
               <button
                 type="button"
-                onClick={() => setCantidad((c) => Math.min(10, c + 1))}
-                className="h-full px-4 text-xl leading-none hover:bg-raised"
+                onClick={() => setCantidad((c) => Math.min(Math.max(1, quedan), c + 1))}
+                disabled={agotado || cantidad >= quedan}
+                className="h-full px-4 text-xl leading-none hover:bg-raised disabled:text-muted disabled:opacity-40 disabled:hover:bg-transparent"
                 aria-label="Sumar una unidad"
               >
                 +
@@ -260,7 +285,7 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
             <button
               type="button"
               onClick={agregar}
-              disabled={llegoAlMaximo && !agregado}
+              disabled={(llegoAlMaximo || agotado) && !agregado}
               className={`relative flex-1 overflow-hidden rounded-[3px] bg-lime px-6 py-3 font-bold text-bg hover:shadow-glow disabled:cursor-not-allowed disabled:bg-raised disabled:text-muted disabled:shadow-none ${
                 agregado ? "con-onda" : ""
               }`}
@@ -272,7 +297,7 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
                   agregado ? "-translate-y-full opacity-0" : ""
                 }`}
               >
-                {llegoAlMaximo ? "Ya tenés el máximo" : "Agregar al carrito"}
+                {agotado ? "Sin stock" : llegoAlMaximo ? "Ya tenés el máximo" : "Agregar al carrito"}
               </span>
               <span
                 aria-hidden={!agregado}
@@ -302,12 +327,19 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito }) {
                 </svg>
               </span>
             </button>
+
+            {/* T-027: guardar en favoritos */}
+            <BotonFavorito producto={este} />
           </div>
 
           {enCarrito > 0 && (
             <p className="mt-3 text-sm text-muted" role="status">
               Tenés {enCarrito} en el carrito
-              {llegoAlMaximo && ` (el máximo es ${MAXIMO_POR_PRODUCTO} por producto)`}.{" "}
+              {llegoAlMaximo &&
+                (maximo < 10
+                  ? ` (es todo el stock que hay)`
+                  : ` (el máximo es ${maximo} por producto)`)}
+              .{" "}
               <Link
                 to="/carrito"
                 className="font-medium text-lime underline-offset-4 hover:underline"

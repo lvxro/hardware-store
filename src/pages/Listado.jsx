@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import categorias from '../data/categorias'
-import productos, { productosDe } from '../data/catalogo'
+import productos, { formatoPrecio, productosDe } from '../data/catalogo'
 import guias from '../data/guias'
 import { PORCENTAJE_OFERTA } from '../data/ofertas'
 import ProductoCard from '../components/ProductoCard'
@@ -38,6 +38,62 @@ const boton = 'inline-block rounded-[3px] bg-lime px-4 py-2 font-mono text-sm fo
 
 const selector =
   'rounded-[3px] border border-line-strong bg-surface px-2.5 py-1.5 font-medium text-white hover:border-line-hover'
+
+/* ---------- T-026: filtro de precio mínimo y máximo ---------- */
+
+// Los campos guardan solo los dígitos; se muestran con puntos de miles mientras se escribe
+const aNumero = (texto) => (texto === '' ? null : Number(texto))
+const conPuntos = (texto) => (texto === '' ? '' : Number(texto).toLocaleString('es-AR'))
+
+function CampoPrecio({ etiqueta, valor, onCambiar, sugerido }) {
+  return (
+    <label className="flex items-center rounded-[3px] border border-line-strong bg-surface focus-within:border-lime hover:border-line-hover">
+      <span className="sr-only">{etiqueta}</span>
+      <span aria-hidden="true" className="pl-2.5 font-mono text-muted">
+        $
+      </span>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={conPuntos(valor)}
+        onChange={(e) => onCambiar(e.target.value.replace(/\D/g, '').slice(0, 9))}
+        placeholder={sugerido}
+        className="w-24 bg-transparent px-1.5 py-1.5 font-mono font-medium text-white placeholder:text-muted/60 focus:outline-none sm:w-28"
+      />
+    </label>
+  )
+}
+
+function FiltroPrecio({ desde, hasta, onDesde, onHasta, minimo, maximo }) {
+  const invertido = desde !== '' && hasta !== '' && Number(desde) > Number(hasta)
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-muted">Precio</span>
+      <CampoPrecio etiqueta="Precio desde" valor={desde} onCambiar={onDesde} sugerido={minimo.toLocaleString('es-AR')} />
+      <span aria-hidden="true" className="text-muted">
+        –
+      </span>
+      <CampoPrecio etiqueta="Precio hasta" valor={hasta} onCambiar={onHasta} sugerido={maximo.toLocaleString('es-AR')} />
+      {(desde !== '' || hasta !== '') && (
+        <button
+          type="button"
+          onClick={() => {
+            onDesde('')
+            onHasta('')
+          }}
+          className="text-muted underline-offset-4 hover:text-white hover:underline"
+        >
+          Limpiar
+        </button>
+      )}
+      {invertido && (
+        <span role="alert" className="w-full text-xs text-lime">
+          El precio “desde” es mayor que el “hasta”: los damos vuelta.
+        </span>
+      )}
+    </div>
+  )
+}
 
 /* ---------- Portada de la categoría: título, bajada y dos productos en grande ---------- */
 
@@ -99,6 +155,9 @@ function Preguntas({ preguntas }) {
 function ListadoContenido({ slug, busqueda, soloOfertas }) {
   const [orden, setOrden] = useState('ofertas')
   const [marca, setMarca] = useState(null)
+  // T-026: rango de precio, en pesos (precio de lista). Vacío = sin límite
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
   const categoria = categorias.find((c) => c.slug === slug)
 
   if (slug && !categoria) {
@@ -125,6 +184,15 @@ function ListadoContenido({ slug, busqueda, soloOfertas }) {
     .sort((a, b) => b.cantidad - a.cantidad || a.nombre.localeCompare(b.nombre))
 
   let lista = marca ? base.filter((p) => p.marca === marca) : base
+
+  // T-026: precio mínimo y máximo. Si los cargaron al revés, se dan vuelta.
+  const precios = base.map((p) => p.precio)
+  const minimo = precios.length ? Math.min(...precios) : 0
+  const maximo = precios.length ? Math.max(...precios) : 0
+  let [piso, techo] = [aNumero(desde), aNumero(hasta)]
+  if (piso != null && techo != null && piso > techo) [piso, techo] = [techo, piso]
+  const filtraPrecio = piso != null || techo != null
+  if (filtraPrecio) lista = lista.filter((p) => (piso == null || p.precio >= piso) && (techo == null || p.precio <= techo))
   if (ordenes[orden].fn) lista = [...lista].sort(ordenes[orden].fn)
 
   const guia = categoria ? guias[categoria.slug] : null
@@ -178,6 +246,7 @@ function ListadoContenido({ slug, busqueda, soloOfertas }) {
 
         {base.length > 1 && (
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <FiltroPrecio desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} minimo={minimo} maximo={maximo} />
             {marcas.length > 1 && (
               <label className="flex items-center gap-2">
                 <span className="text-muted">Marca</span>
@@ -209,7 +278,33 @@ function ListadoContenido({ slug, busqueda, soloOfertas }) {
         )}
       </div>
 
-      {lista.length === 0 ? (
+      {lista.length === 0 && filtraPrecio && base.length > 0 ? (
+        // T-026: nada en ese rango
+        <div className="py-8">
+          <p className="text-lg font-semibold">
+            No hay productos{' '}
+            {piso != null && techo != null
+              ? `entre ${formatoPrecio(piso)} y ${formatoPrecio(techo)}`
+              : piso != null
+                ? `desde ${formatoPrecio(piso)}`
+                : `hasta ${formatoPrecio(techo)}`}
+            {marca ? ` de ${marca}` : ''}
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            Acá los precios van de {formatoPrecio(minimo)} a {formatoPrecio(maximo)}.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setDesde('')
+              setHasta('')
+            }}
+            className={`mt-5 ${boton}`}
+          >
+            Quitar el filtro de precio
+          </button>
+        </div>
+      ) : lista.length === 0 ? (
         <div className="py-8">
           <p className="text-lg font-semibold">
             {busqueda

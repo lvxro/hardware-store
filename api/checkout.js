@@ -48,7 +48,7 @@ export default async function handler(req, res) {
 
   const { data: filas, error } = await supabase
     .from('productos')
-    .select('id, nombre, marca, modelo, precio_usd_aprox, imagen')
+    .select('*') // con "*" sigue andando aunque todavía no exista la columna stock (T-025)
     .in('id', [...cantidades.keys()])
   if (error) {
     console.error('No se pudo leer Supabase', error)
@@ -56,6 +56,18 @@ export default async function handler(req, res) {
   }
   if (filas.length !== cantidades.size) {
     return res.status(409).json({ error: 'Algún producto del carrito ya no está a la venta. Revisá el carrito.' })
+  }
+
+  // T-025: no se puede pagar más de lo que hay
+  const faltante = filas.find((p) => Number.isInteger(p.stock) && cantidades.get(p.id) > p.stock)
+  if (faltante) {
+    const nombre = faltante.nombre ?? `${faltante.marca} ${faltante.modelo}`
+    return res.status(409).json({
+      error:
+        faltante.stock === 0
+          ? `${nombre} se quedó sin stock. Quitalo del carrito para seguir.`
+          : `De ${nombre} quedan ${faltante.stock}. Bajá la cantidad en el carrito.`,
+    })
   }
 
   const sitio = direccionDelSitio(req)

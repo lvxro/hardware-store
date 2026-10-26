@@ -1,16 +1,44 @@
-import { useEffect } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { Route, Routes, useLocation, Link } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import Home from './pages/Home'
 import Listado from './pages/Listado'
-import Producto from './pages/Producto'
-import Carrito from './pages/Carrito'
-import Acceso from './pages/Acceso'
-import CuentaConfirmada from './pages/CuentaConfirmada'
-import ResultadoPago from './pages/ResultadoPago'
 import { useCarrito } from './data/carrito'
 import { useSesion } from './data/sesion'
+import { FavoritosContext, useFavoritos } from './data/favoritos'
+
+// T-028: el inicio y los listados vienen en el archivo principal; el resto de las páginas se baja
+// recién cuando hace falta, así la primera carga pesa menos (sobre todo en el celular).
+const cargarProducto = () => import('./pages/Producto')
+const cargarCarrito = () => import('./pages/Carrito')
+const Producto = lazy(cargarProducto)
+const Carrito = lazy(cargarCarrito)
+const Favoritos = lazy(() => import('./pages/Favoritos'))
+const Acceso = lazy(() => import('./pages/Acceso'))
+const CuentaConfirmada = lazy(() => import('./pages/CuentaConfirmada'))
+const ResultadoPago = lazy(() => import('./pages/ResultadoPago'))
+const Admin = lazy(() => import('./pages/Admin'))
+
+// Con la página ya dibujada y el navegador libre, se adelanta la ficha y el carrito,
+// que son a donde más se va después. Así, al tocar un producto, ya está.
+function useAdelantarPaginas() {
+  useEffect(() => {
+    const adelantar = () => {
+      cargarProducto()
+      cargarCarrito()
+    }
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(adelantar, { timeout: 4000 })
+      return () => cancelIdleCallback(id)
+    }
+    const id = setTimeout(adelantar, 2500)
+    return () => clearTimeout(id)
+  }, [])
+}
+
+// Mientras baja una página, un espacio vacío del alto de la pantalla (sin "Cargando…" que parpadee)
+const Esperando = () => <div className="min-h-[60vh]" aria-busy="true" />
 
 function NoEncontrada() {
   return (
@@ -41,15 +69,20 @@ export default function App() {
   const carrito = useCarrito()
   // La sesión del cliente (T-019) también vive acá, por la misma razón
   const sesion = useSesion()
+  // Los favoritos (T-027) también, y llegan a cada tarjeta por contexto
+  const favoritos = useFavoritos()
   const { pathname } = useLocation()
+  useAdelantarPaginas()
 
   return (
+    <FavoritosContext.Provider value={favoritos}>
     <div className="flex min-h-screen flex-col">
       <ScrollArriba />
-      <Header enCarrito={carrito.unidades} sesion={sesion} />
+      <Header enCarrito={carrito.unidades} enFavoritos={favoritos.cantidad} sesion={sesion} />
       <main className="flex-1">
         {/* La key hace que, al cambiar de página, el contenido nuevo entre con un fundido corto */}
         <div key={pathname} className="entra-pagina">
+        <Suspense fallback={<Esperando />}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Listado />} />
@@ -67,6 +100,7 @@ export default function App() {
                 total={carrito.total}
                 unidades={carrito.unidades}
                 correo={sesion.usuario?.email}
+                hayAgotados={carrito.hayAgotados}
                 onCambiarCantidad={carrito.cambiarCantidad}
                 onQuitar={carrito.quitar}
                 onVaciar={carrito.vaciar}
@@ -77,11 +111,18 @@ export default function App() {
           <Route path="/registro" element={<Acceso modo="registro" sesion={sesion} />} />
           <Route path="/cuenta-confirmada" element={<CuentaConfirmada sesion={sesion} />} />
           <Route path="/compra/:estado" element={<ResultadoPago nombre={sesion.nombre} onVaciarCarrito={carrito.vaciar} />} />
+          <Route
+            path="/favoritos"
+            element={<Favoritos onAgregarAlCarrito={carrito.agregar} cantidadEnCarrito={carrito.cantidadDe} />}
+          />
+          <Route path="/admin" element={<Admin sesion={sesion} />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
+        </Suspense>
         </div>
       </main>
       <Footer />
     </div>
+    </FavoritosContext.Provider>
   )
 }

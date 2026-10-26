@@ -12,7 +12,8 @@ create table public.pedidos (
   pago_id text,                              -- número de operación de Mercado Pago
   medio text,                                -- credit_card, account_money, etc.
   cuotas int,
-  mail_enviado timestamptz                   -- cuándo salió el comprobante (null = todavía no)
+  mail_enviado timestamptz,                  -- cuándo salió el comprobante (null = todavía no)
+  stock_descontado boolean not null default false  -- T-025: si ya se descontó el stock de este pedido
 );
 
 -- Seguridad: la web no puede leer ni escribir esta tabla. Solo las funciones de Vercel,

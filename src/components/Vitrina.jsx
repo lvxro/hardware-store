@@ -20,7 +20,7 @@ export default function Vitrina({ producto, categoria, className = '', trazo = n
   return (
     <div
       ref={caja}
-      className={`vitrina flex items-center justify-center ${hayFoto ? 'vitrina-foto' : ''} ${className}`}
+      className={`vitrina relative flex items-center justify-center ${hayFoto ? 'vitrina-foto' : ''} ${className}`}
     >
       {!hayFoto && (
         <Ilustracion producto={producto} categoria={categoria} className="h-full w-full p-[4%]" />
@@ -31,7 +31,11 @@ export default function Vitrina({ producto, categoria, className = '', trazo = n
           alt=""
           onLoad={() => setFoto('si')}
           onError={() => setFoto('no')}
-          className={hayFoto ? 'h-full w-full object-contain p-3' : 'hidden'}
+          // T-028: se pide recién cuando la tarjeta está por entrar en pantalla. Mientras se prueba,
+          // queda invisible pero en su lugar (con "hidden" el navegador nunca la pediría)
+          loading="lazy"
+          decoding="async"
+          className={hayFoto ? 'h-full w-full object-contain p-3' : 'absolute inset-0 h-full w-full opacity-0'}
         />
       )}
     </div>

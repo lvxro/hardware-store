@@ -77,3 +77,21 @@ Después de cargarlas hay que volver a desplegar. En el panel de Mercado Pago, e
 ### Probar en la computadora
 
 `npm run dev` no levanta las funciones de `api/`. Para probar el pago en local: `npx vercel dev` (con las variables en `.env.local`, que no se sube). En `http` Mercado Pago no vuelve solo a la tienda ni avisa al webhook: eso se prueba en el deploy de Vercel.
+
+## Pedidos y comprobante por mail (T-024)
+
+Cada vez que alguien toca "Pagar con Mercado Pago" se anota un pedido en la tabla `pedidos` de Supabase (`supabase/tabla-pedidos.sql`). Cuando Mercado Pago avisa que el pago se aprobó, `api/webhook.js` marca el pedido como aprobado y le manda al cliente el comprobante de aura/ware por mail (`api/_lib/comprobante.js`, misma estética que el mail de confirmación de cuenta). Mercado Pago repite los avisos, pero el mail sale una sola vez. Aparte, Mercado Pago manda su propio comprobante de pago.
+
+El mail va al correo de la cuenta de la tienda; si el cliente compró sin iniciar sesión, al que usó en Mercado Pago. Dice "Documento no válido como factura": la factura electrónica de ARCA es otro trámite.
+
+### Configuración
+
+1. **Tabla:** en Supabase → SQL Editor, correr `supabase/tabla-pedidos.sql`.
+2. **Clave secreta de Supabase:** en Supabase → Project Settings → API Keys, la clave `service_role` (o la "secret"). En Vercel, como `SUPABASE_SERVICE_ROLE_KEY`. Nunca va en el código ni en el navegador.
+3. **Correo (SMTP)**, en Vercel:
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+   - `MAIL_REMITENTE` (opcional), por ejemplo `aura/ware <ventas@tudominio.com>`
+   - Con Gmail: `smtp.gmail.com`, puerto `465`, la casilla como usuario y una "contraseña de aplicación" (Cuenta de Google → Seguridad → Verificación en dos pasos → Contraseñas de aplicaciones).
+   - Con Resend (necesita dominio propio): `smtp.resend.com`, puerto `465`, usuario `resend` y la API key como contraseña.
+
+Después, redesplegar. Sin estas variables el pago funciona igual, solo que no se anotan pedidos ni sale el mail.

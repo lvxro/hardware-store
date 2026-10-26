@@ -2,10 +2,85 @@
 // La página /compra/aprobada no alcanza para saber si se cobró (cualquiera puede abrirla):
 // lo que vale es esto, porque se consulta el pago directo a Mercado Pago.
 //
-// Por ahora solo deja el pago en los logs de Vercel (Deployments → Functions → Logs).
-// Cuando haya una tabla de pedidos, este es el lugar para guardarlo y descontar stock.
+// T-024: actualiza el pedido en Supabase (tabla pedidos) y, cuando el pago se aprueba, le manda
+// al cliente el comprobante de aura/ware por mail. Mercado Pago repite los avisos: el mail sale una sola vez.
+// Todo queda también en los logs de Vercel (Deployments → Functions → Logs).
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { MercadoPagoConfig, Payment } from 'mercadopago'
+import { supabaseAdmin } from './_lib/supabase.js'
+import { armarComprobante, enviarCorreo } from './_lib/comprobante.js'
+
+const ESTADOS = {
+  approved: 'aprobado',
+  pending: 'pendiente',
+  in_process: 'pendiente',
+  authorized: 'pendiente',
+  rejected: 'rechazado',
+  cancelled: 'cancelado',
+  refunded: 'reintegrado',
+  charged_back: 'contracargo',
+}
+
+function direccionDelSitio(req) {
+  if (process.env.SITIO_URL) return process.env.SITIO_URL.replace(/\/$/, '')
+  return `https://${req.headers.host}`
+}
+
+// Pasa el estado del pago al pedido y, si se aprobó, manda el comprobante (una sola vez)
+async function actualizarPedido(pago, sitio) {
+  const id = pago.external_reference
+  if (!supabaseAdmin || !id) return
+
+  const datosPago = {
+    estado: ESTADOS[pago.status] ?? pago.status,
+    pago_id: String(pago.id),
+    medio: pago.payment_type_id,
+    cuotas: pago.installments ?? null,
+  }
+
+  if (pago.status !== 'approved') {
+    const { error } = await supabaseAdmin.from('pedidos').update(datosPago).eq('id', id)
+    if (error) throw error
+    return
+  }
+
+  // Se "reserva" el envío marcando la hora solo si todavía no tenía. Si dos avisos llegan juntos,
+  // uno solo consigue la fila: el otro no manda nada.
+  const { data: pedido, error } = await supabaseAdmin
+    .from('pedidos')
+    .update({ ...datosPago, mail_enviado: new Date().toISOString() })
+    .eq('id', id)
+    .is('mail_enviado', null)
+    .select()
+    .maybeSingle()
+  if (error) throw error
+  if (!pedido) {
+    // Ya se había mandado, o el pedido no existe: igual se deja el estado al día
+    await supabaseAdmin.from('pedidos').update(datosPago).eq('id', id)
+    return
+  }
+
+  // El correo de la cuenta de la tienda; si compró sin iniciar sesión, el que usó en Mercado Pago
+  const para = pedido.correo ?? pago.payer?.email
+  if (!para) {
+    console.warn('Pedido aprobado sin correo para el comprobante', id)
+    return
+  }
+
+  try {
+    const enviado = await enviarCorreo({ para, ...armarComprobante(pedido, pago, sitio) })
+    if (!enviado) {
+      // Sin correo configurado no tiene sentido que Mercado Pago reintente: queda sin marcar y listo
+      await supabaseAdmin.from('pedidos').update({ mail_enviado: null }).eq('id', id)
+      return
+    }
+    console.log('Comprobante enviado', { pedido: id, para })
+  } catch (e) {
+    // Se libera la marca para que el próximo aviso de Mercado Pago vuelva a intentar
+    await supabaseAdmin.from('pedidos').update({ mail_enviado: null }).eq('id', id)
+    throw e
+  }
+}
 
 // Comprueba que el aviso venga de Mercado Pago con la clave secreta del webhook
 // (panel de Mercado Pago → tu aplicación → Webhooks → "Clave secreta"). Si no está cargada, no se valida.
@@ -48,10 +123,11 @@ export default async function handler(req, res) {
       correo: pago.payer?.email,
       productos: pago.additional_info?.items?.map((i) => `${i.quantity} × ${i.id}`),
     })
+    await actualizarPedido(pago, direccionDelSitio(req))
     return res.status(200).end()
   } catch (e) {
     // Con un error, Mercado Pago vuelve a avisar más tarde
-    console.error('No se pudo consultar el pago', id, e)
+    console.error('No se pudo procesar el pago', id, e)
     return res.status(500).end()
   }
 }

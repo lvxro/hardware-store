@@ -3,15 +3,12 @@
 // de la tabla productos de Supabase, para que nadie pueda cambiarlos desde el navegador.
 // Devuelve la dirección de Mercado Pago a la que hay que mandar al cliente.
 import { randomUUID } from 'node:crypto'
-import { createClient } from '@supabase/supabase-js'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
-import { SUPABASE_URL, SUPABASE_CLAVE } from '../src/data/supabase.js'
+import { supabasePublico as supabase, supabaseAdmin } from './_lib/supabase.js'
 import { precioDeProducto } from '../src/data/precios.js'
 
 const MAXIMO_POR_PRODUCTO = 10 // el mismo tope que el carrito (src/data/carrito.js)
 const MAXIMO_RENGLONES = 50
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_CLAVE, { auth: { persistSession: false } })
 
 // La dirección pública de la tienda, para que Mercado Pago sepa adónde volver.
 // SITIO_URL se puede fijar en Vercel; si no está, se usa la del pedido (sirve también en las previews).
@@ -76,6 +73,25 @@ export default async function handler(req, res) {
   // Número de pedido propio: vuelve en el aviso de Mercado Pago (api/webhook.js) y en la vuelta a la tienda
   const pedido = randomUUID()
   const conHttps = sitio.startsWith('https://')
+
+  // T-024: el pedido queda anotado antes de ir a Mercado Pago. Con el aviso del pago (api/webhook.js)
+  // se marca aprobado y se manda el comprobante. Si no se puede anotar, el pago sigue igual.
+  if (supabaseAdmin) {
+    const marcaDe = new Map(filas.map((p) => [p.id, p.marca]))
+    const { error: errorPedido } = await supabaseAdmin.from('pedidos').insert({
+      id: pedido,
+      correo,
+      items: items.map((i) => ({
+        id: i.id,
+        nombre: i.title,
+        marca: marcaDe.get(i.id),
+        cantidad: i.quantity,
+        precio: i.unit_price,
+      })),
+      total: items.reduce((suma, i) => suma + i.unit_price * i.quantity, 0),
+    })
+    if (errorPedido) console.error('No se pudo anotar el pedido', pedido, errorPedido)
+  }
 
   try {
     const mp = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })

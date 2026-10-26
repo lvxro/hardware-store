@@ -201,7 +201,7 @@ function Aprobada({ nombre, operacion, pedido, medio }) {
           {items.length > 1
             ? `Tus ${items.reduce((s, i) => s + i.cantidad, 0)} productos ya están confirmados.`
             : 'Tu compra ya está confirmada.'}{' '}
-          Te va a llegar el comprobante de Mercado Pago por correo.
+          Te mandamos el detalle por mail, y Mercado Pago el comprobante de pago.
         </p>
       </div>
 

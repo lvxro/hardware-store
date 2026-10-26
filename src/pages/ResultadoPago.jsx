@@ -4,7 +4,6 @@ import productos, { formatoPrecio } from '../data/catalogo'
 import { leerCompra } from '../data/pago'
 import Vitrina from '../components/Vitrina'
 import NumeroAnimado from '../components/NumeroAnimado'
-import Festejo from '../components/Festejo'
 
 // T-022/T-023: adonde vuelve el cliente desde Mercado Pago: /compra/aprobada, /compra/pendiente o /compra/rechazada.
 // Mercado Pago agrega en la dirección el número de operación (payment_id), el estado (status),
@@ -54,9 +53,9 @@ function Palabras({ texto, desde = 250, resaltar = [] }) {
 }
 
 // El sello lima con el tilde que se dibuja, las ondas y un reflejo que lo cruza
-function Sello({ refSello }) {
+function Sello() {
   return (
-    <div ref={refSello} className="relative mx-auto h-24 w-24 sm:h-28 sm:w-28">
+    <div className="relative mx-auto h-24 w-24 sm:h-28 sm:w-28">
       {/* Resplandor de fondo */}
       <div className="absolute -inset-16 rounded-full bg-lime opacity-[0.07] blur-3xl" aria-hidden="true" />
       {[350, 650, 950].map((espera) => (
@@ -177,7 +176,6 @@ function Ticket({ items, total, operacion, pedido, medio }) {
 }
 
 function Aprobada({ nombre, operacion, pedido, medio }) {
-  const sello = useRef(null)
   const { items, total } = useCompra()
 
   // En el celular, una vibración corta junto con el tilde
@@ -191,10 +189,8 @@ function Aprobada({ nombre, operacion, pedido, medio }) {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-12 sm:py-16">
-      <Festejo origen={sello} />
-
       <div className="text-center">
-        <Sello refSello={sello} />
+        <Sello />
         <p className="entra-subiendo mt-8 font-mono text-xs font-medium uppercase tracking-[0.2em] text-lime" style={{ '--espera': '300ms' }}>
           Pago aprobado
         </p>

@@ -26,15 +26,25 @@ export function leerCompra() {
   }
 }
 
-export async function iniciarPago(items, correo) {
+export async function iniciarPago(items) {
+  // T-031: el servidor pide la sesión para saber quién compra (y de ahí sale el correo del pedido)
+  let token
+  try {
+    const { supabase } = await import('./supabase')
+    const { data } = await supabase.auth.getSession()
+    token = data.session?.access_token
+  } catch {
+    // sin conexión con Supabase: se trata como sin sesión
+  }
+  if (!token) return { error: 'Iniciá sesión para comprar.' }
+
   let respuesta
   try {
     respuesta = await fetch('/api/checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
         carrito: items.map((i) => ({ id: i.producto.id, cantidad: i.cantidad })),
-        correo: correo || undefined,
       }),
     })
   } catch {

@@ -19,6 +19,7 @@ const Acceso = lazy(() => import('./pages/Acceso'))
 const CuentaConfirmada = lazy(() => import('./pages/CuentaConfirmada'))
 const ResultadoPago = lazy(() => import('./pages/ResultadoPago'))
 const Admin = lazy(() => import('./pages/Admin'))
+const MisPedidos = lazy(() => import('./pages/MisPedidos'))
 
 // Con la página ya dibujada y el navegador libre, se adelanta la ficha y el carrito,
 // que son a donde más se va después. Así, al tocar un producto, ya está.
@@ -118,6 +119,7 @@ export default function App() {
             element={<Favoritos onAgregarAlCarrito={carrito.agregar} cantidadEnCarrito={carrito.cantidadDe} />}
           />
           <Route path="/admin" element={<Admin sesion={sesion} />} />
+          <Route path="/mis-pedidos" element={<MisPedidos sesion={sesion} />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
         </Suspense>

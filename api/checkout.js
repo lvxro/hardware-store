@@ -58,6 +58,20 @@ export default async function handler(req, res) {
   } catch {
     return res.status(400).json({ error: 'El carrito no es válido.' })
   }
+  // T-031: para comprar hace falta una cuenta con el correo confirmado. El correo del pedido sale de
+  // la sesión verificada por Supabase, no de lo que mande el navegador.
+  const token = String(req.headers.authorization ?? '').replace(/^Bearer\s+/i, '')
+  const { data: sesion, error: errorSesion } = token
+    ? await supabase.auth.getUser(token)
+    : { data: null, error: new Error('sin sesión') }
+  const usuario = sesion?.user
+  if (errorSesion || !usuario?.email) {
+    return res.status(401).json({ error: 'Iniciá sesión para comprar.' })
+  }
+  if (!usuario.email_confirmed_at) {
+    return res.status(403).json({ error: 'Confirmá tu correo antes de comprar.' })
+  }
+
   const cantidades = limpiarCarrito(body.carrito)
   if (!cantidades) return res.status(400).json({ error: 'El carrito no es válido.' })
 
@@ -96,8 +110,7 @@ export default async function handler(req, res) {
   }))
 
   // El correo del cliente, si inició sesión, para que Mercado Pago lo complete solo
-  const correo =
-    typeof body.correo === 'string' && body.correo.length <= 254 && /^\S+@\S+\.\S+$/.test(body.correo) ? body.correo : null
+  const correo = usuario.email.toLowerCase()
   // Número de pedido propio: vuelve en el aviso de Mercado Pago (api/webhook.js) y en la vuelta a la tienda
   const pedido = randomUUID()
   const conHttps = sitio.startsWith('https://')

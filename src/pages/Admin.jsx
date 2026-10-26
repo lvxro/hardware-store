@@ -5,6 +5,8 @@ import categorias from '../data/categorias'
 import { formatearCampo } from '../data/campos'
 import { precioDeProducto } from '../data/precios'
 import { formatoPrecio } from '../data/catalogo'
+import { MEDIOS, fecha } from '../data/pedidos'
+import EstadoPedido from '../components/EstadoPedido'
 
 // T-025: panel de administración. Cargar productos, editarlos y controlar el stock.
 // La seguridad no está acá sino en Supabase (supabase/admin-stock.sql): aunque alguien abriera esta
@@ -544,7 +546,161 @@ function Panel() {
   )
 }
 
+/* ---------- T-031: pedidos ---------- */
+
+const FILTROS = [
+  ['pagos', 'Con pago'],
+  ['aprobado', 'Aprobados'],
+  ['pendiente', 'Pendientes'],
+  ['rechazado', 'Rechazados'],
+  ['sin-pagar', 'Sin pagar'],
+]
+
+function PanelPedidos() {
+  const [pedidos, setPedidos] = useState(null)
+  const [error, setError] = useState('')
+  const [filtro, setFiltro] = useState('pagos')
+  const [texto, setTexto] = useState('')
+  const [abierto, setAbierto] = useState(null)
+
+  useEffect(() => {
+    supabase
+      .from('pedidos')
+      .select('*')
+      .order('creado', { ascending: false })
+      .limit(500)
+      .then(({ data, error }) =>
+        error ? setError('No se pudieron leer los pedidos. ¿Corriste supabase/pedidos-historial.sql?') : setPedidos(data),
+      )
+  }, [])
+
+  if (error) return <p className="mt-6 text-muted">{error}</p>
+  if (!pedidos) return <p role="status" className="mt-6 text-muted">Cargando pedidos…</p>
+
+  const aprobados = pedidos.filter((p) => p.estado === 'aprobado')
+  const facturado = aprobados.reduce((s, p) => s + Number(p.total), 0)
+  const hoy = new Date().toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })
+  const deHoy = aprobados.filter(
+    (p) => new Date(p.creado).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' }) === hoy,
+  )
+  const pendientes = pedidos.filter((p) => p.pago_id && p.estado === 'pendiente').length
+
+  const palabras = texto.toLowerCase().split(/\s+/).filter(Boolean)
+  const lista = pedidos.filter((p) => {
+    const pasa =
+      filtro === 'pagos' ? Boolean(p.pago_id) : filtro === 'sin-pagar' ? !p.pago_id : p.estado === filtro
+    const donde = `${p.id} ${p.correo ?? ''} ${p.pago_id ?? ''} ${p.items.map((i) => i.nombre).join(' ')}`.toLowerCase()
+    return pasa && palabras.every((w) => donde.includes(w))
+  })
+
+  return (
+    <>
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          ['Vendido', formatoPrecio(facturado), true],
+          ['Ventas aprobadas', aprobados.length, false],
+          ['Hoy', deHoy.length ? `${deHoy.length} · ${formatoPrecio(deHoy.reduce((s, p) => s + Number(p.total), 0))}` : '0', false],
+          ['Pendientes de pago', pendientes, false],
+        ].map(([etiqueta, valor, destacado]) => (
+          <div key={etiqueta} className={`rounded-[3px] border bg-surface p-4 ${destacado ? 'border-lime' : 'border-line'}`}>
+            <span className="block text-xs text-muted sm:text-sm">{etiqueta}</span>
+            <span className={`mt-1 block truncate font-mono text-lg font-bold sm:text-2xl ${destacado ? 'text-lime' : ''}`}>{valor}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center gap-3 border-b border-line pb-4">
+        <input
+          type="search"
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          placeholder="Buscar por correo, pedido, operación o producto"
+          aria-label="Buscar pedidos"
+          className={`${campoClase} min-w-0 flex-1 sm:max-w-sm`}
+        />
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Estado">
+          {FILTROS.map(([clave, nombre]) => (
+            <button
+              key={clave}
+              type="button"
+              onClick={() => setFiltro(clave)}
+              aria-pressed={filtro === clave}
+              className={`rounded-full border px-3 py-1 font-mono text-xs font-medium ${
+                filtro === clave ? 'border-lime text-lime' : 'border-line-strong text-muted hover:text-white'
+              }`}
+            >
+              {nombre}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <p className="mt-4 text-sm text-muted tabular-nums">
+        {lista.length} {lista.length === 1 ? 'pedido' : 'pedidos'}
+      </p>
+
+      <ul className="mt-2 divide-y divide-line border-y border-line">
+        {lista.map((p) => {
+          const unidades = p.items.reduce((s, i) => s + i.cantidad, 0)
+          const verDetalle = abierto === p.id
+          return (
+            <li key={p.id}>
+              <button
+                type="button"
+                onClick={() => setAbierto(verDetalle ? null : p.id)}
+                aria-expanded={verDetalle}
+                className="grid w-full gap-1 py-3 text-left hover:bg-surface sm:grid-cols-[8rem_minmax(0,1fr)_auto_7rem] sm:items-center sm:gap-6 sm:px-2"
+              >
+                <span className="font-mono text-sm font-bold">{p.id.slice(0, 8).toUpperCase()}</span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm">{p.correo ?? 'Sin correo'}</span>
+                  <span className="block text-xs text-muted">
+                    {fecha(p.creado)} · {unidades} {unidades === 1 ? 'unidad' : 'unidades'}
+                  </span>
+                </span>
+                <span>{p.pago_id ? <EstadoPedido estado={p.estado} /> : <span className="font-mono text-[11px] text-muted">SIN PAGAR</span>}</span>
+                <span className="font-mono font-bold sm:text-right">{formatoPrecio(p.total)}</span>
+              </button>
+              {verDetalle && (
+                <div className="entra-deslizando mb-3 rounded-[3px] border border-line bg-surface p-4 text-sm" style={{ animationDelay: '0ms' }}>
+                  <ul className="divide-y divide-line">
+                    {p.items.map((i) => (
+                      <li key={i.id} className="flex justify-between gap-4 py-2">
+                        <span>
+                          {i.cantidad} × {i.nombre} <span className="font-mono text-xs text-muted">{i.id}</span>
+                        </span>
+                        <span className="font-mono">{formatoPrecio(i.precio * i.cantidad)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 font-mono text-xs text-muted">
+                    {[
+                      `Pedido ${p.id}`,
+                      p.pago_id && `Operación ${p.pago_id}`,
+                      MEDIOS[p.medio],
+                      p.cuotas > 1 && `${p.cuotas} cuotas`,
+                      p.stock_descontado && 'Stock descontado',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </p>
+                </div>
+              )}
+            </li>
+          )
+        })}
+        {lista.length === 0 && <li className="py-8 text-center text-muted">No hay pedidos con esos filtros.</li>}
+      </ul>
+      <p className="mt-4 text-xs text-muted">
+        "Sin pagar" son carritos que llegaron a Mercado Pago pero no terminaron el pago. Los cobros, siempre confirmalos también en Mercado
+        Pago.
+      </p>
+    </>
+  )
+}
+
 export default function Admin({ sesion }) {
+  const [pestana, setPestana] = useState('productos')
   const { usuario, cargando, esAdmin, verificandoAdmin } = sesion
 
   if (cargando || verificandoAdmin) {
@@ -585,8 +741,27 @@ export default function Admin({ sesion }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <h1 className="text-3xl font-semibold">Panel de administración</h1>
-      <p className="mt-1 text-muted">Productos y stock de la tienda.</p>
-      <Panel />
+      <p className="mt-1 text-muted">Productos, stock y ventas de la tienda.</p>
+      <div className="mt-6 flex gap-1 border-b border-line" role="tablist">
+        {[
+          ['productos', 'Productos'],
+          ['pedidos', 'Pedidos'],
+        ].map(([clave, nombre]) => (
+          <button
+            key={clave}
+            type="button"
+            role="tab"
+            aria-selected={pestana === clave}
+            onClick={() => setPestana(clave)}
+            className={`-mb-px border-b-2 px-4 py-2.5 font-mono text-sm font-medium ${
+              pestana === clave ? 'border-lime text-white' : 'border-transparent text-muted hover:text-white'
+            }`}
+          >
+            {nombre}
+          </button>
+        ))}
+      </div>
+      {pestana === 'productos' ? <Panel /> : <PanelPedidos />}
     </div>
   )
 }

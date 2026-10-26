@@ -169,7 +169,7 @@ function BotonCarrito({ cantidad }) {
 
 /*
   Botón de la cuenta (T-019). Sin sesión, lleva a iniciar sesión. Con sesión, se llena de lima con la
-  inicial del nombre y abre un menú chico con el nombre y "Cerrar sesión".
+  inicial del nombre y abre un menú chico con el nombre, "Mis pedidos" (T-023) y "Cerrar sesión".
 */
 function BotonCuenta({ sesion }) {
   const { usuario, nombre, cargando, salir } = sesion
@@ -222,6 +222,14 @@ function BotonCuenta({ sesion }) {
         <div role="menu" className="absolute right-0 top-full z-20 mt-2 w-56 rounded-[3px] border border-line-strong bg-surface p-3 shadow-glow-lg">
           <p className="truncate text-sm font-medium">{nombre}</p>
           <p className="truncate text-xs text-muted">{usuario.email}</p>
+          <Link
+            to="/pedidos"
+            role="menuitem"
+            onClick={() => setAbierto(false)}
+            className="mt-3 block w-full rounded-[3px] border border-line-strong px-3 py-2 text-center font-mono text-sm font-medium hover:border-line-hover hover:bg-raised"
+          >
+            Mis pedidos
+          </Link>
           <button
             type="button"
             role="menuitem"
@@ -229,7 +237,7 @@ function BotonCuenta({ sesion }) {
               setAbierto(false)
               salir()
             }}
-            className="mt-3 w-full rounded-[3px] border border-line-strong px-3 py-2 text-center font-mono text-sm font-medium hover:border-line-hover hover:bg-raised"
+            className="mt-2 w-full rounded-[3px] border border-line-strong px-3 py-2 text-center font-mono text-sm font-medium hover:border-line-hover hover:bg-raised"
           >
             Cerrar sesión
           </button>

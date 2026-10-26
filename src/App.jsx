@@ -9,6 +9,7 @@ import Carrito from './pages/Carrito'
 import Acceso from './pages/Acceso'
 import CuentaConfirmada from './pages/CuentaConfirmada'
 import ResultadoPago from './pages/ResultadoPago'
+import Pedidos from './pages/Pedidos'
 import { useCarrito } from './data/carrito'
 import { useSesion } from './data/sesion'
 
@@ -76,7 +77,8 @@ export default function App() {
           <Route path="/ingresar" element={<Acceso modo="ingreso" sesion={sesion} />} />
           <Route path="/registro" element={<Acceso modo="registro" sesion={sesion} />} />
           <Route path="/cuenta-confirmada" element={<CuentaConfirmada sesion={sesion} />} />
-          <Route path="/compra/:estado" element={<ResultadoPago onVaciarCarrito={carrito.vaciar} />} />
+          <Route path="/pedidos" element={<Pedidos sesion={sesion} />} />
+          <Route path="/compra/:estado"element={<ResultadoPago onVaciarCarrito={carrito.vaciar} />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
         </div>

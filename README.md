@@ -77,3 +77,11 @@ Después de cargarlas hay que volver a desplegar. En el panel de Mercado Pago, e
 ### Probar en la computadora
 
 `npm run dev` no levanta las funciones de `api/`. Para probar el pago en local: `npx vercel dev` (con las variables en `.env.local`, que no se sube). En `http` Mercado Pago no vuelve solo a la tienda ni avisa al webhook: eso se prueba en el deploy de Vercel.
+
+## Historial de pedidos (T-023)
+
+El cliente con la sesión iniciada ve sus compras en `/pedidos` (menú de la cuenta → "Mis pedidos"). Sin sesión, la página lo manda a iniciar sesión y después vuelve.
+
+- Los pedidos se leen de la tabla `pedidos` de Supabase. El script para crearla está en `supabase/tabla-pedidos.sql` (hay que correrlo una vez en el SQL Editor). Su regla de seguridad deja que cada cliente vea solo sus pedidos.
+- Mientras la tabla no exista o esté vacía, la página muestra "Todavía no hiciste compras".
+- **Falta (T-027 y T-030):** que el checkout guarde cada pedido en la tabla y que `api/webhook.js` actualice su estado cuando Mercado Pago confirma el pago. Hasta entonces el historial no tiene qué mostrar. Para probarlo se puede cargar un pedido a mano con el ejemplo que está al final de `tabla-pedidos.sql`.

@@ -58,3 +58,23 @@ export async function iniciarPago(items) {
   guardarCompra(items)
   return { url: datos.url }
 }
+
+// T-032: al volver de Mercado Pago, se le pide al servidor que confirme el pago (api/confirmar.js).
+// Así el pedido queda al día en Mis pedidos aunque el aviso de Mercado Pago tarde.
+// No muestra nada: si falla, el aviso automático lo va a actualizar igual.
+export async function confirmarPago(pedido, pago) {
+  try {
+    const { supabase } = await import('./supabase')
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    if (!token) return null
+    const respuesta = await fetch('/api/confirmar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ pedido, pago }),
+    })
+    return respuesta.ok ? await respuesta.json() : null
+  } catch {
+    return null
+  }
+}

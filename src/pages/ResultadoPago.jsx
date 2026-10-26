@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import productos, { formatoPrecio } from '../data/catalogo'
-import { leerCompra } from '../data/pago'
+import { confirmarPago, leerCompra } from '../data/pago'
 import Vitrina from '../components/Vitrina'
 import NumeroAnimado from '../components/NumeroAnimado'
 
@@ -273,6 +273,16 @@ export default function ResultadoPago({ nombre, onVaciarCarrito }) {
       onVaciarCarrito()
     }
   }, [aprobado, onVaciarCarrito])
+
+  // T-032: le pide al servidor que confirme el pago con Mercado Pago (una vez), así el pedido
+  // aparece al día en Mis pedidos sin depender del aviso automático
+  const pedidoId = valor('external_reference')
+  const confirmado = useRef(false)
+  useEffect(() => {
+    if (confirmado.current || !pedidoId || !operacion) return
+    confirmado.current = true
+    confirmarPago(pedidoId, operacion)
+  }, [pedidoId, operacion])
 
   if (estado === 'aprobada') {
     return <Aprobada nombre={nombre} operacion={operacion} pedido={valor('external_reference')} medio={valor('payment_type')} />

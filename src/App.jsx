@@ -76,7 +76,7 @@ export default function App() {
           <Route path="/ingresar" element={<Acceso modo="ingreso" sesion={sesion} />} />
           <Route path="/registro" element={<Acceso modo="registro" sesion={sesion} />} />
           <Route path="/cuenta-confirmada" element={<CuentaConfirmada sesion={sesion} />} />
-          <Route path="/compra/:estado" element={<ResultadoPago onVaciarCarrito={carrito.vaciar} />} />
+          <Route path="/compra/:estado" element={<ResultadoPago nombre={sesion.nombre} onVaciarCarrito={carrito.vaciar} />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
         </div>

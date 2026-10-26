@@ -468,6 +468,87 @@ body {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   T-023: página de gracias (pages/ResultadoPago.jsx)
+   --------------------------------------------------------------------------- */
+
+/* Ondas que salen del sello del tilde, como una gota en el agua */
+@keyframes anillo {
+  from {
+    opacity: 0.7;
+    scale: 0.7;
+  }
+  to {
+    opacity: 0;
+    scale: 2.6;
+  }
+}
+
+/* La línea del seguimiento del pedido se llena de izquierda a derecha */
+@keyframes llenar {
+  from {
+    scale: 0 1;
+  }
+}
+
+/* Un punto que late: el paso del pedido que está en curso */
+@keyframes latido {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--lime-ring);
+  }
+  50% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}
+
+/* El reflejo que cruza el sello una vez, como luz sobre metal */
+@keyframes reflejo {
+  from {
+    translate: -120% 0;
+  }
+  to {
+    translate: 120% 0;
+  }
+}
+
+@layer components {
+  .sello {
+    animation: brotar 750ms cubic-bezier(0.16, 1, 0.3, 1) 100ms both;
+  }
+
+  .sello .tilde {
+    animation-delay: 550ms;
+    animation-duration: 500ms;
+  }
+
+  .sello-anillo {
+    animation: anillo 1400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--espera, 350ms);
+  }
+
+  .sello-reflejo {
+    animation: reflejo 900ms cubic-bezier(0.65, 0, 0.35, 1) 1100ms both;
+  }
+
+  .linea-llena {
+    transform-origin: left;
+    animation: llenar 900ms cubic-bezier(0.65, 0, 0.35, 1) both;
+    animation-delay: var(--espera, 0ms);
+  }
+
+  .late {
+    animation: latido 1.8s ease-in-out infinite;
+  }
+
+  /* El borde dentado del ticket: semicírculos del color del fondo */
+  .ticket-corte {
+    background-image: radial-gradient(circle at 50% 0, var(--bg) 5px, transparent 5.5px);
+    background-size: 14px 10px;
+    background-repeat: repeat-x;
+  }
+}
+
 /* Quien pidió menos movimiento en su sistema ve todo en su lugar, sin animaciones */
 @media (prefers-reduced-motion: reduce) {
   *,

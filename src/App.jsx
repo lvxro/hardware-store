@@ -17,6 +17,8 @@ const Carrito = lazy(cargarCarrito)
 const Favoritos = lazy(() => import('./pages/Favoritos'))
 const Acceso = lazy(() => import('./pages/Acceso'))
 const CuentaConfirmada = lazy(() => import('./pages/CuentaConfirmada'))
+const RecuperarContrasena = lazy(() => import('./pages/RecuperarContrasena'))
+const NuevaContrasena = lazy(() => import('./pages/NuevaContrasena'))
 const ResultadoPago = lazy(() => import('./pages/ResultadoPago'))
 const Admin = lazy(() => import('./pages/Admin'))
 const MisPedidos = lazy(() => import('./pages/MisPedidos'))
@@ -113,6 +115,8 @@ export default function App() {
           <Route path="/ingresar" element={<Acceso modo="ingreso" sesion={sesion} />} />
           <Route path="/registro" element={<Acceso modo="registro" sesion={sesion} />} />
           <Route path="/cuenta-confirmada" element={<CuentaConfirmada sesion={sesion} />} />
+          <Route path="/recuperar-contrasena" element={<RecuperarContrasena sesion={sesion} />} />
+          <Route path="/nueva-contrasena" element={<NuevaContrasena sesion={sesion} />} />
           <Route path="/compra/:estado" element={<ResultadoPago nombre={sesion.nombre} onVaciarCarrito={carrito.vaciar} />} />
           <Route
             path="/favoritos"

@@ -9,6 +9,19 @@ const conSupabase = () => import('./supabase').then((m) => m.supabase)
 
 export const CLAVE_MINIMA = 8
 
+// Recuperar contraseña (T-028 del tablero): si el enlace del correo venció o ya se usó, Supabase vuelve
+// a la tienda con el error en la dirección. Se lee apenas carga el sitio, antes de que el cliente de
+// Supabase limpie la dirección.
+function leerErrorDelEnlace() {
+  if (typeof window === 'undefined') return false
+  const parametros = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+  const consulta = new URLSearchParams(window.location.search)
+  return Boolean(
+    parametros.get('error_code') || parametros.get('error') || consulta.get('error_code') || consulta.get('error'),
+  )
+}
+export const enlaceConError = leerErrorDelEnlace()
+
 // Supabase devuelve los errores en inglés: acá se pasan a mensajes que entiende el cliente
 function traducir(error) {
   switch (error.code) {
@@ -26,11 +39,24 @@ function traducir(error) {
       return 'Ese correo no es válido.'
     case 'signup_disabled':
       return 'El registro está desactivado por ahora.'
+    case 'same_password':
+      return 'La contraseña nueva tiene que ser distinta de la actual.'
+    case 'reauthentication_needed':
+    case 'reauthentication_not_valid':
+      return 'Por seguridad, iniciá sesión de nuevo antes de cambiar la contraseña.'
+    case 'session_not_found':
+    case 'session_expired':
+    case 'bad_jwt':
+      return 'El enlace venció. Pedí uno nuevo para cambiar tu contraseña.'
     case 'over_request_rate_limit':
     case 'over_email_send_rate_limit':
       return 'Hiciste demasiados intentos. Esperá unos minutos y volvé a probar.'
     default:
       break
+  }
+  // Supabase no pudo mandar el mail de recuperación (por ejemplo, el correo SMTP está mal configurado)
+  if (/recovery email/i.test(error.message ?? '')) {
+    return 'No pudimos mandarte el mail para cambiar la contraseña. Probá de nuevo en unos minutos.'
   }
   // Supabase no pudo mandar el mail de confirmación (por ejemplo, el correo SMTP está mal configurado)
   if (error.code === 'unexpected_failure' || /confirmation email/i.test(error.message ?? '')) {
@@ -125,6 +151,30 @@ export function useSesion() {
     return error ? { error: traducir(error) } : { ok: true }
   }
 
+  // Recuperar contraseña (T-028 del tablero): Supabase manda un mail con un enlace que vuelve a
+  // /nueva-contrasena con una sesión temporal abierta. No dice si el correo tiene cuenta o no.
+  const pedirRecuperacion = async ({ correo }) => {
+    const supabase = await conSupabase()
+    const { error } = await supabase.auth.resetPasswordForEmail(correo, {
+      redirectTo: `${window.location.origin}/nueva-contrasena`,
+    })
+    return error ? { error: traducir(error) } : { ok: true }
+  }
+
+  // Guarda la contraseña nueva de la cuenta que tiene la sesión abierta
+  const cambiarClave = async ({ clave }) => {
+    const supabase = await conSupabase()
+    const { error } = await supabase.auth.updateUser({ password: clave })
+    if (error) return { error: traducir(error) }
+    // Por seguridad, se cierran las sesiones de los demás dispositivos (esta sigue abierta)
+    try {
+      await supabase.auth.signOut({ scope: 'others' })
+    } catch {
+      // Si falla, la contraseña igual ya cambió
+    }
+    return { ok: true }
+  }
+
   const salir = async () => {
     // scope local: cierra solo este navegador, no los demás dispositivos del cliente
     const supabase = await conSupabase()
@@ -133,5 +183,16 @@ export function useSesion() {
 
   const nombre = usuario?.user_metadata?.nombre?.trim() || usuario?.email?.split('@')[0] || ''
 
-  return { usuario, nombre, cargando, esAdmin, verificandoAdmin, registrar, ingresar, salir }
+  return {
+    usuario,
+    nombre,
+    cargando,
+    esAdmin,
+    verificandoAdmin,
+    registrar,
+    ingresar,
+    pedirRecuperacion,
+    cambiarClave,
+    salir,
+  }
 }

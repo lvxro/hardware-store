@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTitulo } from '../data/titulo'
 import categorias from '../data/categorias'
 import { productosDe, precioDesde, formatoPrecio, ofertas } from '../data/catalogo'
 import { PORCENTAJE_OFERTA } from '../data/ofertas'
@@ -213,6 +214,7 @@ function Ofertas() {
 
 // T-010: home con navegación por categorías. T-021 le suma las ofertas.
 export default function Home() {
+  useTitulo()
   return (
     <>
       <Portada />

@@ -7,6 +7,7 @@ import { precioDeProducto } from '../data/precios'
 import { formatoPrecio } from '../data/catalogo'
 import { MEDIOS, fecha } from '../data/pedidos'
 import EstadoPedido from '../components/EstadoPedido'
+import { useTitulo } from '../data/titulo'
 
 // T-025: panel de administración. Cargar productos, editarlos y controlar el stock.
 // La seguridad no está acá sino en Supabase (supabase/admin-stock.sql): aunque alguien abriera esta
@@ -700,6 +701,7 @@ function PanelPedidos() {
 }
 
 export default function Admin({ sesion }) {
+  useTitulo('Panel de administración')
   const [pestana, setPestana] = useState('productos')
   const { usuario, cargando, esAdmin, verificandoAdmin } = sesion
 

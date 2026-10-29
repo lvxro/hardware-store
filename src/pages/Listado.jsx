@@ -7,6 +7,7 @@ import { PORCENTAJE_OFERTA } from '../data/ofertas'
 import ProductoCard from '../components/ProductoCard'
 import { compatibleCon } from '../data/compatibilidad'
 import Vitrina from '../components/Vitrina'
+import { useTitulo } from '../data/titulo'
 
 // T-021: "Ofertas" reemplaza a "Destacados". Pone primero los productos en oferta y deja los demás
 // en su orden de siempre (el orden de sort es estable).
@@ -162,6 +163,17 @@ function ListadoContenido({ slug, busqueda, soloOfertas, enCarrito, compatiblesI
   // T-029: ver solo lo que va con el carrito (se abre activado desde los enlaces del carrito)
   const [soloCompatibles, setSoloCompatibles] = useState(compatiblesInicial)
   const categoria = categorias.find((c) => c.slug === slug)
+  useTitulo(
+    slug && !categoria
+      ? 'Categoría no encontrada'
+      : soloOfertas
+        ? 'Ofertas'
+        : categoria
+          ? categoria.nombre
+          : busqueda
+            ? `Resultados para "${busqueda}"`
+            : 'Todos los productos',
+  )
 
   if (slug && !categoria) {
     return (

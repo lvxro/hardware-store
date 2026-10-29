@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Campo from '../components/Campo'
+import { useTitulo } from '../data/titulo'
 
 // Recuperar contraseña (T-028 del tablero): el cliente escribe su correo y Supabase le manda un enlace
 // para elegir una contraseña nueva (ver pages/NuevaContrasena.jsx). "sesion" llega desde App.
@@ -11,6 +12,7 @@ const botonSecundario =
   'inline-block rounded-[3px] border border-line-strong px-4 py-2 font-mono text-sm font-medium text-white hover:border-line-hover hover:bg-raised'
 
 export default function RecuperarContrasena({ sesion }) {
+  useTitulo('Recuperar contraseña')
   const { state } = useLocation()
   const [error, setError] = useState('')
   const [enviando, setEnviando] = useState(false)

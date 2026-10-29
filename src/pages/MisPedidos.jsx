@@ -4,6 +4,7 @@ import { supabase } from '../data/supabase'
 import { formatoPrecio } from '../data/catalogo'
 import { MEDIOS, fecha } from '../data/pedidos'
 import EstadoPedido from '../components/EstadoPedido'
+import { useTitulo } from '../data/titulo'
 
 // T-031: el historial de compras del cliente. Supabase solo le devuelve los pedidos hechos con el
 // correo de su cuenta (supabase/pedidos-historial.sql). Los que se empezaron y nunca llegaron a
@@ -103,6 +104,7 @@ function Lista() {
 }
 
 export default function MisPedidos({ sesion }) {
+  useTitulo('Mis pedidos')
   const { usuario, cargando } = sesion
 
   return (

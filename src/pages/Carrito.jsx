@@ -14,6 +14,7 @@ import { plegar } from '../components/animaciones'
 import { iniciarPago } from '../data/pago'
 import { revisar } from '../data/compatibilidad'
 import { PanelCompatibilidad } from '../components/Compatibilidad'
+import { useTitulo } from '../data/titulo'
 
 // T-018: la página del carrito. Los datos y las acciones llegan desde App (ver data/carrito.js).
 
@@ -307,6 +308,7 @@ function Vacio() {
 }
 
 export default function Carrito({ items, total, unidades, correo, hayAgotados, onCambiarCantidad, onQuitar, onVaciar }) {
+  useTitulo('Carrito')
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <h1 className="text-3xl font-semibold sm:text-4xl">Carrito</h1>

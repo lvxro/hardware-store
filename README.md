@@ -146,3 +146,18 @@ La tienda muestra "Sin stock" y "Últimas unidades", y no deja agregar más de l
 - `/mis-pedidos` (menú de la cuenta → Mis pedidos): cada cliente ve sus compras con fecha, productos, total, estado y número de operación.
 - `/admin` → pestaña Pedidos: todas las ventas, total vendido, ventas del día, búsqueda y filtro por estado.
 - Configuración: correr `supabase/pedidos-historial.sql` (reglas de lectura) y tener `SUPABASE_SERVICE_ROLE_KEY` en Vercel, que es lo que permite registrar los pedidos.
+
+## Títulos por página y vista previa al compartir (T-051)
+
+**Título de la pestaña.** Cada pantalla pone el suyo con el hook `useTitulo` (`src/data/titulo.js`): "Procesadores · aura/ware", "Carrito · aura/ware", y en la ficha el nombre del producto. El inicio deja el general del sitio. Así se distinguen en el historial, en los favoritos del navegador y en las pestañas abiertas.
+
+**Vista previa al compartir.** WhatsApp, Instagram o Discord no ejecutan JavaScript: leen las etiquetas Open Graph del HTML. Como la tienda arma las pantallas en el navegador, todas las direcciones devolvían el mismo `index.html`. Ahora:
+
+- `index.html` trae la vista previa general del sitio, con la imagen `public/og-auraware.png` (1200 × 630).
+- `vercel.json` manda `/producto/:id` a la función `api/producto.js`, que devuelve ese mismo `index.html` con el nombre, el precio (de oferta si corresponde), el precio en efectivo y la descripción del producto. Para el cliente no cambia nada: React carga igual.
+- Si el producto no existe, el código no tiene la forma de un código del catálogo o Supabase no responde, se devuelve la página común y la tienda decide qué mostrar.
+- La respuesta se guarda 5 minutos en la caché de Vercel, para no consultar Supabase en cada pedido.
+
+Para probarlo, después de publicar, pegar el enlace de un producto en WhatsApp o en <https://www.opengraph.xyz>. Si cambia el precio y la vista previa muestra el viejo, WhatsApp la guarda por su cuenta: se renueva con un enlace distinto (por ejemplo, agregando `?v=2`).
+
+Limitación: todos los productos usan la misma imagen de la marca, porque todavía no hay fotos reales (T-042). Cuando estén en `public/img`, `api/producto.js` puede usarlas.

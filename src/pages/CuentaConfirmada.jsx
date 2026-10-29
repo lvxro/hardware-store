@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTitulo } from '../data/titulo'
 
 // T-019: a esta página llega el cliente al tocar "Verificar correo electrónico" en el mail.
 // Supabase confirma la cuenta, abre la sesión y vuelve acá. "sesion" llega desde App (ver data/sesion.js).
@@ -27,6 +28,7 @@ function Pantalla({ titulo, children }) {
 }
 
 export default function CuentaConfirmada({ sesion }) {
+  useTitulo('Cuenta confirmada')
   const navegar = useNavigate()
   const { usuario, nombre, cargando } = sesion
   // Se lee una sola vez, apenas se abre la página: el cliente de Supabase limpia la dirección al terminar

@@ -75,17 +75,6 @@ export default function RecuperarContrasena({ sesion }) {
           {enviando ? 'Un momento…' : 'Mandar enlace'}
         </button>
       </form>
-
-      <p className="mt-6 text-sm text-muted">
-        ¿Te acordaste?{' '}
-        <Link
-          to="/ingresar"
-          state={state}
-          className="text-white underline underline-offset-4 hover:text-lime"
-        >
-          Iniciá sesión
-        </Link>
-      </p>
     </div>
   )
 }

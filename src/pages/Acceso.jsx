@@ -1,25 +1,11 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import Campo from '../components/Campo'
 import { CLAVE_MINIMA } from '../data/sesion'
 
 // T-019: las páginas de registro (/registro) e inicio de sesión (/ingresar).
 // Son la misma pantalla con campos distintos, así que comparten componente.
 // "sesion" llega desde App (ver data/sesion.js).
-
-const claseCampo =
-  'mt-1.5 w-full rounded-[3px] border border-line-strong bg-bg px-3 py-2.5 text-white placeholder:text-muted focus:border-lime focus:shadow-glow focus:outline-none'
-
-function Campo({ id, etiqueta, ayuda, ...resto }) {
-  return (
-    <div>
-      <label htmlFor={id} className="text-sm font-medium">
-        {etiqueta}
-      </label>
-      <input id={id} name={id} className={claseCampo} {...resto} />
-      {ayuda && <p className="mt-1 text-xs text-muted">{ayuda}</p>}
-    </div>
-  )
-}
 
 export default function Acceso({ modo, sesion }) {
   const esRegistro = modo === 'registro'
@@ -108,6 +94,18 @@ export default function Acceso({ modo, sesion }) {
           minLength={esRegistro ? CLAVE_MINIMA : undefined}
           ayuda={esRegistro ? `Al menos ${CLAVE_MINIMA} caracteres.` : undefined}
         />
+        {/* Recuperar contraseña (T-028 del tablero) */}
+        {!esRegistro && (
+          <p className="-mt-2 text-right text-sm">
+            <Link
+              to="/recuperar-contrasena"
+              state={state}
+              className="text-muted underline underline-offset-4 hover:text-lime"
+            >
+              ¿Te olvidaste la contraseña?
+            </Link>
+          </p>
+        )}
         {esRegistro && (
           <Campo id="repetir" etiqueta="Repetí la contraseña" type="password" autoComplete="new-password" required />
         )}

@@ -46,6 +46,22 @@ La plantilla no se aplica sola: hay que cargarla en el panel de Supabase.
 - **Vencimiento:** el mail dice que el enlace expira en 15 minutos. Hay que poner la expiración del correo en 900 segundos (Authentication → Providers → Email); por defecto es 1 hora.
 - **Remitente:** con el envío de mails que trae Supabase, el remitente es el de Supabase. Para que figure `aura/ware` hace falta configurar un SMTP propio (Authentication → SMTP Settings) con un dominio del equipo.
 
+### Recuperar contraseña (T-028)
+
+Si el cliente se olvida la contraseña, en `/ingresar` toca "¿Te olvidaste la contraseña?" y llega a `/recuperar-contrasena` (`src/pages/RecuperarContrasena.jsx`). Escribe su correo y Supabase le manda un mail con un botón. Al tocarlo vuelve a `/nueva-contrasena` (`src/pages/NuevaContrasena.jsx`), donde elige la contraseña nueva (mínimo 8 caracteres, repetida) y queda con la sesión abierta. La lógica está en `src/data/sesion.js` (`pedirRecuperacion` y `cambiarClave`).
+
+- La pantalla no dice si el correo tiene cuenta o no, así nadie puede averiguar qué correos están registrados.
+- Al cambiar la contraseña se cierran las sesiones de los demás dispositivos; la actual sigue abierta.
+- Si el enlace venció o ya se usó, `/nueva-contrasena` lo avisa y ofrece pedir uno nuevo.
+- Los errores de Supabase (misma contraseña que la actual, demasiados intentos, mail que no salió) se traducen a mensajes en español.
+
+Para que funcione hay que cargar el mail en el panel de Supabase, igual que el de confirmación:
+
+- **Authentication → Emails → Reset password:** asunto `Cambiá tu contraseña en aura/ware` y, como contenido, el HTML de `supabase/plantilla-recuperar-contrasena.html`.
+- **Redirect URLs:** las mismas del mail de confirmación (`https://aurawarestore.vercel.app/**` y `http://localhost:5173/**`). Si falta alguna, el enlace no vuelve a `/nueva-contrasena`.
+- **SMTP propio:** el envío que trae Supabase tiene un límite muy bajo de mails por hora y no deja usar plantillas propias. Hace falta el mismo SMTP que para el mail de confirmación.
+- **Vencimiento:** el mail dice 15 minutos, que es la misma configuración del mail de confirmación (900 segundos).
+
 ## Ofertas (T-021)
 
 La tienda tiene 6 productos en oferta, con el 25 % menos que su precio de lista. Se ven en el home (sección "Ofertas"), en la página `/ofertas` y en cada tarjeta, ficha y carrito: primero el precio de lista tachado y abajo el precio de oferta.

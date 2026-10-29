@@ -1,6 +1,6 @@
 // Reglas comerciales de ejemplo: ajustalas a tu tienda.
 // Están en un solo archivo para que la ficha, las tarjetas y el home muestren lo mismo.
-import { aPesos } from './precios'
+import { aPesos } from './precios.js'
 
 export const DESCUENTO_EFECTIVO = 0.1
 export const ENVIO_GRATIS_DESDE_USD = 500

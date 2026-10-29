@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Campo from '../components/Campo'
 import { CLAVE_MINIMA } from '../data/sesion'
+import { useTitulo } from '../data/titulo'
 
 // T-019: las páginas de registro (/registro) e inicio de sesión (/ingresar).
 // Son la misma pantalla con campos distintos, así que comparten componente.
@@ -9,6 +10,7 @@ import { CLAVE_MINIMA } from '../data/sesion'
 
 export default function Acceso({ modo, sesion }) {
   const esRegistro = modo === 'registro'
+  useTitulo(esRegistro ? 'Crear cuenta' : 'Iniciar sesión')
   const navegar = useNavigate()
   const { state } = useLocation()
   const [error, setError] = useState('')

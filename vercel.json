@@ -1,5 +1,8 @@
 {
-  "rewrites": [{ "source": "/((?!api/|assets/|img/).*)", "destination": "/index.html" }],
+  "rewrites": [
+    { "source": "/producto/:id", "destination": "/api/producto?id=:id" },
+    { "source": "/((?!api/|assets/|img/).*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

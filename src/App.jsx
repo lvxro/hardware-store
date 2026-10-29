@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Listado from './pages/Listado'
 import { useCarrito } from './data/carrito'
 import { useSesion } from './data/sesion'
+import { useTitulo } from './data/titulo'
 import { FavoritosContext, useFavoritos } from './data/favoritos'
 
 // T-028: el inicio y los listados vienen en el archivo principal; el resto de las páginas se baja
@@ -44,6 +45,7 @@ function useAdelantarPaginas() {
 const Esperando = () => <div className="min-h-[60vh]" aria-busy="true" />
 
 function NoEncontrada() {
+  useTitulo('Página no encontrada')
   return (
     <div className="mx-auto max-w-7xl px-4 py-12">
       <h1 className="text-2xl font-semibold">Esta página no existe</h1>

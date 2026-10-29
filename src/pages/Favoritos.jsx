@@ -5,6 +5,7 @@ import { useFavoritosCompartidos } from '../data/favoritos'
 import { maximoDe } from '../data/carrito'
 import ProductoCard from '../components/ProductoCard'
 import { Corazon } from '../components/BotonFavorito'
+import { useTitulo } from '../data/titulo'
 
 // T-027: los productos guardados, el último primero.
 // Desde acá se pueden pasar todos al carrito de una vez (los que tienen stock).
@@ -13,6 +14,7 @@ const porId = new Map(productos.map((p) => [p.id, p]))
 
 export default function Favoritos({ onAgregarAlCarrito, cantidadEnCarrito }) {
   const favoritos = useFavoritosCompartidos()
+  useTitulo('Favoritos')
   const [aviso, setAviso] = useState('')
   const lista = favoritos.ids.map((id) => porId.get(id)).filter(Boolean)
   // Los que se pueden sumar al carrito: con stock y sin haber llegado al tope

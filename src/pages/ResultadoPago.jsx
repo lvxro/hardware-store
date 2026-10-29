@@ -4,6 +4,7 @@ import productos, { formatoPrecio } from '../data/catalogo'
 import { confirmarPago, leerCompra } from '../data/pago'
 import Vitrina from '../components/Vitrina'
 import NumeroAnimado from '../components/NumeroAnimado'
+import { useTitulo } from '../data/titulo'
 
 // T-022/T-023: adonde vuelve el cliente desde Mercado Pago: /compra/aprobada, /compra/pendiente o /compra/rechazada.
 // Mercado Pago agrega en la dirección el número de operación (payment_id), el estado (status),
@@ -257,6 +258,9 @@ const trazo = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLine
 
 export default function ResultadoPago({ nombre, onVaciarCarrito }) {
   const { estado } = useParams()
+  useTitulo(
+    estado === 'aprobada' ? 'Pago aprobado' : estado === 'pendiente' ? 'Pago pendiente' : estado === 'rechazada' ? 'Pago rechazado' : 'Tu compra',
+  )
   const [parametros] = useSearchParams()
   const valor = (clave) => {
     const v = parametros.get(clave)

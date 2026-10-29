@@ -15,6 +15,7 @@ import BotonFavorito from "../components/BotonFavorito";
 import { MarcaCompatibilidad } from "../components/Compatibilidad";
 import { compatibleCon } from "../data/compatibilidad";
 import { volarAlCarrito } from "../components/animaciones";
+import { useTitulo } from "../data/titulo";
 
 const NOMBRES_CATEGORIA = {
   procesadores: "Procesadores",
@@ -59,6 +60,7 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito, productosEn
   const [agregado, setAgregado] = useState(false);
 
   const resultado = buscarProducto(id);
+  useTitulo(resultado ? resultado.producto.nombre : "Producto no encontrado");
 
   if (!resultado) {
     return (

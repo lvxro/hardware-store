@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Campo from '../components/Campo'
 import { CLAVE_MINIMA, enlaceConError } from '../data/sesion'
+import { useTitulo } from '../data/titulo'
 
 // Recuperar contraseña (T-028 del tablero): a esta página llega el cliente al tocar el botón del mail.
 // Supabase abre una sesión temporal con ese enlace, y con ella el cliente elige su contraseña nueva.
@@ -20,6 +21,7 @@ function Pantalla({ titulo, children }) {
 }
 
 export default function NuevaContrasena({ sesion }) {
+  useTitulo('Nueva contraseña')
   const { usuario, cargando } = sesion
   const [error, setError] = useState('')
   const [guardando, setGuardando] = useState(false)

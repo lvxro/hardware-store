@@ -317,6 +317,12 @@ export default function Header({ enCarrito = 0, enFavoritos = 0, sesion }) {
               </NavLink>
             </li>
           ))}
+          {/* Arma tu PC: queda al lado de Mouses, con las demás categorías */}
+          <li>
+            <NavLink to="/arma-tu-pc" className={claseNav}>
+              Arma tu PC
+            </NavLink>
+          </li>
           <li className="ml-auto">
             <NavLink to="/productos" end className={claseNav}>
               Todos los productos

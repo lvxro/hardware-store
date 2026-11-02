@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import categorias from '../data/categorias'
-import { formatoPrecio } from '../data/catalogo'
+import categorias, { grupos } from '../data/categorias'
+import { formatoPrecio, precioDesde } from '../data/catalogo'
+import Icono from './Icono'
 import { CUOTAS_SIN_INTERES, ENVIO_GRATIS_DESDE, PORCENTAJE_EFECTIVO } from '../data/reglas'
 import Logo from './Logo'
 import { Corazon } from './BotonFavorito'
@@ -134,6 +135,110 @@ function Condiciones() {
 // NavLink marca la página actual con aria-current="page".
 const claseNav =
   'subrayado block border-b-2 border-transparent px-3 py-2.5 text-muted hover:text-white aria-[current=page]:text-white'
+
+/*
+  Menú desplegable de un grupo de categorías ("Componentes" o "Periféricos").
+  Se abre al tocarlo o, con mouse, al pasar por encima. Se cierra al tocar afuera, con Escape,
+  al hacer scroll o al elegir una categoría.
+  La barra se desliza de costado en celular (overflow), y eso recortaría un menú común:
+  por eso el panel se ubica fijo en la pantalla, debajo del botón, y no dentro de la barra.
+*/
+function Desplegable({ grupo }) {
+  const { pathname } = useLocation()
+  const [lugar, setLugar] = useState(null) // null = cerrado; si no, dónde va el panel
+  const caja = useRef(null)
+  const boton = useRef(null)
+  const delGrupo = categorias.filter((c) => c.grupo === grupo)
+  const activo = delGrupo.some((c) => pathname === `/categoria/${c.slug}`)
+  const abierto = lugar !== null
+
+  const abrir = () => {
+    const r = boton.current.getBoundingClientRect()
+    // Que no se salga de la pantalla por la derecha (el panel mide 18rem = 288 px)
+    setLugar({ top: r.bottom, left: Math.max(8, Math.min(r.left, window.innerWidth - 296)) })
+  }
+  const cerrar = () => setLugar(null)
+
+  useEffect(() => {
+    if (!abierto) return
+    const afuera = (e) => !caja.current?.contains(e.target) && cerrar()
+    const escape = (e) => {
+      if (e.key !== 'Escape') return
+      cerrar()
+      boton.current?.focus()
+    }
+    document.addEventListener('pointerdown', afuera)
+    document.addEventListener('keydown', escape)
+    // true: también el scroll de costado de la barra
+    window.addEventListener('scroll', cerrar, true)
+    window.addEventListener('resize', cerrar)
+    return () => {
+      document.removeEventListener('pointerdown', afuera)
+      document.removeEventListener('keydown', escape)
+      window.removeEventListener('scroll', cerrar, true)
+      window.removeEventListener('resize', cerrar)
+    }
+  }, [abierto])
+
+  // Con mouse, se abre al pasar por encima; en pantallas táctiles, solo al tocar
+  const conMouse = (e) => e.pointerType === 'mouse'
+
+  return (
+    <div
+      ref={caja}
+      onPointerEnter={(e) => conMouse(e) && !abierto && abrir()}
+      onPointerLeave={(e) => conMouse(e) && cerrar()}
+    >
+      <button
+        ref={boton}
+        type="button"
+        onClick={() => (abierto ? cerrar() : abrir())}
+        aria-expanded={abierto}
+        aria-haspopup="true"
+        className={`subrayado flex items-center gap-1 border-b-2 font-sans border-transparent px-3 py-2.5 hover:text-white ${
+          abierto || activo ? 'text-white' : 'text-muted'
+        }`}
+        // El subrayado lima queda fijo si estás en una de sus categorías
+        aria-current={activo ? 'page' : undefined}
+      >
+        {grupo}
+        <svg
+          viewBox="0 0 12 12"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`h-3 w-3 transition-transform duration-300 motion-reduce:transition-none ${abierto ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        >
+          <path d="m3 4.5 3 3 3-3" />
+        </svg>
+      </button>
+
+      {abierto && (
+        // El padding de arriba (en vez de un margen) evita que el menú se cierre al bajar el mouse
+        <div className="fixed z-30 w-72 pt-1" style={{ top: lugar.top, left: lugar.left }}>
+          <ul className="entra-deslizando rounded-[3px] border border-line-strong bg-surface p-1.5 shadow-glow-lg" style={{ animationDelay: '0ms' }}>
+            {delGrupo.map((cat) => (
+              <li key={cat.slug}>
+                <NavLink
+                  to={`/categoria/${cat.slug}`}
+                  onClick={cerrar}
+                  className="group flex items-center gap-3 rounded-[3px] px-2.5 py-2 text-muted hover:bg-raised hover:text-white aria-[current=page]:text-white"
+                >
+                  <Icono categoria={cat.slug} className="h-7 w-7 shrink-0" />
+                  <span className="flex-1 text-sm">{cat.nombre}</span>
+                  <span className="font-mono text-[11px] text-muted">desde {formatoPrecio(precioDesde(cat.slug))}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
 
 /*
   Botón del carrito. "cantidad" es cuántos productos hay en el carrito:
@@ -310,21 +415,18 @@ export default function Header({ enCarrito = 0, enFavoritos = 0, sesion }) {
               Ofertas
             </NavLink>
           </li>
-          {categorias.map((cat) => (
-            <li key={cat.slug}>
-              <NavLink to={`/categoria/${cat.slug}`} className={claseNav}>
-                {cat.nombre}
-              </NavLink>
+          {/* Las siete categorías, agrupadas en dos menús desplegables */}
+          {grupos.map((grupo) => (
+            <li key={grupo}>
+              <Desplegable grupo={grupo} />
             </li>
           ))}
-          {/* Arma tu PC: queda al lado de Mouses, con las demás categorías */}
           <li>
             <NavLink to="/arma-tu-pc" className={claseNav}>
               Arma tu PC
             </NavLink>
           </li>
-          {/* Comparador: queda al lado de Arma tu PC */}
-          <li>
+                    <li>
             <NavLink to="/comparador" className={claseNav}>
               Comparador
             </NavLink>

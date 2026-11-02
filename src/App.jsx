@@ -112,6 +112,7 @@ export default function App() {
                 hayAgotados={carrito.hayAgotados}
                 onCambiarCantidad={carrito.cambiarCantidad}
                 onQuitar={carrito.quitar}
+                onReemplazar={carrito.reemplazar}
                 onVaciar={carrito.vaciar}
               />
             }

@@ -13,6 +13,7 @@ import NumeroAnimado from '../components/NumeroAnimado'
 import { plegar } from '../components/animaciones'
 import { iniciarPago } from '../data/pago'
 import { revisar } from '../data/compatibilidad'
+import { alternativas } from '../data/alternativas'
 import { PanelCompatibilidad } from '../components/Compatibilidad'
 import { useTitulo } from '../data/titulo'
 
@@ -57,7 +58,69 @@ function Cantidad({ nombre, cantidad, maximo, onCambiar }) {
   )
 }
 
-function Renglon({ item, onCambiarCantidad, onQuitar }) {
+/*
+  Comparador del carrito: debajo de cada producto, una opción más barata y una más cara,
+  con la diferencia de precio y de rendimiento (o del dato principal, si no hay puntaje).
+  "Cambiar" lo reemplaza en el carrito con la misma cantidad.
+*/
+function SubirOBajar({ producto, enCarrito, onReemplazar }) {
+  const { bajar, subir } = alternativas(producto, enCarrito)
+  if (!bajar && !subir) return null
+
+  const opcion = (alt, sentido) => {
+    if (!alt) return null
+    const { producto: otro, precio, rendimiento, dato } = alt
+    return (
+      <li className="grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 py-2 sm:grid-cols-[1.25rem_minmax(0,1fr)_7.5rem_6.5rem_auto]">
+        <span className="font-mono text-sm text-muted" aria-hidden="true">
+          {sentido === 'bajar' ? '↓' : '↑'}
+        </span>
+        <span className="min-w-0">
+          <span className="sr-only">{sentido === 'bajar' ? 'Opción más barata: ' : 'Opción más cara: '}</span>
+          <Link to={`/producto/${otro.id}`} className="block truncate text-sm hover:underline">
+            {otro.modelo}
+          </Link>
+          {dato && <span className="block truncate font-mono text-[11px] text-muted">{dato}</span>}
+        </span>
+        <span className="col-start-2 row-start-2 font-mono text-xs sm:col-start-auto sm:row-start-auto sm:text-right sm:text-sm">
+          {precio > 0 ? '+' : '−'}
+          {formatoPrecio(Math.abs(precio))}
+          {rendimiento !== null && (
+            <span className={`ml-2 sm:hidden ${rendimiento > 0 ? 'text-lime' : 'text-muted'}`}>
+              {rendimiento > 0 ? '+' : rendimiento < 0 ? '−' : '±'}
+              {Math.abs(rendimiento)}% rend.
+            </span>
+          )}
+        </span>
+        <span
+          className={`hidden text-right font-mono text-sm sm:block ${rendimiento > 0 ? 'text-lime' : 'text-muted'}`}
+        >
+          {rendimiento !== null && `${rendimiento > 0 ? '+' : rendimiento < 0 ? '−' : '±'}${Math.abs(rendimiento)}% rend.`}
+        </span>
+        <button
+          type="button"
+          onClick={() => onReemplazar(producto.id, otro)}
+          className="col-start-3 row-span-2 row-start-1 rounded-[3px] border border-line-strong px-3 py-1.5 font-mono text-xs font-medium hover:border-lime hover:text-lime sm:col-start-auto sm:row-span-1 sm:row-start-auto"
+          aria-label={`Cambiar ${producto.modelo} por ${otro.modelo}`}
+        >
+          Cambiar
+        </button>
+      </li>
+    )
+  }
+
+  return (
+    <div className="col-span-2 rounded-[3px] border border-line-subtle bg-bg px-3 pt-2 sm:col-span-3 sm:col-start-2">
+      <p className="font-mono text-[11px] font-bold uppercase tracking-wide text-muted">¿Subir o bajar?</p>
+      <ul className="divide-y divide-line-subtle">
+        {opcion(bajar, 'bajar')}
+        {opcion(subir, 'subir')}
+      </ul>
+    </div>
+  )
+}
+
+function Renglon({ item, enCarrito, onCambiarCantidad, onQuitar, onReemplazar }) {
   const { producto, cantidad, subtotal, agotado } = item
   const renglon = useRef(null)
   const ficha = `/producto/${producto.id}`
@@ -124,6 +187,8 @@ function Renglon({ item, onCambiarCantidad, onQuitar }) {
           </button>
         </div>
       </div>
+
+      {!agotado && <SubirOBajar producto={producto} enCarrito={enCarrito} onReemplazar={onReemplazar} />}
     </li>
   )
 }
@@ -307,7 +372,7 @@ function Vacio() {
   )
 }
 
-export default function Carrito({ items, total, unidades, correo, hayAgotados, onCambiarCantidad, onQuitar, onVaciar }) {
+export default function Carrito({ items, total, unidades, correo, hayAgotados, onCambiarCantidad, onQuitar, onReemplazar, onVaciar }) {
   useTitulo('Carrito')
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -323,8 +388,10 @@ export default function Carrito({ items, total, unidades, correo, hayAgotados, o
               <Renglon
                 key={item.producto.id}
                 item={item}
+                enCarrito={items.map((i) => i.producto)}
                 onCambiarCantidad={onCambiarCantidad}
                 onQuitar={onQuitar}
+                onReemplazar={onReemplazar}
               />
             ))}
           </ul>

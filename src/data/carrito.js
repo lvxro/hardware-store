@@ -67,6 +67,20 @@ export function useCarrito() {
   const cambiarCantidad = (id, cantidad) =>
     setRenglones((actual) => actual.map((r) => (r.id === id ? { ...r, cantidad: acotar(cantidad, id) } : r)))
 
+  // Comparador del carrito: cambia un producto por otro en el mismo lugar y con la misma cantidad.
+  // Si el nuevo ya estaba, se suman.
+  const reemplazar = (idViejo, nuevo) =>
+    setRenglones((actual) => {
+      const viejo = actual.find((r) => r.id === idViejo)
+      if (!viejo) return actual
+      const yaEsta = actual.find((r) => r.id === nuevo.id)
+      if (yaEsta)
+        return actual
+          .filter((r) => r.id !== idViejo)
+          .map((r) => (r.id === nuevo.id ? { ...r, cantidad: acotar(r.cantidad + viejo.cantidad, r.id) } : r))
+      return actual.map((r) => (r.id === idViejo ? { id: nuevo.id, cantidad: acotar(viejo.cantidad, nuevo.id) } : r))
+    })
+
   const quitar = (id) => setRenglones((actual) => actual.filter((r) => r.id !== id))
 
   const vaciar = () => setRenglones([])
@@ -91,6 +105,7 @@ export function useCarrito() {
     cantidadDe: (id) => renglones.find((r) => r.id === id)?.cantidad ?? 0,
     agregar,
     cambiarCantidad,
+    reemplazar,
     quitar,
     vaciar,
   }

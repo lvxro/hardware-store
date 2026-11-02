@@ -15,7 +15,8 @@ import { PORCENTAJE_OFERTA } from '../data/ofertas'
 // Al pasar el cursor, el borde pasa a lima con resplandor, la tarjeta sube apenas
 // y el dibujo se aclara (esto último está en index.css, .vitrina).
 // T-029: "compat" (opcional) dice si va con lo que hay en el carrito
-export default function ProductoCard({ producto, compat = null }) {
+// "compacta": sin la descripción, para las filas cortas del home
+export default function ProductoCard({ producto, compat = null, compacta = false }) {
   const agotado = producto.stock === 0
   const ultimas = producto.stock != null && producto.stock > 0 && producto.stock <= 3
 
@@ -41,7 +42,7 @@ export default function ProductoCard({ producto, compat = null }) {
           </div>
         </div>
         <h3 className="mt-3 font-semibold leading-snug group-hover:underline">{producto.nombre}</h3>
-        <p className="mt-1 text-xs text-muted sm:text-sm">{producto.descripcion}</p>
+        {!compacta && <p className="mt-1 text-xs text-muted sm:text-sm">{producto.descripcion}</p>}
         {compat && (
           <div className="mt-2">
             <MarcaCompatibilidad resultado={compat} />

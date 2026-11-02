@@ -15,6 +15,22 @@ import { useTitulo } from '../data/titulo'
 
 const STOCK_BAJO = 3
 
+// T-052: por qué cambió el stock (supabase/historial-stock.sql).
+// Los de MOTIVOS_A_MANO son los que se eligen al ajustar desde el panel; el resto los pone la base de datos.
+const MOTIVOS = {
+  venta: 'Venta',
+  ingreso: 'Ingreso de mercadería',
+  correccion: 'Corrección de conteo',
+  devolucion: 'Devolución',
+  rotura: 'Rotura o pérdida',
+  otro: 'Otro',
+  alta: 'Producto nuevo',
+  edicion: 'Edición del producto',
+  baja: 'Producto borrado',
+  sistema: 'Cambio desde Supabase',
+}
+const MOTIVOS_A_MANO = ['ingreso', 'correccion', 'devolucion', 'rotura', 'otro']
+
 // T-030: la tienda guarda una copia del catálogo por 10 minutos (public/precarga.js).
 // Al cambiar algo desde acá se borra, así en este navegador se ve al recargar.
 function olvidarCopiaDelCatalogo() {
@@ -43,24 +59,32 @@ function Pantalla({ titulo, children }) {
   )
 }
 
-/* ---------- Stock de un producto: − / número / + y Guardar ---------- */
+/* ---------- Stock de un producto: − / número / + y, si cambió, el motivo y Guardar ---------- */
 
 function ControlStock({ producto, onGuardado }) {
   const [valor, setValor] = useState(String(producto.stock ?? 0))
+  const [motivo, setMotivo] = useState('') // '' = el que corresponde según suba o baje
+  const [nota, setNota] = useState('')
   const [estado, setEstado] = useState('') // '', 'guardando', 'listo', 'error'
   const numero = Number.parseInt(valor, 10)
   const valido = Number.isInteger(numero) && numero >= 0
   const cambio = valido && numero !== producto.stock
+  const motivoFinal = motivo || (numero > producto.stock ? 'ingreso' : 'correccion')
 
   const guardar = async () => {
     if (!cambio) return
     setEstado('guardando')
-    const { data, error } = await supabase
-      .from('productos')
-      .update({ stock: numero })
-      .eq('id', producto.id)
-      .select()
-      .maybeSingle()
+    // T-052: el cambio pasa por ajustar_stock, que deja anotado el motivo en el historial
+    let { data, error } = await supabase.rpc('ajustar_stock', {
+      p_producto: producto.id,
+      p_stock: numero,
+      p_motivo: motivoFinal,
+      p_nota: nota.trim() || null,
+    })
+    // Si todavía no se corrió historial-stock.sql, la función no existe: se guarda como antes
+    if (error?.code === 'PGRST202') {
+      ;({ data, error } = await supabase.from('productos').update({ stock: numero }).eq('id', producto.id).select().maybeSingle())
+    }
     if (error || !data) {
       setEstado('error')
       return
@@ -74,31 +98,57 @@ function ControlStock({ producto, onGuardado }) {
   const mover = (paso) => setValor(String(Math.max(0, (valido ? numero : 0) + paso)))
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex h-9 items-center overflow-hidden rounded-[3px] border border-line-strong bg-bg">
-        <button type="button" onClick={() => mover(-1)} className="h-full px-2.5 hover:bg-raised" aria-label={`Restar stock de ${producto.nombre}`}>
-          −
-        </button>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={valor}
-          onChange={(e) => setValor(e.target.value.replace(/\D/g, ''))}
-          onKeyDown={(e) => e.key === 'Enter' && guardar()}
-          aria-label={`Stock de ${producto.nombre}`}
-          className="w-12 bg-transparent text-center font-mono text-sm font-medium text-white focus:outline-none"
-        />
-        <button type="button" onClick={() => mover(1)} className="h-full px-2.5 hover:bg-raised" aria-label={`Sumar stock de ${producto.nombre}`}>
-          +
-        </button>
+    <div className="grid gap-2">
+      <div className="flex items-center gap-2">
+        <div className="flex h-9 items-center overflow-hidden rounded-[3px] border border-line-strong bg-bg">
+          <button type="button" onClick={() => mover(-1)} className="h-full px-2.5 hover:bg-raised" aria-label={`Restar stock de ${producto.nombre}`}>
+            −
+          </button>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={valor}
+            onChange={(e) => setValor(e.target.value.replace(/\D/g, ''))}
+            onKeyDown={(e) => e.key === 'Enter' && guardar()}
+            aria-label={`Stock de ${producto.nombre}`}
+            className="w-12 bg-transparent text-center font-mono text-sm font-medium text-white focus:outline-none"
+          />
+          <button type="button" onClick={() => mover(1)} className="h-full px-2.5 hover:bg-raised" aria-label={`Sumar stock de ${producto.nombre}`}>
+            +
+          </button>
+        </div>
+        {cambio && (
+          <button type="button" onClick={guardar} disabled={estado === 'guardando'} className="rounded-[3px] bg-lime px-2.5 py-1.5 font-mono text-xs font-bold text-bg">
+            {estado === 'guardando' ? '…' : 'Guardar'}
+          </button>
+        )}
+        {estado === 'listo' && <span className="font-mono text-xs text-lime">Guardado</span>}
+        {estado === 'error' && <span className="text-xs text-white">No se pudo guardar</span>}
       </div>
       {cambio && (
-        <button type="button" onClick={guardar} disabled={estado === 'guardando'} className="rounded-[3px] bg-lime px-2.5 py-1.5 font-mono text-xs font-bold text-bg">
-          {estado === 'guardando' ? '…' : 'Guardar'}
-        </button>
+        <div className="grid gap-2">
+          <select
+            value={motivoFinal}
+            onChange={(e) => setMotivo(e.target.value)}
+            aria-label={`Motivo del cambio de stock de ${producto.nombre}`}
+            className="rounded-[3px] border border-line-strong bg-bg px-2 py-1.5 text-xs text-white hover:border-line-hover focus:border-lime focus:outline-none"
+          >
+            {MOTIVOS_A_MANO.map((m) => (
+              <option key={m} value={m}>
+                {MOTIVOS[m]}
+              </option>
+            ))}
+          </select>
+          <input
+            value={nota}
+            onChange={(e) => setNota(e.target.value.slice(0, 200))}
+            onKeyDown={(e) => e.key === 'Enter' && guardar()}
+            placeholder="Nota (opcional)"
+            aria-label={`Nota del cambio de stock de ${producto.nombre}`}
+            className="rounded-[3px] border border-line-strong bg-bg px-2 py-1.5 text-xs text-white placeholder:text-muted hover:border-line-hover focus:border-lime focus:outline-none"
+          />
+        </div>
       )}
-      {estado === 'listo' && <span className="font-mono text-xs text-lime">Guardado</span>}
-      {estado === 'error' && <span className="text-xs text-white">No se pudo guardar</span>}
     </div>
   )
 }
@@ -394,7 +444,7 @@ function Formulario({ producto, productos, onCerrar, onGuardado, onBorrado }) {
 
 /* ---------- El panel ---------- */
 
-function Panel() {
+function Panel({ onVerHistorial }) {
   const [productos, setProductos] = useState(null)
   const [error, setError] = useState('')
   const [texto, setTexto] = useState('')
@@ -501,7 +551,7 @@ function Panel() {
 
       <ul className="mt-2 divide-y divide-line border-y border-line">
         {lista.map((p) => (
-          <li key={p.id} className="grid gap-3 py-3 sm:grid-cols-[minmax(0,1fr)_9rem_auto_auto] sm:items-center sm:gap-6">
+          <li key={p.id} className="grid gap-3 py-3 sm:grid-cols-[minmax(0,1fr)_9rem_14rem_auto] sm:items-start sm:gap-6">
             <div className="min-w-0">
               <p className="flex flex-wrap items-center gap-2">
                 <span className="font-medium">{p.nombre}</span>
@@ -516,9 +566,14 @@ function Panel() {
               <span className="block text-xs text-muted">USD {p.precio_usd_aprox}</span>
             </p>
             {'stock' in p ? <ControlStock key={p.stock} producto={p} onGuardado={reemplazar} /> : <span />}
-            <button type="button" onClick={() => setEditando(p)} className={`${botonSecundario} py-1.5 text-xs`}>
-              Editar
-            </button>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => onVerHistorial(p)} className={`${botonSecundario} py-1.5 text-xs`}>
+                Historial
+              </button>
+              <button type="button" onClick={() => setEditando(p)} className={`${botonSecundario} py-1.5 text-xs`}>
+                Editar
+              </button>
+            </div>
           </li>
         ))}
         {lista.length === 0 && <li className="py-8 text-center text-muted">No hay productos con esos filtros.</li>}
@@ -700,9 +755,167 @@ function PanelPedidos() {
   )
 }
 
+/* ---------- T-052: historial de movimientos de stock ---------- */
+
+// Los filtros juntan motivos parecidos
+const GRUPOS = [
+  ['todos', 'Todos', null],
+  ['ventas', 'Ventas', ['venta']],
+  ['entradas', 'Entradas', ['ingreso', 'devolucion']],
+  ['ajustes', 'Ajustes y pérdidas', ['correccion', 'rotura', 'otro', 'sistema']],
+  ['catalogo', 'Altas, bajas y ediciones', ['alta', 'baja', 'edicion']],
+]
+const LIMITE_HISTORIAL = 1000
+const TREINTA_DIAS = 30 * 24 * 60 * 60 * 1000
+
+const fechaCorta = (iso) =>
+  new Intl.DateTimeFormat('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    day: 'numeric',
+    month: 'short',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(iso))
+
+// Quién hizo el cambio. Sin correo, fue algo automático
+function quien(m) {
+  if (m.usuario) return m.usuario
+  if (m.motivo === 'venta') return 'Mercado Pago'
+  if (m.motivo === 'sistema') return 'Panel de Supabase'
+  return 'Automático'
+}
+
+function PanelHistorial({ busquedaInicial = '' }) {
+  const [movimientos, setMovimientos] = useState(null)
+  const [error, setError] = useState('')
+  const [grupo, setGrupo] = useState('todos')
+  const [texto, setTexto] = useState(busquedaInicial)
+  const [desde, setDesde] = useState(0) // desde cuándo cuenta el resumen: 30 días antes de cargar
+
+  useEffect(() => {
+    supabase
+      .from('movimientos_stock')
+      .select('*')
+      .order('creado', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(LIMITE_HISTORIAL)
+      .then(({ data, error }) => {
+        if (error) return setError('No se pudo leer el historial. ¿Corriste supabase/historial-stock.sql en el SQL Editor de Supabase?')
+        setDesde(Date.now() - TREINTA_DIAS)
+        setMovimientos(data)
+      })
+  }, [])
+
+  if (error) return <p className="mt-6 text-muted">{error}</p>
+  if (!movimientos) return <p role="status" className="mt-6 text-muted">Cargando historial…</p>
+
+  // Resumen de los últimos 30 días
+  const recientes = movimientos.filter((m) => new Date(m.creado).getTime() >= desde)
+  const sumar = (motivos, signo) =>
+    recientes
+      .filter((m) => motivos.includes(m.motivo) && Math.sign(m.cambio) === signo)
+      .reduce((s, m) => s + Math.abs(m.cambio), 0)
+  const vendidas = sumar(['venta'], -1)
+  const entraron = sumar(['ingreso', 'devolucion'], 1)
+  const perdidas = sumar(['correccion', 'rotura', 'otro', 'sistema'], -1)
+
+  const motivosDelGrupo = GRUPOS.find(([clave]) => clave === grupo)[2]
+  const palabras = texto.toLowerCase().split(/\s+/).filter(Boolean)
+  const lista = movimientos.filter((m) => {
+    const donde = `${m.producto_id} ${m.producto_nombre ?? ''} ${m.usuario ?? ''} ${m.nota ?? ''}`.toLowerCase()
+    return (!motivosDelGrupo || motivosDelGrupo.includes(m.motivo)) && palabras.every((w) => donde.includes(w))
+  })
+
+  return (
+    <>
+      <p className="mt-6 text-sm text-muted">Unidades en los últimos 30 días</p>
+      <div className="mt-2 grid grid-cols-3 gap-3">
+        {[
+          ['Vendidas', vendidas],
+          ['Entraron', entraron],
+          ['Pérdidas', perdidas],
+        ].map(([etiqueta, numero]) => (
+          <div key={etiqueta} className="rounded-[3px] border border-line bg-surface p-4">
+            <span className="block text-xs text-muted sm:text-sm">{etiqueta}</span>
+            <span className="mt-1 block font-mono text-2xl font-bold">{numero}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center gap-3 border-b border-line pb-4">
+        <input
+          type="search"
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          placeholder="Buscar por producto, código, correo o nota"
+          aria-label="Buscar en el historial"
+          className={`${campoClase} min-w-0 flex-1 sm:max-w-sm`}
+        />
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Tipo de movimiento">
+          {GRUPOS.map(([clave, nombre]) => (
+            <button
+              key={clave}
+              type="button"
+              onClick={() => setGrupo(clave)}
+              aria-pressed={grupo === clave}
+              className={`rounded-full border px-3 py-1 font-mono text-xs font-medium ${
+                grupo === clave ? 'border-lime text-lime' : 'border-line-strong text-muted hover:text-white'
+              }`}
+            >
+              {nombre}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <p className="mt-4 text-sm text-muted tabular-nums">
+        {lista.length} {lista.length === 1 ? 'movimiento' : 'movimientos'}
+        {movimientos.length === LIMITE_HISTORIAL && ` (se muestran los últimos ${LIMITE_HISTORIAL})`}
+      </p>
+
+      <ul className="mt-2 divide-y divide-line border-y border-line">
+        {lista.map((m) => (
+          <li
+            key={m.id}
+            className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-4 gap-y-1 py-3 sm:grid-cols-[8.5rem_minmax(0,1fr)_4.5rem_6rem_minmax(0,15rem)] sm:items-center sm:gap-6 sm:px-2"
+          >
+            <span className="col-span-2 font-mono text-xs text-muted sm:col-span-1">{fechaCorta(m.creado)}</span>
+            <span className="col-span-2 min-w-0 sm:col-span-1">
+              <span className="block truncate text-sm font-medium">{m.producto_nombre ?? m.producto_id}</span>
+              <span className="block font-mono text-xs text-muted">{m.producto_id}</span>
+            </span>
+            <span className={`font-mono text-lg font-bold tabular-nums sm:text-right ${m.cambio > 0 ? 'text-lime' : 'text-white'}`}>
+              {m.cambio > 0 ? `+${m.cambio}` : `−${Math.abs(m.cambio)}`}
+            </span>
+            <span className="self-center font-mono text-xs text-muted tabular-nums">
+              {m.stock_anterior} → {m.stock_nuevo} u.
+            </span>
+            <span className="col-span-2 min-w-0 text-sm sm:col-span-1">
+              <span className={m.motivo === 'venta' ? 'font-medium' : 'font-medium text-white'}>{MOTIVOS[m.motivo] ?? m.motivo}</span>
+              {m.pedido_id && <span className="font-mono text-xs text-muted"> · pedido {m.pedido_id.slice(0, 8).toUpperCase()}</span>}
+              <span className="block truncate text-xs text-muted">{quien(m)}</span>
+              {m.nota && <span className="block text-xs text-muted">“{m.nota}”</span>}
+            </span>
+          </li>
+        ))}
+        {lista.length === 0 && (
+          <li className="py-8 text-center text-muted">
+            {movimientos.length === 0 ? 'Todavía no hay movimientos. Se anotan desde que se corrió historial-stock.sql.' : 'No hay movimientos con esos filtros.'}
+          </li>
+        )}
+      </ul>
+      <p className="mt-4 text-xs text-muted">
+        Lo anota la base de datos sola cada vez que cambia el stock, desde donde sea. No se puede editar ni borrar desde la tienda.
+      </p>
+    </>
+  )
+}
+
 export default function Admin({ sesion }) {
   useTitulo('Panel de administración')
   const [pestana, setPestana] = useState('productos')
+  const [historialDe, setHistorialDe] = useState('') // T-052: el código del producto, al tocar "Historial"
   const { usuario, cargando, esAdmin, verificandoAdmin } = sesion
 
   if (cargando || verificandoAdmin) {
@@ -744,18 +957,22 @@ export default function Admin({ sesion }) {
     <div className="mx-auto max-w-6xl px-4 py-8">
       <h1 className="text-3xl font-semibold">Panel de administración</h1>
       <p className="mt-1 text-muted">Productos, stock y ventas de la tienda.</p>
-      <div className="mt-6 flex gap-1 border-b border-line" role="tablist">
+      <div className="mt-6 flex gap-1 overflow-x-auto border-b border-line" role="tablist">
         {[
           ['productos', 'Productos'],
           ['pedidos', 'Pedidos'],
+          ['historial', 'Historial de stock'],
         ].map(([clave, nombre]) => (
           <button
             key={clave}
             type="button"
             role="tab"
             aria-selected={pestana === clave}
-            onClick={() => setPestana(clave)}
-            className={`-mb-px border-b-2 px-4 py-2.5 font-mono text-sm font-medium ${
+            onClick={() => {
+              setPestana(clave)
+              setHistorialDe('')
+            }}
+            className={`-mb-px shrink-0 border-b-2 px-4 py-2.5 font-mono text-sm font-medium ${
               pestana === clave ? 'border-lime text-white' : 'border-transparent text-muted hover:text-white'
             }`}
           >
@@ -763,7 +980,16 @@ export default function Admin({ sesion }) {
           </button>
         ))}
       </div>
-      {pestana === 'productos' ? <Panel /> : <PanelPedidos />}
+      {pestana === 'productos' && (
+        <Panel
+          onVerHistorial={(p) => {
+            setHistorialDe(p.id)
+            setPestana('historial')
+          }}
+        />
+      )}
+      {pestana === 'pedidos' && <PanelPedidos />}
+      {pestana === 'historial' && <PanelHistorial key={historialDe} busquedaInicial={historialDe} />}
     </div>
   )
 }

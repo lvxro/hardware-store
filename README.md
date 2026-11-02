@@ -161,3 +161,11 @@ La tienda muestra "Sin stock" y "Últimas unidades", y no deja agregar más de l
 Para probarlo, después de publicar, pegar el enlace de un producto en WhatsApp o en <https://www.opengraph.xyz>. Si cambia el precio y la vista previa muestra el viejo, WhatsApp la guarda por su cuenta: se renueva con un enlace distinto (por ejemplo, agregando `?v=2`).
 
 Limitación: todos los productos usan la misma imagen de la marca, porque todavía no hay fotos reales (T-042). Cuando estén en `public/img`, `api/producto.js` puede usarlas.
+
+## Historial de stock (T-052)
+
+Cada cambio de stock queda anotado en la tabla `movimientos_stock`: cuándo, quién, cuántas unidades, de cuánto a cuánto y por qué. Se ve en `/admin`, pestaña **Historial de stock**, o con el botón **Historial** de cada producto.
+
+- **Cómo se anota:** lo hace la base de datos con un trigger sobre `productos`, así no se escapa ningún cambio (panel, ventas o Table Editor). Nadie puede editar ni borrar el historial desde la web; solo los administradores lo leen.
+- **Motivos:** al ajustar el stock desde el panel se elige uno: ingreso de mercadería, corrección de conteo, devolución, rotura o pérdida, u otro, con una nota opcional. Las ventas de Mercado Pago quedan como **Venta** con el número de pedido, y no se pueden cargar a mano, así que se distinguen siempre. Los cambios desde "Editar producto", las altas, las bajas y los cambios hechos en el panel de Supabase llevan su propio motivo.
+- **Para activarlo:** correr `supabase/historial-stock.sql` en Supabase → SQL Editor (después de `admin-stock.sql`). Hasta que se corra, el panel sigue guardando el stock como antes y la pestaña avisa que falta el archivo.

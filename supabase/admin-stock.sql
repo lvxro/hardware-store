@@ -70,6 +70,10 @@ begin
     return; -- ya se había descontado, o el pedido no existe
   end if;
 
+  -- T-052: avisa al historial de stock que esto es una venta y de qué pedido
+  perform set_config('auraware.motivo', 'venta', true);
+  perform set_config('auraware.pedido', p_pedido::text, true);
+
   update public.productos p
      set stock = greatest(p.stock - (i ->> 'cantidad')::int, 0)
     from jsonb_array_elements(v_items) as i

@@ -4,6 +4,7 @@ import { supabase } from '../data/supabase'
 import { formatoPrecio } from '../data/catalogo'
 import { MEDIOS, fecha } from '../data/pedidos'
 import EstadoPedido from '../components/EstadoPedido'
+import SeguimientoEnvio from '../components/SeguimientoEnvio'
 import { useTitulo } from '../data/titulo'
 
 // T-031: el historial de compras del cliente. Supabase solo le devuelve los pedidos hechos con el
@@ -44,6 +45,7 @@ function Pedido({ pedido }) {
           </li>
         ))}
       </ul>
+      {pedido.estado === 'aprobado' && <SeguimientoEnvio envio={pedido.envio} actualizado={pedido.envio_actualizado} />}
       {(pedido.pago_id || pedido.medio) && (
         <p className="border-t border-line px-5 py-3 font-mono text-xs text-muted">
           {[
@@ -64,12 +66,18 @@ function Lista() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    supabase
-      .from('pedidos')
-      .select('id, creado, estado, items, total, pago_id, medio, cuotas')
-      .not('pago_id', 'is', null)
-      .order('creado', { ascending: false })
-      .then(({ data, error }) => (error ? setError(true) : setPedidos(data)))
+    const pedir = (columnas) =>
+      supabase.from('pedidos').select(columnas).not('pago_id', 'is', null).order('creado', { ascending: false })
+    const base = 'id, creado, estado, items, total, pago_id, medio, cuotas'
+
+    pedir(`${base}, envio, envio_actualizado`).then(async ({ data, error }) => {
+      if (error?.code === '42703') {
+        // Todavía no se corrió supabase/estado-envio.sql: se muestran los pedidos sin el seguimiento
+        ;({ data, error } = await pedir(base))
+      }
+      if (error) setError(true)
+      else setPedidos(data)
+    })
   }, [])
 
   if (error) return <p className="mt-6 text-muted">No pudimos traer tus pedidos. Probá de nuevo en un rato.</p>

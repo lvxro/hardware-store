@@ -178,3 +178,13 @@ El estado del pago (aprobado, pendiente...) lo escribe Mercado Pago y no se toca
 - **Cliente:** en `/mis-pedidos`, los pedidos aprobados muestran una barra de cuatro pasos (Pago aprobado → Preparando → En camino → Entregado) y la fecha del último cambio. Un pedido recién aprobado está en el primer paso.
 - **Seguridad:** la web no puede escribir en `pedidos`. El cambio pasa por la función `cambiar_envio`, que solo deja usar a los administradores y solo en pedidos con el pago aprobado.
 - **Para activarlo:** correr `supabase/estado-envio.sql` en Supabase → SQL Editor (después de `tabla-pedidos.sql` y `admin-stock.sql`). Se puede correr más de una vez. Hasta entonces, Mis pedidos sigue funcionando sin la barra y el panel avisa que falta el archivo.
+
+## Costo de envío por código postal (T-048)
+
+El cliente ve cuánto le sale el envío antes de pagar.
+
+- **Tarifas:** `src/data/envio.js` define ocho zonas por rango de código postal (CABA, Gran Buenos Aires, Santa Fe y Entre Ríos, Litoral y Noreste, Noroeste, Córdoba y Cuyo, interior de Buenos Aires y La Pampa, Patagonia). Los precios son de ejemplo: para cambiarlos se edita `ZONAS`. El envío es gratis desde `ENVIO_GRATIS_DESDE` (`src/data/reglas.js`).
+- **Ficha de producto:** "Calcular" muestra la zona y el costo (o "Envío gratis"). El código postal queda guardado en el navegador y se reutiliza en el carrito.
+- **Carrito:** campo de código postal, costo del envío y **Total a pagar con envío**. Sin un código válido el botón de pagar queda bloqueado.
+- **Checkout:** `api/checkout.js` recalcula el envío en el servidor con el código postal (el navegador no manda el precio) y lo cobra como un renglón más de Mercado Pago. El total del pedido incluye el envío.
+- **Después de pagar:** el envío se muestra en Mis pedidos, en el detalle del panel de administración y en el comprobante por correo. No tiene columna propia: es el total menos la suma de los productos, así que no hace falta correr SQL.

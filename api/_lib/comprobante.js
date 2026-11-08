@@ -68,6 +68,14 @@ export function armarComprobante(pedido, pago, sitio) {
     )
     .join('')
 
+  // T-048: el envío es lo que sobra del total una vez sumados los productos (0 si fue gratis)
+  const envio = Math.max(0, Math.round(Number(pedido.total) - pedido.items.reduce((suma, i) => suma + i.precio * i.cantidad, 0)))
+  const filaEnvio = `
+          <tr>
+            <td style="padding:16px 0;border-top:1px solid ${C.borde};font-size:15px;color:${C.texto};">Envío</td>
+            <td align="right" style="padding:16px 0 16px 16px;border-top:1px solid ${C.borde};font-family:${MONO};font-size:15px;font-weight:700;white-space:nowrap;color:${C.texto};">${envio > 0 ? pesos(envio) : 'Gratis'}</td>
+          </tr>`
+
   const datos = [
     ['Pedido', numero],
     ['Fecha', fecha],
@@ -151,7 +159,7 @@ export function armarComprobante(pedido, pago, sitio) {
                 <tr>
                   <td style="padding:4px 20px 0 20px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                      ${filasProductos}
+                      ${filasProductos}${filaEnvio}
                     </table>
                   </td>
                 </tr>
@@ -230,6 +238,7 @@ export function armarComprobante(pedido, pago, sitio) {
     'aura/ware — Pago aprobado',
     '',
     ...pedido.items.map((i) => `${i.cantidad} × ${i.nombre}  ${pesos(i.precio * i.cantidad)}`),
+    `Envío: ${envio > 0 ? pesos(envio) : 'Gratis'}`,
     '',
     `Pagaste: ${pesos(pedido.total)}`,
     ...datos.map(([e, v]) => `${e}: ${v}`),

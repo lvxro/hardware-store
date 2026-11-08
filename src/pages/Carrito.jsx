@@ -12,6 +12,7 @@ import Vitrina from '../components/Vitrina'
 import NumeroAnimado from '../components/NumeroAnimado'
 import { plegar } from '../components/animaciones'
 import { iniciarPago } from '../data/pago'
+import { CP_VALIDO, costoEnvio, guardarCodigoPostal, leerCodigoPostal } from '../data/envio'
 import { revisar } from '../data/compatibilidad'
 import { alternativas } from '../data/alternativas'
 import { PanelCompatibilidad } from '../components/Compatibilidad'
@@ -193,13 +194,37 @@ function Renglon({ item, enCarrito, onCambiarCantidad, onQuitar, onReemplazar })
   )
 }
 
-// Cuánto falta para el envío gratis, con una barra que se va llenando
-function Envio({ total }) {
+// Cuánto falta para el envío gratis, con una barra que se va llenando, y el costo según el código postal (T-048)
+function Envio({ total, cp, onCambiarCp, envio }) {
   const falta = ENVIO_GRATIS_DESDE - total
   const avance = Math.min(100, Math.round((total / ENVIO_GRATIS_DESDE) * 100))
   return (
     <div className="border-t border-line py-4">
-      <p className="flex items-center gap-2 text-sm font-medium tabular-nums">
+      <label htmlFor="cp-carrito" className="block text-sm font-medium">
+        ¿A dónde lo enviamos?
+      </label>
+      <input
+        id="cp-carrito"
+        type="text"
+        inputMode="numeric"
+        maxLength={4}
+        value={cp}
+        onChange={(e) => onCambiarCp(e.target.value.replace(/\D/g, ''))}
+        placeholder="Tu código postal"
+        className="mt-2 w-full rounded-[3px] border border-line-strong bg-surface px-3 py-2 font-mono text-sm font-medium text-white placeholder:text-muted hover:border-line-hover focus:border-lime focus:outline-none"
+      />
+      {cp.length === 4 && !envio && (
+        <p role="alert" className="mt-2 text-sm text-white">
+          Ese código postal no existe. Tiene que ser de 4 números, desde 1000.
+        </p>
+      )}
+      {envio && (
+        <p className="mt-2 flex items-baseline justify-between gap-4 text-sm tabular-nums" data-envio>
+          <span className="text-muted">Envío a {envio.zona}</span>
+          <span className="font-mono font-bold">{envio.gratis ? 'Gratis' : formatoPrecio(envio.costo)}</span>
+        </p>
+      )}
+      <p className="mt-4 flex items-center gap-2 text-sm font-medium tabular-nums">
         {falta <= 0 ? (
           <>
             {/* Al llegar al envío gratis, el tilde se dibuja */}
@@ -223,14 +248,14 @@ function Envio({ total }) {
 }
 
 // T-022: manda al cliente a Mercado Pago. Mientras se arma el pago, el botón queda esperando.
-function Pagar({ items, correo, bloqueado }) {
+function Pagar({ items, correo, bloqueado, cp, envio }) {
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
 
   const pagar = async () => {
     setEnviando(true)
     setError('')
-    const { url, error } = await iniciarPago(items)
+    const { url, error } = await iniciarPago(items, cp, envio?.costo ?? 0)
     if (url) {
       window.location.assign(url) // se queda "esperando" hasta que carga Mercado Pago
       return
@@ -263,12 +288,15 @@ function Pagar({ items, correo, bloqueado }) {
 
   return (
     <div className="mb-3">
-      <button type="button" onClick={pagar} disabled={enviando || bloqueado} className={`pulsable block w-full ${botonPrimario}`}>
+      <button type="button" onClick={pagar} disabled={enviando || bloqueado || !envio} className={`pulsable block w-full ${botonPrimario}`}>
         {enviando ? 'Conectando con Mercado Pago…' : 'Pagar con Mercado Pago'}
       </button>
       <p className="mt-2 text-center text-xs text-muted">
-        Se cobra el total de lista. Tarjeta, débito o dinero en cuenta; las cuotas se eligen en Mercado Pago.
+        Se cobra el total de lista más el envío. Tarjeta, débito o dinero en cuenta; las cuotas se eligen en Mercado Pago.
       </p>
+      {!envio && (
+        <p className="mt-2 text-center text-sm text-white">Ingresá tu código postal para ver el envío y poder pagar.</p>
+      )}
       {bloqueado && (
         <p role="alert" className="mt-2 text-center text-sm text-white">
           Hay productos sin stock en el carrito. Quitalos para seguir.
@@ -285,6 +313,12 @@ function Pagar({ items, correo, bloqueado }) {
 
 function Resumen({ items, total, unidades, correo, hayAgotados, onVaciar }) {
   const [confirmando, setConfirmando] = useState(false)
+  const [cp, setCp] = useState(leerCodigoPostal)
+  const envio = CP_VALIDO.test(cp) ? costoEnvio(cp, total) : null
+  const cambiarCp = (nuevo) => {
+    setCp(nuevo)
+    guardarCodigoPostal(nuevo)
+  }
 
   return (
     <aside aria-labelledby="resumen" className="rounded-[3px] border border-line bg-surface p-5 lg:sticky lg:top-6">
@@ -320,9 +354,20 @@ function Resumen({ items, total, unidades, correo, hayAgotados, onVaciar }) {
         </div>
       </dl>
 
-      <Envio total={total} />
+      <Envio total={total} cp={cp} onCambiarCp={cambiarCp} envio={envio} />
 
-      <Pagar items={items} correo={correo} bloqueado={hayAgotados} />
+      {envio && (
+        <dl className="mb-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-line py-3">
+            <dt className="font-medium">Total a pagar con envío</dt>
+            <dd className="font-mono text-xl font-bold" data-total-pagar>
+              <NumeroAnimado valor={total + envio.costo} formato={formatoPrecio} />
+            </dd>
+          </div>
+        </dl>
+      )}
+
+      <Pagar items={items} correo={correo} bloqueado={hayAgotados} cp={cp} envio={envio} />
 
       <Link to="/productos" className={`pulsable block ${botonSecundario}`}>
         Seguir comprando

@@ -6,11 +6,11 @@
 // el carrito se vacía y la página de gracias (pages/ResultadoPago.jsx) muestra lo que se compró.
 const CLAVE_COMPRA = 'ultima-compra'
 
-export function guardarCompra(items) {
+export function guardarCompra(items, envio = 0) {
   try {
     sessionStorage.setItem(
       CLAVE_COMPRA,
-      JSON.stringify(items.map((i) => ({ id: i.producto.id, cantidad: i.cantidad }))),
+      JSON.stringify({ items: items.map((i) => ({ id: i.producto.id, cantidad: i.cantidad })), envio }),
     )
   } catch {
     // Sin almacenamiento, la página de gracias se muestra sin el detalle
@@ -20,13 +20,15 @@ export function guardarCompra(items) {
 export function leerCompra() {
   try {
     const guardada = JSON.parse(sessionStorage.getItem(CLAVE_COMPRA) ?? '[]')
-    return Array.isArray(guardada) ? guardada : []
+    // Antes de T-048 se guardaba solo la lista de productos
+    if (Array.isArray(guardada)) return { items: guardada, envio: 0 }
+    return { items: Array.isArray(guardada?.items) ? guardada.items : [], envio: Number(guardada?.envio) || 0 }
   } catch {
-    return []
+    return { items: [], envio: 0 }
   }
 }
 
-export async function iniciarPago(items) {
+export async function iniciarPago(items, cp, costoEnvio = 0) {
   // T-031: el servidor pide la sesión para saber quién compra (y de ahí sale el correo del pedido)
   let token
   try {
@@ -45,6 +47,7 @@ export async function iniciarPago(items) {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
         carrito: items.map((i) => ({ id: i.producto.id, cantidad: i.cantidad })),
+        cp, // T-048: el servidor calcula el envío con este código postal
       }),
     })
   } catch {
@@ -55,7 +58,7 @@ export async function iniciarPago(items) {
   if (!respuesta.ok || !datos.url) {
     return { error: datos.error ?? 'No pudimos iniciar el pago. Probá de nuevo en un rato.' }
   }
-  guardarCompra(items)
+  guardarCompra(items, costoEnvio)
   return { url: datos.url }
 }
 

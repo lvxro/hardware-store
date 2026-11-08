@@ -5,7 +5,7 @@ import categorias from '../data/categorias'
 import { formatearCampo } from '../data/campos'
 import { precioDeProducto } from '../data/precios'
 import { formatoPrecio } from '../data/catalogo'
-import { MEDIOS, fecha } from '../data/pedidos'
+import { MEDIOS, envioDe, fecha } from '../data/pedidos'
 import EstadoPedido from '../components/EstadoPedido'
 import { useTitulo } from '../data/titulo'
 
@@ -728,6 +728,12 @@ function PanelPedidos() {
                         <span className="font-mono">{formatoPrecio(i.precio * i.cantidad)}</span>
                       </li>
                     ))}
+                    {envioDe(p) > 0 && (
+                      <li className="flex justify-between gap-4 py-2">
+                        <span>Envío</span>
+                        <span className="font-mono">{formatoPrecio(envioDe(p))}</span>
+                      </li>
+                    )}
                   </ul>
                   <p className="mt-3 font-mono text-xs text-muted">
                     {[

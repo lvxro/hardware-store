@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../data/supabase'
 import { formatoPrecio } from '../data/catalogo'
-import { MEDIOS, fecha } from '../data/pedidos'
+import { MEDIOS, envioDe, fecha } from '../data/pedidos'
 import EstadoPedido from '../components/EstadoPedido'
 import { useTitulo } from '../data/titulo'
 
@@ -44,6 +44,12 @@ function Pedido({ pedido }) {
           </li>
         ))}
       </ul>
+      {envioDe(pedido) > 0 && (
+        <p className="flex items-baseline justify-between gap-4 border-t border-line px-5 py-3 text-sm">
+          <span className="text-muted">Envío</span>
+          <span className="font-mono">{formatoPrecio(envioDe(pedido))}</span>
+        </p>
+      )}
       {(pedido.pago_id || pedido.medio) && (
         <p className="border-t border-line px-5 py-3 font-mono text-xs text-muted">
           {[

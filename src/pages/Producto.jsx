@@ -9,6 +9,7 @@ import {
 } from "../data/reglas";
 import { PORCENTAJE_OFERTA } from "../data/ofertas";
 import { maximoDe } from "../data/carrito";
+import { costoEnvio, guardarCodigoPostal, leerCodigoPostal } from "../data/envio";
 import { CAMPOS_BASE, formatearCampo, formatearValor } from "../data/campos";
 import Vitrina from "../components/Vitrina";
 import BotonFavorito from "../components/BotonFavorito";
@@ -55,7 +56,7 @@ function IconoCamion() {
 
 function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito, productosEnCarrito = [] }) {
   const [cantidad, setCantidad] = useState(1);
-  const [codigoPostal, setCodigoPostal] = useState("");
+  const [codigoPostal, setCodigoPostal] = useState(leerCodigoPostal);
   const [mensajeEnvio, setMensajeEnvio] = useState("");
   const [agregado, setAgregado] = useState(false);
 
@@ -120,8 +121,16 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito, productosEn
       setMensajeEnvio("Ingresá un código postal de 4 dígitos.");
       return;
     }
+    const envio = costoEnvio(codigoPostal, este.precio * cantidad);
+    if (!envio) {
+      setMensajeEnvio("Ese código postal no existe. Probá con otro.");
+      return;
+    }
+    guardarCodigoPostal(codigoPostal);
     setMensajeEnvio(
-      `El costo de envío al CP ${codigoPostal} se calcula al finalizar la compra.`
+      envio.gratis
+        ? `Envío gratis a ${envio.zona}.`
+        : `Envío a ${envio.zona}: ${formatearPesos(envio.costo)}.`
     );
   };
 

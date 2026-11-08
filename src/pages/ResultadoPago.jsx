@@ -33,10 +33,12 @@ const PASOS = ['Pago aprobado', 'Preparando tu pedido', 'En camino', 'En tus man
 function useCompra() {
   return useMemo(() => {
     const porId = new Map(productos.map((p) => [p.id, p]))
-    const items = leerCompra()
+    const compra = leerCompra()
+    const items = compra.items
       .filter((r) => porId.has(r.id))
       .map((r) => ({ producto: porId.get(r.id), cantidad: r.cantidad }))
-    return { items, total: items.reduce((suma, i) => suma + i.producto.precio * i.cantidad, 0) }
+    // T-048: lo que se pagó incluye el envío
+    return { items, total: items.reduce((suma, i) => suma + i.producto.precio * i.cantidad, 0) + (items.length ? compra.envio : 0) }
   }, [])
 }
 

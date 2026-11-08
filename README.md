@@ -169,3 +169,13 @@ Cada cambio de stock queda anotado en la tabla `movimientos_stock`: cuándo, qui
 - **Cómo se anota:** lo hace la base de datos con un trigger sobre `productos`, así no se escapa ningún cambio (panel, ventas o Table Editor). Nadie puede editar ni borrar el historial desde la web; solo los administradores lo leen.
 - **Motivos:** al ajustar el stock desde el panel se elige uno: ingreso de mercadería, corrección de conteo, devolución, rotura o pérdida, u otro, con una nota opcional. Las ventas de Mercado Pago quedan como **Venta** con el número de pedido, y no se pueden cargar a mano, así que se distinguen siempre. Los cambios desde "Editar producto", las altas, las bajas y los cambios hechos en el panel de Supabase llevan su propio motivo.
 - **Para activarlo:** correr `supabase/historial-stock.sql` en Supabase → SQL Editor (después de `admin-stock.sql`). Hasta que se corra, el panel sigue guardando el stock como antes y la pestaña avisa que falta el archivo.
+
+## Costo de envío por código postal (T-048)
+
+El cliente ve cuánto le sale el envío antes de pagar.
+
+- **Tarifas:** `src/data/envio.js` define ocho zonas por rango de código postal (CABA, Gran Buenos Aires, Santa Fe y Entre Ríos, Litoral y Noreste, Noroeste, Córdoba y Cuyo, interior de Buenos Aires y La Pampa, Patagonia). Los precios son de ejemplo: para cambiarlos se edita `ZONAS`. El envío es gratis desde `ENVIO_GRATIS_DESDE` (`src/data/reglas.js`).
+- **Ficha de producto:** "Calcular" muestra la zona y el costo (o "Envío gratis"). El código postal queda guardado en el navegador y se reutiliza en el carrito.
+- **Carrito:** campo de código postal, costo del envío y **Total a pagar con envío**. Sin un código válido el botón de pagar queda bloqueado.
+- **Checkout:** `api/checkout.js` recalcula el envío en el servidor con el código postal (el navegador no manda el precio) y lo cobra como un renglón más de Mercado Pago. El total del pedido incluye el envío.
+- **Después de pagar:** el envío se muestra en Mis pedidos, en el detalle del panel de administración y en el comprobante por correo. No tiene columna propia: es el total menos la suma de los productos, así que no hace falta correr SQL.

@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
 import { supabasePublico as supabase, supabaseAdmin } from './_lib/supabase.js'
 import { precioDeProducto } from '../src/data/precios.js'
+import { costoEnvio } from '../src/data/envio.js'
 
 const MAXIMO_POR_PRODUCTO = 10 // el mismo tope que el carrito (src/data/carrito.js)
 const MAXIMO_RENGLONES = 50
@@ -75,6 +76,12 @@ export default async function handler(req, res) {
   const cantidades = limpiarCarrito(body.carrito)
   if (!cantidades) return res.status(400).json({ error: 'El carrito no es válido.' })
 
+  // T-048: el envío se calcula acá, con el código postal. Sin uno válido no se cobra.
+  const cp = String(body.cp ?? '').trim()
+  if (!costoEnvio(cp, 0)) {
+    return res.status(400).json({ error: 'Ingresá un código postal de 4 dígitos para calcular el envío.' })
+  }
+
   const { data: filas, error } = await supabase
     .from('productos')
     .select('*') // con "*" sigue andando aunque todavía no exista la columna stock (T-025)
@@ -109,6 +116,13 @@ export default async function handler(req, res) {
     ...(p.imagen ? { picture_url: new URL(p.imagen, sitio).href } : {}),
   }))
 
+  // T-048: el envío va como un renglón más del pago, así Mercado Pago cobra todo junto
+  const subtotal = items.reduce((suma, i) => suma + i.unit_price * i.quantity, 0)
+  const envio = costoEnvio(cp, subtotal)
+  const itemsDelPago = envio.costo > 0
+    ? [...items, { id: 'envio', title: `Envío a ${envio.zona} (CP ${cp})`, quantity: 1, unit_price: envio.costo, currency_id: 'ARS' }]
+    : items
+
   // El correo del cliente, si inició sesión, para que Mercado Pago lo complete solo
   const correo = usuario.email.toLowerCase()
   // Número de pedido propio: vuelve en el aviso de Mercado Pago (api/webhook.js) y en la vuelta a la tienda
@@ -129,7 +143,8 @@ export default async function handler(req, res) {
         cantidad: i.quantity,
         precio: i.unit_price,
       })),
-      total: items.reduce((suma, i) => suma + i.unit_price * i.quantity, 0),
+      // El total incluye el envío: el costo se ve en Mis pedidos como total menos productos
+      total: subtotal + envio.costo,
     })
     if (errorPedido) console.error('No se pudo anotar el pedido', pedido, errorPedido)
   }
@@ -138,7 +153,7 @@ export default async function handler(req, res) {
     const mp = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN })
     const preferencia = await new Preference(mp).create({
       body: {
-        items,
+        items: itemsDelPago,
         ...(correo ? { payer: { email: correo } } : {}),
         external_reference: pedido,
         statement_descriptor: 'AURAWARE',

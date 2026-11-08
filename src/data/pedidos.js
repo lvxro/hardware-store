@@ -29,3 +29,10 @@ export function fecha(iso) {
     minute: '2-digit',
   }).format(new Date(iso))
 }
+
+// T-048: el envío no tiene columna propia: es lo que sobra del total una vez sumados los productos.
+// 0 si el envío fue gratis (o si el pedido es anterior al cobro del envío).
+export function envioDe(pedido) {
+  const productos = pedido.items.reduce((suma, i) => suma + i.precio * i.cantidad, 0)
+  return Math.max(0, Math.round(Number(pedido.total) - productos))
+}

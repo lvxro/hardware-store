@@ -5,7 +5,7 @@ import categorias from '../data/categorias'
 import { formatearCampo } from '../data/campos'
 import { precioDeProducto } from '../data/precios'
 import { formatoPrecio } from '../data/catalogo'
-import { MEDIOS, envioDe, fecha } from '../data/pedidos'
+import { ENVIOS, MEDIOS, envioDe, fecha } from '../data/pedidos'
 import EstadoPedido from '../components/EstadoPedido'
 import { useTitulo } from '../data/titulo'
 
@@ -607,6 +607,7 @@ function Panel({ onVerHistorial }) {
 const FILTROS = [
   ['pagos', 'Con pago'],
   ['aprobado', 'Aprobados'],
+  ['por-enviar', 'Por enviar'], // T-047: pagados que todavía no se entregaron
   ['pendiente', 'Pendientes'],
   ['rechazado', 'Rechazados'],
   ['sin-pagar', 'Sin pagar'],
@@ -618,6 +619,8 @@ function PanelPedidos() {
   const [filtro, setFiltro] = useState('pagos')
   const [texto, setTexto] = useState('')
   const [abierto, setAbierto] = useState(null)
+  const [cambiando, setCambiando] = useState(null) // T-047: el pedido cuyo envío se está guardando
+  const [avisoEnvio, setAvisoEnvio] = useState('')
 
   useEffect(() => {
     supabase
@@ -629,6 +632,26 @@ function PanelPedidos() {
         error ? setError('No se pudieron leer los pedidos. ¿Corriste supabase/pedidos-historial.sql?') : setPedidos(data),
       )
   }, [])
+
+  // T-047: cambia el estado de envío. La regla está en Supabase (cambiar_envio): solo los administradores
+  // y solo en pedidos con el pago aprobado. El estado del pago no se toca.
+  const cambiarEnvio = async (pedido, envio) => {
+    if (pedido.envio === envio || cambiando) return
+    setCambiando(pedido.id)
+    setAvisoEnvio('')
+    const { data, error } = await supabase.rpc('cambiar_envio', { p_pedido: pedido.id, p_envio: envio })
+    setCambiando(null)
+    if (error) {
+      setAvisoEnvio(
+        error.code === 'PGRST202'
+          ? '¿Corriste supabase/estado-envio.sql? La base de datos todavía no tiene el envío.'
+          : 'No se pudo cambiar el envío. Probá de nuevo.',
+      )
+      return
+    }
+    const fila = Array.isArray(data) ? data[0] : data
+    setPedidos((lista) => lista.map((p) => (p.id === pedido.id ? { ...p, ...fila } : p)))
+  }
 
   if (error) return <p className="mt-6 text-muted">{error}</p>
   if (!pedidos) return <p role="status" className="mt-6 text-muted">Cargando pedidos…</p>
@@ -644,7 +667,13 @@ function PanelPedidos() {
   const palabras = texto.toLowerCase().split(/\s+/).filter(Boolean)
   const lista = pedidos.filter((p) => {
     const pasa =
-      filtro === 'pagos' ? Boolean(p.pago_id) : filtro === 'sin-pagar' ? !p.pago_id : p.estado === filtro
+      filtro === 'pagos'
+        ? Boolean(p.pago_id)
+        : filtro === 'sin-pagar'
+          ? !p.pago_id
+          : filtro === 'por-enviar'
+            ? p.estado === 'aprobado' && p.envio !== 'entregado'
+            : p.estado === filtro
     const donde = `${p.id} ${p.correo ?? ''} ${p.pago_id ?? ''} ${p.items.map((i) => i.nombre).join(' ')}`.toLowerCase()
     return pasa && palabras.every((w) => donde.includes(w))
   })
@@ -714,7 +743,12 @@ function PanelPedidos() {
                     {fecha(p.creado)} · {unidades} {unidades === 1 ? 'unidad' : 'unidades'}
                   </span>
                 </span>
-                <span>{p.pago_id ? <EstadoPedido estado={p.estado} /> : <span className="font-mono text-[11px] text-muted">SIN PAGAR</span>}</span>
+                <span className="flex flex-wrap items-center gap-2">
+                  {p.pago_id ? <EstadoPedido estado={p.estado} /> : <span className="font-mono text-[11px] text-muted">SIN PAGAR</span>}
+                  {p.estado === 'aprobado' && (
+                    <span className="font-mono text-[11px] text-muted">{ENVIOS[p.envio] ?? 'Por preparar'}</span>
+                  )}
+                </span>
                 <span className="font-mono font-bold sm:text-right">{formatoPrecio(p.total)}</span>
               </button>
               {verDetalle && (
@@ -735,6 +769,40 @@ function PanelPedidos() {
                       </li>
                     )}
                   </ul>
+                  {p.estado === 'aprobado' && (
+                    <div className="mt-4 border-t border-line pt-3">
+                      <p className="text-xs text-muted">Envío</p>
+                      <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Estado del envío">
+                        {Object.entries(ENVIOS).map(([clave, nombre]) => (
+                          <button
+                            key={clave}
+                            type="button"
+                            onClick={() => cambiarEnvio(p, clave)}
+                            disabled={cambiando === p.id}
+                            aria-pressed={p.envio === clave}
+                            className={`rounded-[3px] border px-3 py-1.5 font-mono text-xs font-medium disabled:opacity-50 ${
+                              p.envio === clave
+                                ? 'border-lime bg-lime text-bg'
+                                : 'border-line-strong text-muted hover:border-line-hover hover:text-white'
+                            }`}
+                          >
+                            {nombre}
+                          </button>
+                        ))}
+                      </div>
+                      {p.envio_actualizado && (
+                        <p className="mt-2 text-xs text-muted">
+                          Último cambio: {fecha(p.envio_actualizado)}
+                          {p.envio_por ? ` · ${p.envio_por}` : ''}
+                        </p>
+                      )}
+                      {avisoEnvio && abierto === p.id && (
+                        <p role="alert" className="mt-2 text-xs text-white">
+                          {avisoEnvio}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <p className="mt-3 font-mono text-xs text-muted">
                     {[
                       `Pedido ${p.id}`,

@@ -170,6 +170,15 @@ Cada cambio de stock queda anotado en la tabla `movimientos_stock`: cuándo, qui
 - **Motivos:** al ajustar el stock desde el panel se elige uno: ingreso de mercadería, corrección de conteo, devolución, rotura o pérdida, u otro, con una nota opcional. Las ventas de Mercado Pago quedan como **Venta** con el número de pedido, y no se pueden cargar a mano, así que se distinguen siempre. Los cambios desde "Editar producto", las altas, las bajas y los cambios hechos en el panel de Supabase llevan su propio motivo.
 - **Para activarlo:** correr `supabase/historial-stock.sql` en Supabase → SQL Editor (después de `admin-stock.sql`). Hasta que se corra, el panel sigue guardando el stock como antes y la pestaña avisa que falta el archivo.
 
+## Estado de envío del pedido (T-047)
+
+El estado del pago (aprobado, pendiente...) lo escribe Mercado Pago y no se toca. El envío va aparte, en tres columnas nuevas de `pedidos`: `envio` (`preparando`, `en_camino` o `entregado`; vacío si todavía no se empezó), `envio_actualizado` y `envio_por` (el correo de quien lo cambió).
+
+- **Administrador:** en `/admin` → Pedidos, al abrir un pedido con el pago aprobado aparecen los botones **Preparando / En camino / Entregado**. En la lista se ve el envío al lado del estado, y el filtro **Por enviar** muestra los pagados que todavía no se entregaron.
+- **Cliente:** en `/mis-pedidos`, los pedidos aprobados muestran una barra de cuatro pasos (Pago aprobado → Preparando → En camino → Entregado) y la fecha del último cambio. Un pedido recién aprobado está en el primer paso.
+- **Seguridad:** la web no puede escribir en `pedidos`. El cambio pasa por la función `cambiar_envio`, que solo deja usar a los administradores y solo en pedidos con el pago aprobado.
+- **Para activarlo:** correr `supabase/estado-envio.sql` en Supabase → SQL Editor (después de `tabla-pedidos.sql` y `admin-stock.sql`). Se puede correr más de una vez. Hasta entonces, Mis pedidos sigue funcionando sin la barra y el panel avisa que falta el archivo.
+
 ## Costo de envío por código postal (T-048)
 
 El cliente ve cuánto le sale el envío antes de pagar.

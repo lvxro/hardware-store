@@ -9,6 +9,27 @@ export const ESTADOS = {
   contracargo: { texto: 'Contracargo', clase: 'border-line-strong text-muted' },
 }
 
+// T-047: cómo va el envío de un pedido con el pago aprobado (supabase/estado-envio.sql).
+// Va aparte del estado del pago: ese lo escribe Mercado Pago y el envío lo cambia un administrador.
+export const ENVIOS = {
+  preparando: 'Preparando',
+  en_camino: 'En camino',
+  entregado: 'Entregado',
+}
+
+// Los pasos que ve el cliente, en orden. Un pedido recién aprobado, sin envío cargado, está en el primero.
+export const PASOS_ENVIO = [
+  ['aprobado', 'Pago aprobado'],
+  ['preparando', 'Preparando'],
+  ['en_camino', 'En camino'],
+  ['entregado', 'Entregado'],
+]
+
+export function pasoDeEnvio(envio) {
+  const paso = PASOS_ENVIO.findIndex(([clave]) => clave === (envio ?? 'aprobado'))
+  return Math.max(paso, 0)
+}
+
 export const MEDIOS = {
   credit_card: 'Tarjeta de crédito',
   debit_card: 'Tarjeta de débito',

@@ -1,19 +1,10 @@
-# React + Vite
+# aura/ware
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Tienda online de componentes y periféricos de PC. React 19 + Vite + Tailwind 4 + React Router 7, con Supabase (cuentas y base de datos) y Mercado Pago (pagos), publicada en Vercel: https://aurawarestore.vercel.app
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Documentación técnica (T-064):** [`docs/documentacion-tecnica.md`](docs/documentacion-tecnica.md) explica cómo está armada la tienda, la base de datos, las variables de entorno y cómo instalarla.
+- **Instalar y probar:** `npm ci`, `npm run dev` (http://localhost:5173), `npm run lint`, `npm run build`.
+- **El resto de este archivo** tiene el detalle de cada función, con el número de su tarjeta del tablero.
 
 ## Base de datos (Supabase)
 

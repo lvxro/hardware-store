@@ -76,7 +76,7 @@ Seis tarjetas se cerraron con atraso (T-022, T-023, T-024, T-029, T-052 y T-057)
 
 ### Qué salió bien
 
-- La tienda **cobra de verdad** (en modo de prueba de Mercado Pago), guarda cada pedido y el cliente lo sigue desde Mis pedidos.
+- La tienda **completa el cobro con Mercado Pago** (en modo de prueba), guarda cada pedido y el cliente lo sigue desde Mis pedidos.
 - La seguridad está en la base de datos y en el servidor: precios, stock y envío los calcula el servidor y las reglas de Supabase protegen los datos.
 - El proyecto está **bien documentado y organizado**, como dijo el profesor: cada sprint tiene su documentación con evidencia, y la metodología se respetó.
 - El equipo **replanificó** a partir del feedback del profesor (6 sprints, sprint final solo de cierre) en vez de apurar.
@@ -84,7 +84,7 @@ Seis tarjetas se cerraron con atraso (T-022, T-023, T-024, T-029, T-052 y T-057)
 
 ### Qué mejorar
 
-- **Reparto de la carga:** a lo largo del proyecto el trabajo quedó desparejo entre los integrantes, y apareció en las retrospectivas de los sprints 1, 2 y 3. Hay 5 tarjetas del sprint 5 sin terminar a cargo de QA y Diseño, y una de Frontend.
+- **Reparto de la carga:** a lo largo del proyecto el trabajo quedó desparejo entre los integrantes, y apareció en las retrospectivas de los sprints 1, 2 y 3. Al 10/11 hay 6 tarjetas del sprint 5 sin terminar: 5 de Juan (diseño, QA y gestión) y 1 de Alvaro (frontend).
 - **Tablero al día:** hubo tarjetas en Hecho en una hoja y en otro estado en otra, y tarjetas sin fecha de fin real. La regla de "Hecho solo con el pull request mergeado" no siempre se cumplió.
 - **Trabajo sin tarjeta:** en los sprints 2 y 3 hubo mucho trabajo que no estaba en el tablero.
 - **Estimaciones:** el sprint 4 se planificó con más tarjetas de las que entraban, y eso llevó a la replanificación.

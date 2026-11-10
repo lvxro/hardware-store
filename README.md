@@ -76,7 +76,7 @@ La tienda tiene 6 productos en oferta, con el 25 % menos que su precio de lista.
 El botón "Pagar con Mercado Pago" del carrito usa Checkout Pro: el cliente paga en la página de Mercado Pago (tarjeta, débito, dinero en cuenta, cuotas) y vuelve a la tienda.
 
 - **Cómo funciona:** el carrito manda solo los id y las cantidades a `api/checkout.js` (una función de Vercel). Esa función lee los precios de Supabase, los pasa a pesos con el mismo cálculo que la tienda (`src/data/precios.js`, ofertas incluidas) y le pide el pago a Mercado Pago. Así nadie puede cambiar el precio desde el navegador.
-- **Qué se cobra:** el total de lista. El 10 % de efectivo/transferencia no se aplica en Mercado Pago. El envío no se cobra en el pago.
+- **Qué se cobra:** el total de lista. El 10 % de efectivo/transferencia no se aplica en Mercado Pago. El envío sí se cobra, como un renglón más del pago (T-048): se calcula en el servidor con el código postal.
 - **Vuelta a la tienda:** `/compra/aprobada`, `/compra/pendiente` y `/compra/rechazada` (`src/pages/ResultadoPago.jsx`). Con el pago aprobado, el carrito se vacía.
 - **Confirmación del cobro:** Mercado Pago avisa cada pago a `api/webhook.js`, que lo consulta y lo deja en los logs de Vercel. La página `/compra/aprobada` sola no prueba que se cobró. Cuando haya tabla de pedidos, ahí se guarda.
 

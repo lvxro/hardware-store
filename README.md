@@ -67,7 +67,7 @@ La tienda tiene 6 productos en oferta, con el 25 % menos que su precio de lista.
 El botón "Pagar con Mercado Pago" del carrito usa Checkout Pro: el cliente paga en la página de Mercado Pago (tarjeta, débito, dinero en cuenta, cuotas) y vuelve a la tienda.
 
 - **Cómo funciona:** el carrito manda solo los id y las cantidades a `api/checkout.js` (una función de Vercel). Esa función lee los precios de Supabase, los pasa a pesos con el mismo cálculo que la tienda (`src/data/precios.js`, ofertas incluidas) y le pide el pago a Mercado Pago. Así nadie puede cambiar el precio desde el navegador.
-- **Qué se cobra:** el total de lista. El 10 % de efectivo/transferencia no se aplica en Mercado Pago. El envío no se cobra en el pago.
+- **Qué se cobra:** el total de lista. El 10 % de efectivo/transferencia no se aplica en Mercado Pago. El envío sí se cobra, como un renglón más del pago (T-048): se calcula en el servidor con el código postal.
 - **Vuelta a la tienda:** `/compra/aprobada`, `/compra/pendiente` y `/compra/rechazada` (`src/pages/ResultadoPago.jsx`). Con el pago aprobado, el carrito se vacía.
 - **Confirmación del cobro:** Mercado Pago avisa cada pago a `api/webhook.js`, que lo consulta y lo deja en los logs de Vercel. La página `/compra/aprobada` sola no prueba que se cobró. Cuando haya tabla de pedidos, ahí se guarda.
 
@@ -179,3 +179,11 @@ El cliente ve cuánto le sale el envío antes de pagar.
 - **Carrito:** campo de código postal, costo del envío y **Total a pagar con envío**. Sin un código válido el botón de pagar queda bloqueado.
 - **Checkout:** `api/checkout.js` recalcula el envío en el servidor con el código postal (el navegador no manda el precio) y lo cobra como un renglón más de Mercado Pago. El total del pedido incluye el envío.
 - **Después de pagar:** el envío se muestra en Mis pedidos, en el detalle del panel de administración y en el comprobante por correo. No tiene columna propia: es el total menos la suma de los productos, así que no hace falta correr SQL.
+
+## Respaldo y limpieza de datos de prueba (T-065)
+
+Antes de la demo final hay que tener una copia de seguridad y borrar los pedidos de prueba. La guía paso a paso está en [`docs/respaldo-y-limpieza.md`](docs/respaldo-y-limpieza.md).
+
+- **`supabase/respaldo.sql`:** copia `pedidos`, `productos`, `movimientos_stock` y `administradores` al esquema `respaldo`, con la fecha en el nombre. No cambia nada de lo que usa la tienda. Se puede correr todas las veces que haga falta.
+- **`supabase/limpiar-datos-prueba.sql`:** borra los pedidos de prueba y devuelve el stock que descontaron. Por defecto es un simulacro: cuenta qué haría y no toca nada hasta que `confirmar` se cambia a `true`. Se corre después de las pruebas de compra (T-050 y T-054).
+- Las copias de `pedidos` tienen correos de clientes: no se suben a GitHub.

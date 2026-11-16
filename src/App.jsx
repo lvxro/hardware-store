@@ -25,6 +25,7 @@ const Admin = lazy(() => import('./pages/Admin'))
 const MisPedidos = lazy(() => import('./pages/MisPedidos'))
 const ArmaTuPC = lazy(() => import('./pages/ArmaTuPC'))
 const Comparador = lazy(() => import('./pages/Comparador'))
+const Legal = lazy(() => import('./pages/Legal'))
 
 // Con la página ya dibujada y el navegador libre, se adelanta la ficha y el carrito,
 // que son a donde más se va después. Así, al tocar un producto, ya está.
@@ -131,6 +132,8 @@ export default function App() {
           <Route path="/mis-pedidos" element={<MisPedidos sesion={sesion} />} />
           <Route path="/arma-tu-pc" element={<ArmaTuPC onAgregarAlCarrito={carrito.agregar} />} />
           <Route path="/comparador" element={<Comparador onAgregarAlCarrito={carrito.agregar} />} />
+          <Route path="/terminos" element={<Legal tipo="terminos" />} />
+          <Route path="/seguridad" element={<Legal tipo="seguridad" />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
         </Suspense>

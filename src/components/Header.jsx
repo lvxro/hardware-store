@@ -426,7 +426,12 @@ export default function Header({ enCarrito = 0, enFavoritos = 0, sesion }) {
               Arma tu PC
             </NavLink>
           </li>
-                    <li className="ml-auto">
+          <li>
+            <NavLink to="/comparador" className={claseNav}>
+              Comparador
+            </NavLink>
+          </li>
+          <li className="ml-auto">
             <NavLink to="/productos" end className={claseNav}>
               Todos los productos
             </NavLink>

@@ -43,6 +43,11 @@ export default function Footer() {
                 Política de seguridad
               </Link>
             </li>
+            <li>
+  <Link to="/guia" className="subrayado border-b-2 border-transparent text-muted hover:text-white">
+    Guía de uso
+  </Link>
+</li>
           </ul>
         </nav>
       </div>

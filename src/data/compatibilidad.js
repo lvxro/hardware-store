@@ -206,3 +206,54 @@ export function compatibleCon(producto, enCarrito) {
 
   return null
 }
+
+/*
+  Comparador: diferencias entre dos productos de la misma categoría que cambian lo que hay que comprar
+  con ellos (otra placa madre, otra memoria, una placa de video, una fuente más grande).
+  Devuelve chequeos con la misma forma que revisar(), en estado 'aviso'. Vacío si no hay nada que avisar.
+*/
+export function diferenciasDeCompra(a, b) {
+  const avisos = []
+  const avisar = (titulo, detalle) => avisos.push({ estado: 'aviso', titulo, detalle })
+
+  if (a.categoria === CPU || a.categoria === PLACA) {
+    if (a.socket !== b.socket)
+      avisar(
+        'Usan sockets distintos',
+        a.categoria === CPU
+          ? `${nombreCorto(a)} es ${a.socket} y ${nombreCorto(b)} es ${b.socket}: cada uno necesita su propia placa madre.`
+          : `${nombreCorto(a)} es ${a.socket} y ${nombreCorto(b)} es ${b.socket}: no sirven para el mismo procesador.`
+      )
+  }
+
+  if (a.categoria === CPU) {
+    const ma = MEMORIA_POR_SOCKET[a.socket]
+    const mb = MEMORIA_POR_SOCKET[b.socket]
+    // Solo si no comparten ningún tipo (AM5 y LGA1700 pueden ir los dos con DDR5)
+    if (ma && mb && !ma.some((tipo) => mb.includes(tipo)))
+      avisar('Piden memorias distintas', `${nombreCorto(a)} usa ${ma.join(' o ')} y ${nombreCorto(b)} usa ${mb.join(' o ')}.`)
+    for (const [cpu, otro] of [[a, b], [b, a]])
+      if (sinVideoIntegrado(cpu) && !sinVideoIntegrado(otro))
+        avisar(`${nombreCorto(cpu)} no tiene video integrado`, 'Sin placa de video la PC no da imagen. El otro sí puede andar sin una.')
+  }
+
+  if (a.categoria === PLACA && a.memoria !== b.memoria)
+    avisar('Usan memorias distintas', `${nombreCorto(a)} es ${a.memoria} y ${nombreCorto(b)} es ${b.memoria}: la misma memoria no sirve para las dos.`)
+
+  if (a.categoria === RAM && a.tipo !== b.tipo)
+    avisar('Son de distinto tipo', `${nombreCorto(a)} es ${a.tipo} y ${nombreCorto(b)} es ${b.tipo}: fijate cuál acepta tu placa madre.`)
+
+  if (a.categoria === GPU) {
+    const fa = fuenteRecomendada(null, a).recomendada
+    const fb = fuenteRecomendada(null, b).recomendada
+    if (fa !== fb) {
+      const [mayor, menor] = fa > fb ? [a, b] : [b, a]
+      avisar(
+        `${nombreCorto(mayor)} pide una fuente más grande`,
+        `Consume ${mayor.consumo_w - menor.consumo_w} W más. Sumando un procesador, revisá que tu fuente alcance.`
+      )
+    }
+  }
+
+  return avisos
+}

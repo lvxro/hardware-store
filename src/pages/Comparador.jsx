@@ -198,7 +198,9 @@ export default function Comparador({ onAgregarAlCarrito }) {
             )}
           </p>
 
-          <div className="mt-6 overflow-x-auto rounded-[3px] border border-line bg-surface">
+          {/* relative: los textos sr-only (position: absolute) quedan dentro de la caja con scroll;
+              sin esto se escapaban y la página se desbordaba en celular (521 px en una pantalla de 375). */}
+          <div className="relative mt-6 overflow-x-auto rounded-[3px] border border-line bg-surface">
             <table className="w-full min-w-[34rem] text-sm tabular-nums">
               <thead>
                 <tr className="border-b border-line text-xs text-muted">

@@ -5,7 +5,7 @@ import Logo from './Logo'
 export default function Footer() {
   return (
     <footer className="mt-16 border-t border-line-subtle">
-      <div className="mx-auto grid max-w-7xl gap-x-12 gap-y-8 px-4 py-10 text-sm sm:grid-cols-[2fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-7xl gap-x-12 gap-y-8 px-4 py-10 text-sm sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1.2fr]">
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-muted">
@@ -29,6 +29,22 @@ export default function Footer() {
             </ul>
           </nav>
         ))}
+
+        <nav aria-label="Información">
+          <h2 className="font-semibold">Información</h2>
+          <ul className="mt-2 space-y-1.5">
+            <li>
+              <Link to="/terminos" className="subrayado border-b-2 border-transparent text-muted hover:text-white">
+                Términos y condiciones
+              </Link>
+            </li>
+            <li>
+              <Link to="/seguridad" className="subrayado border-b-2 border-transparent text-muted hover:text-white">
+                Política de seguridad
+              </Link>
+            </li>
+          </ul>
+        </nav>
       </div>
     </footer>
   )

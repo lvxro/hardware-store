@@ -65,12 +65,44 @@ function armarFilas(categoria, a, b) {
   return filas.map((fila) => {
     const na = aNumero(fila.clave, fila.a)
     const nb = aNumero(fila.clave, fila.b)
+    const comparable = fila.mejor && Number.isFinite(na) && Number.isFinite(nb)
     let gana = null
-    if (fila.mejor && Number.isFinite(na) && Number.isFinite(nb) && na !== nb) {
+    if (comparable && na !== nb) {
       gana = (fila.mejor === 'mas' ? na > nb : na < nb) ? 'a' : 'b'
     }
-    return { ...fila, gana }
+    // Largo de la barra de cada lado: el valor más alto llena la barra y el otro queda en proporción
+    const tope = comparable ? Math.max(na, nb) : 0
+    const barra = tope > 0 ? { a: (na / tope) * 100, b: (nb / tope) * 100 } : null
+    const igual = String(fila.a ?? '') === String(fila.b ?? '')
+    return { ...fila, gana, barra, igual }
   })
+}
+
+// Un valor de la tabla: el dato, la marca de mejor valor y la barra que muestra cuánto es frente al otro
+function Valor({ fila, lado }) {
+  const valor = fila[lado]
+  const mejor = fila.gana === lado
+  return (
+    <>
+      <span className={mejor ? 'font-semibold text-lime' : ''}>
+        {valor === undefined || valor === null ? '—' : fila.texto(valor)}
+        {mejor && (
+          <>
+            <span aria-hidden="true"> ✓</span>
+            <span className="sr-only"> (mejor valor)</span>
+          </>
+        )}
+      </span>
+      {fila.barra && (
+        <span aria-hidden="true" className="mt-1.5 block h-[3px] w-full max-w-40 bg-line-subtle">
+          <span
+            className={`block h-full motion-safe:transition-[width] motion-safe:duration-300 ${mejor ? 'bg-lime' : 'bg-line-hover'}`}
+            style={{ width: `${fila.barra[lado]}%` }}
+          />
+        </span>
+      )}
+    </>
+  )
 }
 
 // Una de las dos columnas de arriba: dibujo, selector, precio y botón de agregar
@@ -129,6 +161,7 @@ export default function Comparador({ onAgregarAlCarrito }) {
   useTitulo('Comparador')
   const [params, setParams] = useSearchParams()
   const [agregadoId, setAgregadoId] = useState(null)
+  const [soloDiferencias, setSoloDiferencias] = useState(false)
 
   // La categoría y los dos productos salen de la dirección; si falta algo o no existe, se usan los primeros
   const slug = categorias.some((c) => c.slug === params.get('cat')) ? params.get('cat') : categorias[0].slug
@@ -150,6 +183,9 @@ export default function Comparador({ onAgregarAlCarrito }) {
   const ganaB = filas.filter((f) => f.gana === 'b').length
   const comparables = ganaA + ganaB
   const lider = ganaA >= ganaB ? a : b
+  const iguales = filas.filter((f) => f.igual).length
+  const visibles = soloDiferencias ? filas.filter((f) => !f.igual) : filas
+  const intercambiar = () => ir({ a: b.id, b: a.id })
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -180,9 +216,23 @@ export default function Comparador({ onAgregarAlCarrito }) {
         <p className="mt-8 text-muted">Todavía no hay dos productos en esta categoría para comparar.</p>
       ) : (
         <>
-          <div className="mt-6 grid gap-4 md:grid-cols-[1fr_2.5rem_1fr]">
+          <div className="mt-6 grid gap-3 md:grid-cols-[1fr_3rem_1fr] md:gap-4">
             <Tarjeta producto={a} lista={lista.filter((p) => p.id !== b.id)} lado="a" onElegir={(id) => ir({ a: id })} onAgregar={agregar} agregado={agregadoId === a.id} />
-            <div className="hidden items-center justify-center font-mono text-xs text-muted md:flex">VS</div>
+            {/* Intercambiar: entre las dos tarjetas; en celular queda como una fila angosta */}
+            <div className="flex items-center justify-center">
+              <button
+                type="button"
+                onClick={intercambiar}
+                aria-label="Intercambiar los dos productos"
+                title="Intercambiar"
+                className="flex items-center gap-2 rounded-[3px] border border-line-strong px-3 py-1.5 text-sm text-muted hover:border-line-hover hover:text-white md:h-10 md:w-10 md:justify-center md:p-0"
+              >
+                <svg viewBox="0 0 20 20" aria-hidden="true" className="h-4 w-4 rotate-90 md:rotate-0" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path d="M4 7h12m0 0-3-3m3 3-3 3M16 13H4m0 0 3-3m-3 3 3 3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="md:sr-only">Intercambiar</span>
+              </button>
+            </div>
             <Tarjeta producto={b} lista={lista.filter((p) => p.id !== a.id)} lado="b" onElegir={(id) => ir({ b: id })} onAgregar={agregar} agregado={agregadoId === b.id} />
           </div>
 
@@ -193,41 +243,71 @@ export default function Comparador({ onAgregarAlCarrito }) {
               <>Empate: cada uno gana en {ganaA} de {comparables} características.</>
             ) : (
               <>
-                Va por delante: <b className="text-lime">{lider.nombre}</b> — gana en {Math.max(ganaA, ganaB)} de {comparables} características
+                <b className="text-lime">{lider.nombre}</b> gana en {Math.max(ganaA, ganaB)} de {comparables} características.
               </>
             )}
           </p>
 
-          {/* relative: los textos sr-only (position: absolute) quedan dentro de la caja con scroll;
-              sin esto se escapaban y la página se desbordaba en celular (521 px en una pantalla de 375). */}
-          <div className="relative mt-6 overflow-x-auto rounded-[3px] border border-line bg-surface">
-            <table className="w-full min-w-[34rem] text-sm tabular-nums">
+          {iguales > 0 && (
+            <label className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm text-muted hover:text-white">
+              <input
+                type="checkbox"
+                checked={soloDiferencias}
+                onChange={(e) => setSoloDiferencias(e.target.checked)}
+                className="h-4 w-4 accent-lime"
+              />
+              Mostrar solo lo que cambia ({iguales} {iguales === 1 ? 'dato igual' : 'datos iguales'})
+            </label>
+          )}
+
+          {/* Celular: cada característica es un renglón con los dos valores abajo, sin desplazarse de costado.
+              El borde de arriba de cada columna repite el color de su tarjeta (lima = izquierda, blanco = derecha). */}
+          <div className="relative mt-3 rounded-[3px] border border-line bg-surface text-sm tabular-nums sm:hidden">
+            <div className="grid grid-cols-2 gap-3 border-b border-line px-4 py-3 text-xs font-medium">
+              <p className="border-t-2 border-lime pt-2">{a.nombre}</p>
+              <p className="border-t-2 border-white pt-2">{b.nombre}</p>
+            </div>
+            <dl>
+              {visibles.map((f) => (
+                <div key={f.clave} className="border-b border-line-subtle px-4 py-3 last:border-b-0">
+                  <dt className="text-xs text-muted">{f.etiqueta}</dt>
+                  <dd className="mt-1 grid grid-cols-2 gap-3">
+                    <span className="min-w-0 break-words">
+                      <Valor fila={f} lado="a" />
+                    </span>
+                    <span className="min-w-0 break-words">
+                      <Valor fila={f} lado="b" />
+                    </span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {/* Computadora y tablet: tabla. "relative": los textos sr-only (position: absolute) quedan dentro de
+              la caja con scroll; sin esto se escapaban y la página se desbordaba (T-055). */}
+          <div className="relative mt-3 hidden overflow-x-auto rounded-[3px] border border-line bg-surface sm:block">
+            <table className="w-full min-w-[34rem] table-fixed text-sm tabular-nums">
               <thead>
                 <tr className="border-b border-line text-xs text-muted">
-                  <th scope="col" className="px-4 py-3 text-left font-medium">Característica</th>
-                  <th scope="col" className="px-4 py-3 text-left font-medium text-white">{a.nombre}</th>
-                  <th scope="col" className="px-4 py-3 text-left font-medium text-white">{b.nombre}</th>
+                  <th scope="col" className="w-[30%] px-4 py-3 text-left font-medium">Característica</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium text-white">
+                    <span className="block border-t-2 border-lime pt-2">{a.nombre}</span>
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium text-white">
+                    <span className="block border-t-2 border-white pt-2">{b.nombre}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {filas.map((f) => (
+                {visibles.map((f) => (
                   <tr key={f.clave} className="border-b border-line last:border-b-0">
                     <th scope="row" className="px-4 py-3 text-left font-normal text-muted">{f.etiqueta}</th>
-                    {['a', 'b'].map((lado) => {
-                      const valor = f[lado]
-                      const mejor = f.gana === lado
-                      return (
-                        <td key={lado} className={`px-4 py-3 ${mejor ? 'font-semibold text-lime' : ''}`}>
-                          {valor === undefined || valor === null ? '—' : f.texto(valor)}
-                          {mejor && (
-                            <>
-                              <span aria-hidden="true"> ✓</span>
-                              <span className="sr-only"> (mejor valor)</span>
-                            </>
-                          )}
-                        </td>
-                      )
-                    })}
+                    {['a', 'b'].map((lado) => (
+                      <td key={lado} className="px-4 py-3 align-top">
+                        <Valor fila={f} lado={lado} />
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -239,7 +319,7 @@ export default function Comparador({ onAgregarAlCarrito }) {
           </p>
 
           <h2 className="mt-12 text-xl font-semibold">Otros para comparar</h2>
-          <p className="mb-3 text-sm text-muted">Tocá uno para ponerlo en lugar del producto de la derecha.</p>
+          <p className="mb-3 text-sm text-muted">Tocá uno para ponerlo en lugar del segundo producto.</p>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {lista
               .filter((p) => p.id !== a.id && p.id !== b.id)

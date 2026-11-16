@@ -135,6 +135,7 @@ export default function App() {
           <Route path="/comparador" element={<Comparador onAgregarAlCarrito={carrito.agregar} />} />
           <Route path="/terminos" element={<Legal tipo="terminos" />} />
           <Route path="/seguridad" element={<Legal tipo="seguridad" />} />
+          <Route path="/guia" element={<Guia />} />
           <Route path="*" element={<NoEncontrada />} />
         </Routes>
         </Suspense>

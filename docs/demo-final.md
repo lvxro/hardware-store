@@ -102,7 +102,7 @@ Seis tarjetas se cerraron con atraso (T-022, T-023, T-024, T-029, T-052 y T-057)
 
 ### Para decir en voz alta
 
-El proyecto cumplió su objetivo —vender online— y lo que más nos enseñó no fue técnico: **repartir y seguir el trabajo** es lo difícil. Y la IA aceleró la programación y la documentación, pero las decisiones, las pruebas y las revisiones siguieron siendo de personas (ver `docs/uso-de-ia.md`).
+El proyecto cumplió su objetivo —vender online— y lo que más nos enseñó no fue técnico: **repartir y seguir el trabajo** es lo difícil. Y la IA aceleró la programación y la documentación, pero las decisiones, las pruebas y las revisiones siguieron siendo de personas.
 
 ## 6. Pendiente para que la tarjeta pase a Hecho
 

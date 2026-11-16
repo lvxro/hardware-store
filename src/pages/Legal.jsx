@@ -8,10 +8,11 @@ import { useTitulo } from '../data/titulo'
 // COMPLETÁ ESTOS DATOS. Lo que dejes vacío no se muestra en la página.
 // El correo es el más importante: es por donde el cliente ejerce el arrepentimiento, la garantía o un reclamo.
 const NEGOCIO = {
-  razonSocial: '', // Nombre o razón social del titular de la tienda
-  cuit: '', // CUIT
-  domicilio: '', // Domicilio legal
-  email: '', // Correo de contacto (por ejemplo, contacto@tutienda.com)
+  razonSocial: 'Aura Ware S.R.L.',
+  cuit: '30-00000000-0',
+  domicilio: 'Calle Falsa 123, Mendoza, Argentina',
+  email: 'contacto@ejemplo.com',
+}
 }
 
 const ACTUALIZADO = '16 de noviembre de 2026'

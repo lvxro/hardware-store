@@ -13,7 +13,6 @@ const NEGOCIO = {
   domicilio: 'Calle Falsa 123, Mendoza, Argentina',
   email: 'contacto@ejemplo.com',
 }
-}
 
 const ACTUALIZADO = '16 de noviembre de 2026'
 

@@ -89,6 +89,7 @@ Estos archivos no importan nada del navegador, así que los usan las pantallas y
 | `/recuperar-contrasena`, `/nueva-contrasena` | Recuperar contraseña | Todos |
 | `/compra/:estado` | Página de gracias (aprobada, pendiente, rechazada) | Cliente |
 | `/mis-pedidos` | Historial y seguimiento del envío | Cliente |
+| `/terminos`, `/seguridad` | Términos y condiciones, y política de seguridad y privacidad | Todos |
 | `/admin` | Panel de administración | Administrador |
 
 ## 5. Flujos importantes
@@ -220,7 +221,15 @@ Observaciones conocidas del panel de seguridad de Supabase (todas revisadas):
 - **Tablero y documentación:** el Google Sheet del equipo (hojas Tareas, Sprints, Documentación y Retrospectiva) tiene el estado de cada tarjeta y qué se hizo en cada sprint.
 - **Agregar una función:** si toca la base, se escribe un script en `supabase/` que se pueda correr más de una vez; si toca el cobro, el cálculo va en el servidor; si la regla la ven el navegador y el servidor, va en un archivo de `src/data/` sin importaciones del navegador; y se agrega su sección al README.
 
-## 12. Lo que queda fuera de esta versión
+## 12. Más documentación
+
+| Archivo | Para qué |
+|---|---|
+| `docs/respaldo-y-limpieza.md` | Copia de seguridad de la base y limpieza de datos de prueba (T-065) |
+| `docs/uso-de-ia.md` | Cómo usó el equipo la IA para programar y documentar (T-056) |
+| `docs/demo-final.md` | Guion de la demo, lista de control previa y retrospectiva del proyecto (T-035) |
+
+## 13. Lo que queda fuera de esta versión
 
 - Cobrar con credenciales de producción de Mercado Pago (T-044, queda en el backlog por decisión del equipo).
 - Factura electrónica de ARCA: el comprobante por correo dice "Documento no válido como factura".

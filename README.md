@@ -3,6 +3,7 @@
 Tienda online de componentes y periféricos de PC. React 19 + Vite + Tailwind 4 + React Router 7, con Supabase (cuentas y base de datos) y Mercado Pago (pagos), publicada en Vercel: https://aurawarestore.vercel.app
 
 - **Documentación técnica (T-064):** [`docs/documentacion-tecnica.md`](docs/documentacion-tecnica.md) explica cómo está armada la tienda, la base de datos, las variables de entorno y cómo instalarla.
+- **Más documentación:** [`docs/uso-de-ia.md`](docs/uso-de-ia.md) (cómo usamos IA, T-056), [`docs/respaldo-y-limpieza.md`](docs/respaldo-y-limpieza.md) (copia de seguridad y limpieza, T-065) y [`docs/demo-final.md`](docs/demo-final.md) (demo y retrospectiva, T-035).
 - **Instalar y probar:** `npm ci`, `npm run dev` (http://localhost:5173), `npm run lint`, `npm run build`.
 - **El resto de este archivo** tiene el detalle de cada función, con el número de su tarjeta del tablero.
 

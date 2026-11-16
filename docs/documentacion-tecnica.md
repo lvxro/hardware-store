@@ -89,6 +89,7 @@ Estos archivos no importan nada del navegador, así que los usan las pantallas y
 | `/recuperar-contrasena`, `/nueva-contrasena` | Recuperar contraseña | Todos |
 | `/compra/:estado` | Página de gracias (aprobada, pendiente, rechazada) | Cliente |
 | `/mis-pedidos` | Historial y seguimiento del envío | Cliente |
+| `/guia` | Guía de uso de la tienda para clientes y administradores | Todos |
 | `/terminos`, `/seguridad` | Términos y condiciones, y política de seguridad y privacidad | Todos |
 | `/admin` | Panel de administración | Administrador |
 

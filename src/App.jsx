@@ -26,6 +26,7 @@ const MisPedidos = lazy(() => import('./pages/MisPedidos'))
 const ArmaTuPC = lazy(() => import('./pages/ArmaTuPC'))
 const Comparador = lazy(() => import('./pages/Comparador'))
 const Legal = lazy(() => import('./pages/Legal'))
+const Guia = lazy(() => import('./pages/Guia'))
 
 // Con la página ya dibujada y el navegador libre, se adelanta la ficha y el carrito,
 // que son a donde más se va después. Así, al tocar un producto, ya está.

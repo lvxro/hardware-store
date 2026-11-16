@@ -369,6 +369,30 @@ function FichaContenido({ id, onAgregarAlCarrito, cantidadEnCarrito, productosEn
             </p>
           )}
 
+          {/* El comparador arranca con este producto y elige solo otro de precio parecido */}
+          {deLaCategoria.length > 1 && (
+            <Link
+              to={`/comparador?cat=${categoria}&a=${producto.id}`}
+              className="mt-4 inline-flex items-center gap-2 rounded-[3px] border border-line-strong px-4 py-2 text-sm font-medium text-white hover:border-line-hover hover:bg-raised"
+            >
+              <svg
+                viewBox="0 0 20 20"
+                aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+              >
+                <path
+                  d="M4 7h12m0 0-3-3m3 3-3 3M16 13H4m0 0 3-3m-3 3 3 3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Comparar con otro modelo
+            </Link>
+          )}
+
           <div className="mt-6 border-t border-line pt-4">
             <p className="flex items-center gap-2 text-sm font-medium text-white tabular-nums">
               <IconoCamion />

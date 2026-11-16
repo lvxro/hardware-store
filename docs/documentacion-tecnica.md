@@ -227,7 +227,6 @@ Observaciones conocidas del panel de seguridad de Supabase (todas revisadas):
 | Archivo | Para qué |
 |---|---|
 | `docs/respaldo-y-limpieza.md` | Copia de seguridad de la base y limpieza de datos de prueba (T-065) |
-| `docs/uso-de-ia.md` | Cómo usó el equipo la IA para programar y documentar (T-056) |
 | `docs/demo-final.md` | Guion de la demo, lista de control previa y retrospectiva del proyecto (T-035) |
 
 ## 13. Lo que queda fuera de esta versión

@@ -82,6 +82,14 @@ function SubirOBajar({ producto, enCarrito, onReemplazar }) {
             {otro.modelo}
           </Link>
           {dato && <span className="block truncate font-mono text-[11px] text-muted">{dato}</span>}
+          {/* Abre el comparador con los dos lado a lado */}
+          <Link
+            to={`/comparador?cat=${producto.categoria}&a=${producto.id}&b=${otro.id}`}
+            className="whitespace-nowrap font-mono text-[11px] text-lime underline-offset-4 hover:underline"
+            aria-label={`Comparar ${producto.modelo} con ${otro.modelo}`}
+          >
+            Comparar →
+          </Link>
         </span>
         <span className="col-start-2 row-start-2 font-mono text-xs sm:col-start-auto sm:row-start-auto sm:text-right sm:text-sm">
           {precio > 0 ? '+' : '−'}

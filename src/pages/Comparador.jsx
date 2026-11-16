@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Vitrina from '../components/Vitrina'
 import categorias from '../data/categorias'
+import { IconoEstado } from '../components/Compatibilidad'
 import { formatoPrecio, productosDe } from '../data/catalogo'
+import { diferenciasDeCompra } from '../data/compatibilidad'
 import { formatearCampo, formatearValor } from '../data/campos'
 import { precioEfectivo } from '../data/reglas'
 import { PUNTAJE_CPU, PUNTAJE_GPU } from '../data/rendimiento'
@@ -14,6 +16,7 @@ import { useTitulo } from '../data/titulo'
 
 // En qué especificaciones es mejor un valor más alto ('mas') y en cuáles uno más bajo ('menos').
 // Las que no están acá (socket, chipset, formato, panel...) se muestran pero no se comparan.
+// Tampoco las que dependen del gusto: tamaño de pantalla, peso y botones del mouse.
 const MEJOR = {
   nucleos: 'mas',
   hilos: 'mas',
@@ -25,13 +28,18 @@ const MEJOR = {
   capacidad_gb: 'mas',
   velocidad_mhz: 'mas',
   latencia: 'menos',
-  tamano_pulgadas: 'mas',
   tasa_refresco_hz: 'mas',
   tiempo_respuesta_ms: 'menos',
   dpi_max: 'mas',
-  peso_g: 'menos',
-  botones: 'mas',
 }
+
+// Cuántos puntos vale ganar cada fila en el veredicto. Las que no están valen 1.
+// El precio por punto ya mezcla precio y rendimiento: se marca el mejor pero no suma, para no contarlos dos veces.
+const PESO = { rendimiento: 3, precio: 2, precio_por_punto: 0 }
+
+// Primero los que tienen stock y, entre ellos, los de precio más parecido a "base"
+const porParecido = (base) => (x, y) =>
+  (x.stock === 0) - (y.stock === 0) || Math.abs(x.precio - base.precio) - Math.abs(y.precio - base.precio)
 
 // Pasa un valor a número para poder compararlo ("CL30" -> 30). Si no es un número, devuelve NaN.
 function aNumero(clave, valor) {
@@ -43,11 +51,13 @@ function aNumero(clave, valor) {
 const textoComun = (valor) => (valor === undefined || valor === null ? '—' : formatearValor(valor))
 
 // Las filas de la tabla: el rendimiento (si hay puntaje), las especificaciones de la categoría y el precio
+// (y, con puntaje, cuánto se paga por cada punto de rendimiento)
 function armarFilas(categoria, a, b) {
   const filas = []
   const puntajes =
     categoria.slug === 'procesadores' ? PUNTAJE_CPU : categoria.slug === 'placas_de_video' ? PUNTAJE_GPU : null
-  if (puntajes && puntajes[a.id] !== undefined && puntajes[b.id] !== undefined) {
+  const conPuntaje = puntajes && puntajes[a.id] !== undefined && puntajes[b.id] !== undefined
+  if (conPuntaje) {
     filas.push({
       clave: 'rendimiento',
       etiqueta: 'Rendimiento en juegos (1 a 10, aprox.)',
@@ -61,6 +71,16 @@ function armarFilas(categoria, a, b) {
     filas.push({ clave, etiqueta: formatearCampo(clave), a: a[clave], b: b[clave], mejor: MEJOR[clave] ?? null, texto: textoComun })
   }
   filas.push({ clave: 'precio', etiqueta: 'Precio', a: a.precio, b: b.precio, mejor: 'menos', texto: formatoPrecio })
+  if (conPuntaje) {
+    filas.push({
+      clave: 'precio_por_punto',
+      etiqueta: 'Precio por punto de rendimiento',
+      a: Math.round(a.precio / puntajes[a.id]),
+      b: Math.round(b.precio / puntajes[b.id]),
+      mejor: 'menos',
+      texto: formatoPrecio,
+    })
+  }
 
   return filas.map((fila) => {
     const na = aNumero(fila.clave, fila.a)
@@ -70,12 +90,32 @@ function armarFilas(categoria, a, b) {
     if (comparable && na !== nb) {
       gana = (fila.mejor === 'mas' ? na > nb : na < nb) ? 'a' : 'b'
     }
-    // Largo de la barra de cada lado: el valor más alto llena la barra y el otro queda en proporción
-    const tope = comparable ? Math.max(na, nb) : 0
-    const barra = tope > 0 ? { a: (na / tope) * 100, b: (nb / tope) * 100 } : null
+    // Largo de la barra de cada lado: el mejor valor llena la barra y el otro queda en proporción.
+    // Cuando gana el más bajo se invierte: si uno cuesta el doble, su barra queda por la mitad.
+    const tope = Math.max(na, nb)
+    const piso = Math.min(na, nb)
+    let barra = null
+    if (comparable && fila.mejor === 'mas' && tope > 0) barra = { a: (na / tope) * 100, b: (nb / tope) * 100 }
+    if (comparable && fila.mejor === 'menos' && piso > 0) barra = { a: (piso / na) * 100, b: (piso / nb) * 100 }
     const igual = String(fila.a ?? '') === String(fila.b ?? '')
-    return { ...fila, gana, barra, igual }
+    return { ...fila, gana, barra, igual, peso: PESO[fila.clave] ?? 1 }
   })
+}
+
+// La frase principal del veredicto, si hay puntaje de rendimiento: cuánto más rinde uno y cuánto cuesta de diferencia
+function rindeYCuesta(filas, a, b) {
+  const rinde = filas.find((f) => f.clave === 'rendimiento')
+  if (!rinde || rinde.a === rinde.b) return null
+  const [rapido, lento, mas, menos] = rinde.a > rinde.b ? [a, b, rinde.a, rinde.b] : [b, a, rinde.b, rinde.a]
+  const porcentaje = Math.round((mas / menos - 1) * 100)
+  const diferencia = rapido.precio - lento.precio
+  const precio =
+    diferencia === 0
+      ? 'cuesta lo mismo'
+      : diferencia > 0
+        ? `cuesta ${formatoPrecio(diferencia)} más`
+        : `encima cuesta ${formatoPrecio(-diferencia)} menos`
+  return { producto: rapido, texto: ` rinde ${porcentaje} % más y ${precio}.` }
 }
 
 // Un valor de la tabla: el dato, la marca de mejor valor y la barra que muestra cuánto es frente al otro
@@ -168,7 +208,9 @@ export default function Comparador({ onAgregarAlCarrito }) {
   const categoria = categorias.find((c) => c.slug === slug)
   const lista = productosDe(slug)
   const a = lista.find((p) => p.id === params.get('a')) ?? lista[0]
-  const b = lista.find((p) => p.id === params.get('b') && p.id !== a?.id) ?? lista.find((p) => p.id !== a?.id)
+  // Sin segundo producto (por ejemplo, al llegar desde la ficha), el de precio más parecido
+  const otros = a ? lista.filter((p) => p.id !== a.id).sort(porParecido(a)) : []
+  const b = otros.find((p) => p.id === params.get('b')) ?? otros[0]
 
   const ir = (cambios) => setParams({ cat: slug, a: a.id, b: b.id, ...cambios }, { replace: true })
 
@@ -179,10 +221,14 @@ export default function Comparador({ onAgregarAlCarrito }) {
   }
 
   const filas = a && b ? armarFilas(categoria, a, b) : []
-  const ganaA = filas.filter((f) => f.gana === 'a').length
-  const ganaB = filas.filter((f) => f.gana === 'b').length
-  const comparables = ganaA + ganaB
-  const lider = ganaA >= ganaB ? a : b
+  // Veredicto con pesos: ganar en rendimiento o en precio vale más que ganar en una especificación suelta
+  const puntosDe = (lado) => filas.reduce((suma, f) => suma + (f.gana === lado ? f.peso : 0), 0)
+  const puntosA = puntosDe('a')
+  const puntosB = puntosDe('b')
+  const enJuego = puntosA + puntosB
+  const lider = puntosA >= puntosB ? a : b
+  const frase = a && b ? rindeYCuesta(filas, a, b) : null
+  const avisos = a && b ? diferenciasDeCompra(a, b) : []
   const iguales = filas.filter((f) => f.igual).length
   const visibles = soloDiferencias ? filas.filter((f) => !f.igual) : filas
   const intercambiar = () => ir({ a: b.id, b: a.id })
@@ -236,17 +282,56 @@ export default function Comparador({ onAgregarAlCarrito }) {
             <Tarjeta producto={b} lista={lista.filter((p) => p.id !== a.id)} lado="b" onElegir={(id) => ir({ b: id })} onAgregar={agregar} agregado={agregadoId === b.id} />
           </div>
 
-          <p className="mt-8 text-center text-lg" aria-live="polite">
-            {comparables === 0 ? (
-              'Estos dos productos no tienen datos comparables.'
-            ) : ganaA === ganaB ? (
-              <>Empate: cada uno gana en {ganaA} de {comparables} características.</>
-            ) : (
-              <>
-                <b className="text-lime">{lider.nombre}</b> gana en {Math.max(ganaA, ganaB)} de {comparables} características.
-              </>
+          <div className="mt-8 text-center" aria-live="polite">
+            <p className="text-lg">
+              {frase ? (
+                <>
+                  <b className="text-lime">{frase.producto.nombre}</b>
+                  {frase.texto}
+                </>
+              ) : enJuego === 0 ? (
+                'Estos dos productos no tienen datos comparables.'
+              ) : puntosA === puntosB ? (
+                'Empate entre los dos.'
+              ) : (
+                <>
+                  <b className="text-lime">{lider.nombre}</b> sale ganando.
+                </>
+              )}
+            </p>
+            {enJuego > 0 && (
+              <p className="mt-1 text-sm text-muted tabular-nums">
+                {puntosA === puntosB
+                  ? `Cada uno suma ${puntosA} de ${enJuego} puntos.`
+                  : `${lider.modelo} suma ${Math.max(puntosA, puntosB)} de ${enJuego} puntos.`}{' '}
+                {filas.some((f) => f.clave === 'rendimiento')
+                  ? 'El rendimiento vale 3, el precio 2 y el resto 1 cada uno.'
+                  : 'El precio vale 2 y el resto 1 cada uno.'}
+              </p>
             )}
-          </p>
+          </div>
+
+          {/* Lo que cambia lo que hay que comprar junto con cada uno (otra placa, otra memoria, más fuente) */}
+          {avisos.length > 0 && (
+            <section aria-labelledby="antes-de-elegir" className="mx-auto mt-6 max-w-2xl rounded-[3px] border border-line bg-surface px-5 py-4">
+              <h2 id="antes-de-elegir" className="text-sm font-semibold">
+                Antes de elegir
+              </h2>
+              <ul className="mt-1 divide-y divide-line">
+                {avisos.map((c) => (
+                  <li key={c.titulo} className="flex gap-3 py-3">
+                    <span className="mt-0.5">
+                      <IconoEstado estado={c.estado} />
+                    </span>
+                    <div className="min-w-0 text-sm">
+                      <p className="font-medium">{c.titulo}</p>
+                      <p className="mt-0.5 text-muted">{c.detalle}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {iguales > 0 && (
             <label className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm text-muted hover:text-white">
@@ -315,14 +400,17 @@ export default function Comparador({ onAgregarAlCarrito }) {
           </div>
           <p className="mt-2 text-xs text-muted">
             Cuentan como mejor: más núcleos, memoria, frecuencia y rendimiento; y menos precio, consumo y latencia.
+            Tamaño, peso y botones dependen del gusto: se muestran pero no suman.
             {(slug === 'procesadores' || slug === 'placas_de_video') && ' El rendimiento es un puntaje aproximado, para orientar.'}
           </p>
 
           <h2 className="mt-12 text-xl font-semibold">Otros para comparar</h2>
-          <p className="mb-3 text-sm text-muted">Tocá uno para ponerlo en lugar del segundo producto.</p>
+          <p className="mb-3 text-sm text-muted">
+            Primero los de precio más parecido a {a.modelo}. Tocá uno para ponerlo en lugar del segundo producto.
+          </p>
           <div className="flex gap-3 overflow-x-auto pb-2">
-            {lista
-              .filter((p) => p.id !== a.id && p.id !== b.id)
+            {otros
+              .filter((p) => p.id !== b.id)
               .map((p) => (
                 <button
                   key={p.id}
@@ -334,7 +422,10 @@ export default function Comparador({ onAgregarAlCarrito }) {
                   className="w-52 shrink-0 rounded-[3px] border border-line bg-surface p-3 text-left hover:border-lime hover:shadow-glow"
                 >
                   <span className="block text-sm font-medium leading-snug">{p.nombre}</span>
-                  <span className="mt-1 block text-sm text-muted">{formatoPrecio(p.precio)}</span>
+                  <span className="mt-1 block text-sm text-muted">
+                    {formatoPrecio(p.precio)}
+                    {p.stock === 0 && ' · Sin stock'}
+                  </span>
                 </button>
               ))}
           </div>

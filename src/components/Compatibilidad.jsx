@@ -26,7 +26,7 @@ const COLORES = {
   info: 'border-line-strong text-muted',
 }
 
-function Icono({ estado, chico = false }) {
+export function IconoEstado({ estado, chico = false }) {
   return (
     <span
       className={`flex shrink-0 items-center justify-center rounded-full border ${COLORES[estado]} ${chico ? 'h-4 w-4' : 'h-5 w-5'}`}
@@ -62,7 +62,7 @@ export function PanelCompatibilidad({ chequeos }) {
         {lista.map((c, i) => (
           <li key={i} className="flex gap-3 py-3">
             <span className="mt-0.5">
-              <Icono estado={c.estado} />
+              <IconoEstado estado={c.estado} />
             </span>
             <div className="min-w-0 text-sm">
               <p className="font-medium">
@@ -92,7 +92,7 @@ export function MarcaCompatibilidad({ resultado, grande = false }) {
   return (
     <p className={`flex items-start gap-1.5 ${grande ? 'text-sm' : 'text-[11px] sm:text-xs'} ${resultado.ok ? 'text-lime' : 'text-white'}`}>
       <span className="mt-px">
-        <Icono estado={resultado.ok ? 'ok' : 'error'} chico />
+        <IconoEstado estado={resultado.ok ? 'ok' : 'error'} chico />
       </span>
       <span>
         <span className="sr-only">{resultado.ok ? 'Compatible con tu carrito: ' : 'No compatible con tu carrito: '}</span>
